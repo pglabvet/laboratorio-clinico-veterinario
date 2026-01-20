@@ -1,17 +1,17 @@
-<div x-data="formularioConstructor()" x-init="init()" class="min-h-screen bg-gray-50">
+<div x-data="formularioConstructor()" x-init="init()" class="min-h-screen bg-gray-50 dark:bg-zinc-800">
     <div class="container mx-auto px-4 py-6">
         <!-- Breadcrumb -->
         <div class="mb-4">
-            <a href="{{ route('plantillas.index') }}" class="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-2">
+            <a href="{{ route('plantillas.index') }}" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm flex items-center gap-2">
                 <i class="fas fa-arrow-left"></i>
                 Volver a Plantillas
             </a>
         </div>
 
         <!-- Header -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-md p-6 mb-6">
             <!-- TÃ­tulo -->
-            <h1 class="text-2xl font-bold text-gray-800 mb-4">
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-zinc-100 mb-4">
                 @if($plantillaId)
                     <i class="fas fa-edit mr-2 text-blue-600"></i>
                     Editar Plantilla
@@ -23,21 +23,21 @@
 
             <!-- Mensajes de Ã©xito/error -->
             @if (session()->has('success'))
-                <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-800">
+                <div class="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-center gap-2 text-green-800 dark:text-green-300">
                     <i class="fas fa-check-circle"></i>
                     <span>{{ session('success') }}</span>
                 </div>
             @endif
             
             @if (session()->has('error'))
-                <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-800">
+                <div class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2 text-red-800 dark:text-red-300">
                     <i class="fas fa-exclamation-circle"></i>
                     <span>{{ session('error') }}</span>
                 </div>
             @endif
 
             @error('nombreFormulario')
-                <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-800">
+                <div class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2 text-red-800 dark:text-red-300">
                     <i class="fas fa-exclamation-circle"></i>
                     <span>{{ $message }}</span>
                 </div>
@@ -74,8 +74,8 @@
             
             <!-- Panel Izquierdo: Componentes Disponibles -->
             <div class="col-span-2">
-                <div class="bg-white rounded-lg shadow-md p-6 sticky top-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-md p-6 sticky top-6">
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-zinc-100 mb-4 flex items-center">
                         <i class="fas fa-puzzle-piece mr-2 text-blue-600"></i>
                         Componentes
                     </h3>
@@ -83,8 +83,8 @@
                         @foreach($tiposComponentes as $tipo => $nombre)
                         <button 
                             wire:click="agregarComponente('{{ $tipo }}')"
-                            class="w-full text-left px-4 py-3 bg-gray-50 hover:bg-blue-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-all group">
-                            <span class="text-sm font-medium text-gray-700 group-hover:text-blue-700">{{ $nombre }}</span>
+                            class="w-full text-left px-4 py-3 bg-gray-50 dark:bg-zinc-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg border border-gray-200 dark:border-zinc-700 hover:border-blue-300 dark:hover:border-blue-600 transition-all group">
+                            <span class="text-sm font-medium text-gray-700 dark:text-zinc-300 group-hover:text-blue-700 dark:group-hover:text-blue-400">{{ $nombre }}</span>
                         </button>
                         @endforeach
                     </div>
@@ -93,14 +93,14 @@
 
             <!-- Panel Central: Vista Previa -->
             <div class="col-span-7">
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-zinc-100 mb-4 flex items-center">
                         <i class="fas fa-eye mr-2 text-blue-600"></i>
                         Vista Previa
                     </h3>
                     
                     <!-- Debug: Estado del array de componentes -->
-                    <div class="text-xs bg-yellow-100 p-2 rounded mb-2 max-h-32 overflow-auto">
+                    <div class="text-xs bg-yellow-100 dark:bg-yellow-900/20 text-yellow-900 dark:text-yellow-300 p-2 rounded mb-2 max-h-32 overflow-auto">
                         @foreach($componentes as $i => $c)
                             <div>{{ $i }}: {{ $c['tipo'] }} = "{{ $c['propiedades']['titulo'] ?? $c['propiedades']['texto'] ?? 'N/A' }}"</div>
                         @endforeach
@@ -113,7 +113,7 @@
                                 wire:key="componente-{{ $componente['id'] }}"
                                 @click="seleccionar('{{ $componente['id'] }}')"
                                 class="border-2 rounded-lg p-4 cursor-pointer transition-all relative"
-                                :class="@this.componenteSeleccionado === '{{ $componente['id'] }}' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'">
+                                :class="@this.componenteSeleccionado === '{{ $componente['id'] }}' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600'">
                                 
                                 <!-- Botón eliminar -->
                                 <div class="absolute top-2 right-2">
@@ -131,7 +131,7 @@
                             </div>
                             @endforeach
                         @else
-                            <div class="text-center py-12 text-gray-400">
+                            <div class="text-center py-12 text-gray-400 dark:text-zinc-500">
                                 <i class="fas fa-inbox text-5xl mb-3"></i>
                                 <p>No hay componentes agregados</p>
                                 <p class="text-sm">Selecciona un componente del panel izquierdo</p>
@@ -143,8 +143,8 @@
 
             <!-- Panel Derecho: Propiedades -->
             <div class="col-span-3">
-                <div class="bg-white rounded-lg shadow-md p-6 sticky top-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-md p-6 sticky top-6">
+                    <h3 class="text-lg font-bold text-gray-800 dark:text-zinc-100 mb-4 flex items-center">
                         <i class="fas fa-sliders-h mr-2 text-blue-600"></i>
                         Propiedades
                     </h3>
@@ -174,7 +174,7 @@
                             </div>
                         @endif
                     @else
-                        <div class="text-center py-8 text-gray-400">
+                        <div class="text-center py-8 text-gray-400 dark:text-zinc-500">
                             <i class="fas fa-mouse-pointer text-4xl mb-3"></i>
                             <p class="text-sm">Selecciona un componente para editar sus propiedades</p>
                         </div>

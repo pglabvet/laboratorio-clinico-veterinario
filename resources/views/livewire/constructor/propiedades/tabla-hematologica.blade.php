@@ -1,28 +1,28 @@
 ﻿<!-- Propiedades de Tabla Hematológica -->
 <div class="space-y-4">
-    <div class="text-xs text-red-500 bg-red-50 p-2 rounded mb-2">Índice: {{ $indiceComponente }} | ID: {{ $componenteId ?? "N/A" }}</div>
+    <div class="text-xs text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded mb-2">Índice: {{ $indiceComponente }} | ID: {{ $componenteId ?? "N/A" }}</div>
     <!-- Título -->
     <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Título</label>
+        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">Título</label>
         <input 
             type="text" 
             wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.titulo"
             placeholder="Ej: CUADRO HEMÁTICO"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+            class="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
     </div>
 
     <!-- Parámetros Principales -->
     <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Parámetros Principales (Lado Izquierdo)</label>
-        <p class="text-xs text-gray-500 mb-2">Eritrocitos, Leucócitos, Hematocrito, etc.</p>
+        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">Parámetros Principales (Lado Izquierdo)</label>
+        <p class="text-xs text-gray-500 dark:text-zinc-400 mb-2">Eritrocitos, Leucócitos, Hematocrito, etc.</p>
         <div class="space-y-2 max-h-64 overflow-y-auto">
             @foreach($props['parametros_principales'] ?? [] as $index => $param)
-            <div class="border border-gray-300 rounded p-2 bg-gray-50">
+            <div class="border border-gray-300 dark:border-zinc-700 rounded p-2 bg-gray-50 dark:bg-zinc-900">
                 <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-semibold text-gray-700">Parámetro {{ $index + 1 }}</span>
+                    <span class="text-xs font-semibold text-gray-700 dark:text-zinc-300">Parámetro {{ $index + 1 }}</span>
                     <button 
                         wire:click="$set('componentes.{{ $indiceComponente }}.propiedades.parametros_principales', {{ json_encode(array_values(array_filter($props['parametros_principales'], fn($p, $i) => $i !== $index, ARRAY_FILTER_USE_BOTH))) }})"
-                        class="px-2 py-1 bg-red-100 text-red-600 hover:bg-red-200 rounded text-xs">
+                        class="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 rounded text-xs">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -31,22 +31,22 @@
                         type="text"
                         wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.parametros_principales.{{ $index }}.nombre"
                         placeholder="Nombre"
-                        class="px-2 py-1 border border-gray-300 rounded text-xs">
+                        class="px-2 py-1 border border-gray-300 dark:border-zinc-700 rounded text-xs bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
                     <input 
                         type="text"
                         wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.parametros_principales.{{ $index }}.unidad"
                         placeholder="Unidad"
-                        class="px-2 py-1 border border-gray-300 rounded text-xs">
+                        class="px-2 py-1 border border-gray-300 dark:border-zinc-700 rounded text-xs bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
                     <input 
                         type="text"
                         wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.parametros_principales.{{ $index }}.ref_min"
                         placeholder="Ref Min"
-                        class="px-2 py-1 border border-gray-300 rounded text-xs">
+                        class="px-2 py-1 border border-gray-300 dark:border-zinc-700 rounded text-xs bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
                     <input 
                         type="text"
                         wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.parametros_principales.{{ $index }}.ref_max"
                         placeholder="Ref Max"
-                        class="px-2 py-1 border border-gray-300 rounded text-xs">
+                        class="px-2 py-1 border border-gray-300 dark:border-zinc-700 rounded text-xs bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
                 </div>
             </div>
             @endforeach
@@ -62,16 +62,16 @@
 
     <!-- Diferenciales -->
     <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Diferenciales (Lado Derecho)</label>
-        <p class="text-xs text-gray-500 mb-2">Cayados, Segmentados, Eosinófilos, etc. Con valores relativos y absolutos</p>
+        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">Diferenciales (Lado Derecho)</label>
+        <p class="text-xs text-gray-500 dark:text-zinc-400 mb-2">Cayados, Segmentados, Eosinófilos, etc. Con valores relativos y absolutos</p>
         <div class="space-y-2 max-h-64 overflow-y-auto">
             @foreach($props['diferenciales'] ?? [] as $index => $dif)
-            <div class="border border-gray-300 rounded p-2 bg-gray-50">
+            <div class="border border-gray-300 dark:border-zinc-700 rounded p-2 bg-gray-50 dark:bg-zinc-900">
                 <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-semibold text-gray-700">Diferencial {{ $index + 1 }}</span>
+                    <span class="text-xs font-semibold text-gray-700 dark:text-zinc-300">Diferencial {{ $index + 1 }}</span>
                     <button 
                         wire:click="$set('componentes.{{ $indiceComponente }}.propiedades.diferenciales', {{ json_encode(array_values(array_filter($props['diferenciales'], fn($d, $i) => $i !== $index, ARRAY_FILTER_USE_BOTH))) }})"
-                        class="px-2 py-1 bg-red-100 text-red-600 hover:bg-red-200 rounded text-xs">
+                        class="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 rounded text-xs">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -80,28 +80,28 @@
                         type="text"
                         wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.diferenciales.{{ $index }}.nombre"
                         placeholder="Nombre (ej: Segmentados)"
-                        class="w-full px-2 py-1 border border-gray-300 rounded text-xs">
+                        class="w-full px-2 py-1 border border-gray-300 dark:border-zinc-700 rounded text-xs bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
                     <div class="grid grid-cols-4 gap-1">
                         <input 
                             type="text"
                             wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.diferenciales.{{ $index }}.ref_rel_min"
                             placeholder="Rel Min"
-                            class="px-2 py-1 border border-gray-300 rounded text-xs">
+                            class="px-2 py-1 border border-gray-300 dark:border-zinc-700 rounded text-xs bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
                         <input 
                             type="text"
                             wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.diferenciales.{{ $index }}.ref_rel_max"
                             placeholder="Rel Max"
-                            class="px-2 py-1 border border-gray-300 rounded text-xs">
+                            class="px-2 py-1 border border-gray-300 dark:border-zinc-700 rounded text-xs bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
                         <input 
                             type="text"
                             wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.diferenciales.{{ $index }}.ref_abs_min"
                             placeholder="Abs Min"
-                            class="px-2 py-1 border border-gray-300 rounded text-xs">
+                            class="px-2 py-1 border border-gray-300 dark:border-zinc-700 rounded text-xs bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
                         <input 
                             type="text"
                             wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.diferenciales.{{ $index }}.ref_abs_max"
                             placeholder="Abs Max"
-                            class="px-2 py-1 border border-gray-300 rounded text-xs">
+                            class="px-2 py-1 border border-gray-300 dark:border-zinc-700 rounded text-xs bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
                     </div>
                 </div>
             </div>
@@ -118,16 +118,16 @@
 
     <!-- Índices Eritrocitarios -->
     <div>
-        <label class="block text-sm font-medium text-gray-700 mb-2">Índices Eritrocitarios</label>
-        <p class="text-xs text-gray-500 mb-2">VCM, HbCM, CCMHb</p>
+        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">Índices Eritrocitarios</label>
+        <p class="text-xs text-gray-500 dark:text-zinc-400 mb-2">VCM, HbCM, CCMHb</p>
         <div class="space-y-2">
             @foreach($props['indices'] ?? [] as $index => $indice)
-            <div class="border border-gray-300 rounded p-2 bg-gray-50">
+            <div class="border border-gray-300 dark:border-zinc-700 rounded p-2 bg-gray-50 dark:bg-zinc-900">
                 <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-semibold text-gray-700">Índice {{ $index + 1 }}</span>
+                    <span class="text-xs font-semibold text-gray-700 dark:text-zinc-300">Índice {{ $index + 1 }}</span>
                     <button 
                         wire:click="$set('componentes.{{ $indiceComponente }}.propiedades.indices', {{ json_encode(array_values(array_filter($props['indices'], fn($i, $idx) => $idx !== $index, ARRAY_FILTER_USE_BOTH))) }})"
-                        class="px-2 py-1 bg-red-100 text-red-600 hover:bg-red-200 rounded text-xs">
+                        class="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 rounded text-xs">
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>
@@ -136,18 +136,18 @@
                         type="text"
                         wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.indices.{{ $index }}.nombre"
                         placeholder="Nombre (ej: VCM)"
-                        class="w-full px-2 py-1 border border-gray-300 rounded text-xs">
+                        class="w-full px-2 py-1 border border-gray-300 dark:border-zinc-700 rounded text-xs bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
                     <div class="grid grid-cols-2 gap-1">
                         <input 
                             type="text"
                             wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.indices.{{ $index }}.unidad"
                             placeholder="Unidad (ej: fl)"
-                            class="px-2 py-1 border border-gray-300 rounded text-xs">
+                            class="px-2 py-1 border border-gray-300 dark:border-zinc-700 rounded text-xs bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
                         <input 
                             type="text"
                             wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.indices.{{ $index }}.referencia"
                             placeholder="Referencia (ej: vn 60-77 fl)"
-                            class="px-2 py-1 border border-gray-300 rounded text-xs">
+                            class="px-2 py-1 border border-gray-300 dark:border-zinc-700 rounded text-xs bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
                     </div>
                 </div>
             </div>
@@ -162,8 +162,8 @@
         </flux:button>
     </div>
 
-    <div class="p-3 bg-purple-50 rounded border border-purple-200">
-        <p class="text-xs text-purple-800">
+    <div class="p-3 bg-purple-50 dark:bg-purple-900/20 rounded border border-purple-200 dark:border-purple-800">
+        <p class="text-xs text-purple-800 dark:text-purple-300">
             <i class="fas fa-info-circle mr-1"></i>
             Tabla especializada para análisis hematológicos con parámetros principales, diferenciales e índices eritrocitarios.
         </p>

@@ -1,8 +1,8 @@
 <!-- Preview de Tabla de Dos Columnas -->
-<div class="border border-gray-300 rounded-lg overflow-hidden">
+<div class="border border-gray-300 dark:border-zinc-700 rounded-lg overflow-hidden">
     @if(isset($props['titulo']))
-    <div class="bg-white border-b border-gray-300">
-        <h4 class="font-bold text-gray-800 text-center py-2">{{ $props['titulo'] }}</h4>
+    <div class="bg-white dark:bg-zinc-800 border-b border-gray-300 dark:border-zinc-700">
+        <h4 class="font-bold text-gray-800 dark:text-zinc-100 text-center py-2">{{ $props['titulo'] }}</h4>
     </div>
     @endif
 
@@ -11,7 +11,7 @@
             <!-- Subtítulo de sección si existe -->
             @if($seccion['subtitulo'] ?? null)
             <tr>
-                <td colspan="2" class="bg-gray-100 border border-gray-300 px-3 py-2 font-bold text-center">
+                <td colspan="2" class="bg-gray-100 dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 px-3 py-2 font-bold text-center text-gray-900 dark:text-zinc-100">
                     {{ $seccion['subtitulo'] }}
                 </td>
             </tr>
@@ -21,10 +21,10 @@
             @foreach($seccion['campos'] ?? [] as $campo)
                 @if($campo)
                 <tr>
-                    <td class="border border-gray-300 px-3 py-2 font-semibold bg-gray-50 w-1/3">
+                    <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 font-semibold bg-gray-50 dark:bg-zinc-900 w-1/3 text-gray-900 dark:text-zinc-100">
                         {{ $campo }}
                     </td>
-                    <td class="border border-gray-300 px-3 py-2 text-gray-400 italic">
+                    <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-400 dark:text-zinc-500 italic">
                         (a completar)
                     </td>
                 </tr>
