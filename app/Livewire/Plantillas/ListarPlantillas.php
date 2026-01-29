@@ -23,7 +23,7 @@ class ListarPlantillas extends Component
                 $query->where('nombre', 'like', '%' . $this->busqueda . '%')
                     ->orWhere('descripcion', 'like', '%' . $this->busqueda . '%');
             })
-            ->with('creador')
+            ->with(['creador', 'tipoAnalisis'])
             ->latest()
             ->paginate(10);
 

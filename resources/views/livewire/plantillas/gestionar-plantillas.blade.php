@@ -58,6 +58,17 @@
                     rows="2"
                 />
 
+                <flux:select 
+                    wire:model.live="tipo_analisis_id"
+                    label="Tipo de Análisis"
+                    placeholder="Selecciona un tipo de análisis"
+                >
+                    <option value="">Sin tipo de análisis</option>
+                    @foreach($tiposAnalisis as $tipoAnalisis)
+                        <option value="{{ $tipoAnalisis->id }}">{{ $tipoAnalisis->nombre }}</option>
+                    @endforeach
+                </flux:select>
+
                 <div>
                     <flux:button 
                         wire:click="guardarFormulario"

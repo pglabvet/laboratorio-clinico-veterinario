@@ -48,39 +48,52 @@
             </div>
             @endforeach
         </div>
-        
-        <flux:button 
-            wire:click="$set('componentes.{{ $indiceComponente }}.propiedades.columnas', {{ json_encode(array_merge($props['columnas'] ?? [], [['nombre' => '']])) }})"
-            variant="primary" 
-            icon="plus" 
-            class="w-full mt-2">
-            Agregar Columna
-        </flux:button>
     </div>
 
     <!-- Filas predefinidas (análisis) -->
     <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">Análisis predefinidos</label>
-        <p class="text-xs text-gray-500 dark:text-zinc-400 mb-2">Define los nombres de los análisis que aparecerán en la tabla</p>
-        <div class="space-y-2 max-h-64 overflow-y-auto">
+        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">Análisis predefinidos con valores por defecto</label>
+        <p class="text-xs text-gray-500 dark:text-zinc-400 mb-2">Define los análisis y sus rangos de referencia por defecto</p>
+        <div class="space-y-3 max-h-96 overflow-y-auto">
             @foreach($props['filas'] ?? [] as $index => $fila)
-            <div class="flex gap-2">
-                <input 
-                    type="text"
-                    wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.filas.{{ $index }}"
-                    placeholder="Ej: T4, T3, TSH, Glicemia..."
-                    class="flex-1 px-2 py-1 border border-gray-300 dark:border-zinc-700 rounded text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
-                <button 
-                    wire:click="$set('componentes.{{ $indiceComponente }}.propiedades.filas', {{ json_encode(array_values(array_filter($props['filas'], fn($f, $i) => $i !== $index, ARRAY_FILTER_USE_BOTH))) }})"
-                    class="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 rounded text-xs">
-                    <i class="fas fa-trash"></i>
-                </button>
+            <div class="p-3 bg-gray-50 dark:bg-zinc-900 rounded border border-gray-200 dark:border-zinc-700">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-medium text-gray-600 dark:text-zinc-400">Fila {{ $index + 1 }}</span>
+                    <button 
+                        wire:click="$set('componentes.{{ $indiceComponente }}.propiedades.filas', {{ json_encode(array_values(array_filter($props['filas'], fn($f, $i) => $i !== $index, ARRAY_FILTER_USE_BOTH))) }})"
+                        class="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 rounded text-xs">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                
+                <div class="space-y-2">
+                    <!-- Nombre del análisis -->
+                    <div>
+                        <label class="block text-xs text-gray-600 dark:text-zinc-400 mb-1">Nombre del Análisis</label>
+                        <input 
+                            type="text"
+                            wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.filas.{{ $index }}.nombre"
+                            placeholder="Ej: T1, T2, T3..."
+                            class="w-full px-2 py-1 border border-gray-300 dark:border-zinc-700 rounded text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
+                    </div>
+                    
+                    <!-- Rangos de referencia por defecto -->
+                    <div>
+                        <label class="block text-xs text-gray-600 dark:text-zinc-400 mb-1">Rango de Referencia (opcional)</label>
+                        <input 
+                            type="text"
+                            wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.filas.{{ $index }}.rango_ref"
+                            placeholder="Ej: 5.000.000 - 8.500.000 Cayados"
+                            class="w-full px-2 py-1 border border-gray-300 dark:border-zinc-700 rounded text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
+                        <p class="text-xs text-gray-500 dark:text-zinc-400 mt-1">Este valor aparecerá por defecto en la columna "Rangos de Referencia"</p>
+                    </div>
+                </div>
             </div>
             @endforeach
         </div>
         
         <flux:button 
-            wire:click="$set('componentes.{{ $indiceComponente }}.propiedades.filas', {{ json_encode(array_merge($props['filas'] ?? [], [''])) }})"
+            wire:click="$set('componentes.{{ $indiceComponente }}.propiedades.filas', {{ json_encode(array_merge($props['filas'] ?? [], [['nombre' => '', 'rango_ref' => '']])) }})"
             variant="primary" 
             icon="plus" 
             class="w-full mt-2">
@@ -91,7 +104,7 @@
     <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
         <p class="text-xs text-blue-800 dark:text-blue-300">
             <i class="fas fa-info-circle mr-1"></i>
-            El bioquímico solo podrá editar las columnas de RESULTADO y RANGOS DE REFERENCIA. Los nombres de análisis son fijos.
+            La tabla tiene 3 columnas fijas: ANÁLISIS (no editable), RESULTADO y RANGOS DE REFERENCIA (ambas editables por el bioquímico).
         </p>
     </div>
 </div>

@@ -4,6 +4,7 @@ namespace App\Livewire\Plantillas;
 
 use Livewire\Component;
 use App\Models\PlantillaFormulario;
+use App\Models\TipoAnalisis;
 use Illuminate\Support\Facades\Auth;
 
 class GestionarPlantillas extends Component
@@ -11,6 +12,7 @@ class GestionarPlantillas extends Component
     public $plantillaId = null;
     public $nombreFormulario = '';
     public $descripcionFormulario = '';
+    public $tipo_analisis_id = null;
     public $componentes = [];
     public $componenteSeleccionado = null;
     
@@ -61,6 +63,7 @@ class GestionarPlantillas extends Component
         $this->plantillaId = $plantilla->id;
         $this->nombreFormulario = $plantilla->nombre;
         $this->descripcionFormulario = $plantilla->descripcion ?? '';
+        $this->tipo_analisis_id = $plantilla->tipo_analisis_id;
         
         // Asegurar que todos los componentes tengan ID
         $componentes = $plantilla->componentes ?? [];
@@ -244,6 +247,7 @@ class GestionarPlantillas extends Component
                 $plantilla->update([
                     'nombre' => $this->nombreFormulario,
                     'descripcion' => $this->descripcionFormulario,
+                    'tipo_analisis_id' => $this->tipo_analisis_id,
                     'componentes' => $this->componentes,
                 ]);
                 
@@ -253,6 +257,7 @@ class GestionarPlantillas extends Component
                 $plantilla = PlantillaFormulario::create([
                     'nombre' => $this->nombreFormulario,
                     'descripcion' => $this->descripcionFormulario,
+                    'tipo_analisis_id' => $this->tipo_analisis_id,
                     'componentes' => $this->componentes,
                     'activo' => true,
                     'creado_por' => Auth::id(),
@@ -272,6 +277,12 @@ class GestionarPlantillas extends Component
 
     public function render()
     {
-        return view('livewire.plantillas.gestionar-plantillas');
+        $tiposAnalisis = TipoAnalisis::where('estado', true)
+            ->orderBy('nombre')
+            ->get();
+
+        return view('livewire.plantillas.gestionar-plantillas', [
+            'tiposAnalisis' => $tiposAnalisis,
+        ]);
     }
 }

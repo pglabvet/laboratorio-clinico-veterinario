@@ -18,15 +18,19 @@ class Analisis extends Model
         'muestra_id',
         'tipo_analisis_id',
         'bioquimico_id',
+        'aprobador_id',
         'estado',
         'observaciones_bioquimico',
+        'observaciones_aprobador',
         'fecha_inicio',
         'fecha_finalizacion',
+        'fecha_aprobacion',
     ];
 
     protected $casts = [
         'fecha_inicio' => 'datetime',
         'fecha_finalizacion' => 'datetime',
+        'fecha_aprobacion' => 'datetime',
     ];
 
     /**
@@ -51,6 +55,14 @@ class Analisis extends Model
     public function bioquimico(): BelongsTo
     {
         return $this->belongsTo(User::class, 'bioquimico_id');
+    }
+
+    /**
+     * Relación con aprobador (usuario)
+     */
+    public function aprobador(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'aprobador_id');
     }
 
     /**

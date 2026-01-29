@@ -44,6 +44,9 @@
                             Descripción
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
+                            Tipo de Análisis
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
                             Componentes
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
@@ -68,6 +71,15 @@
                             </td>
                             <td class="px-6 py-4 text-sm text-neutral-700 dark:text-neutral-300">
                                 {{ Str::limit($plantilla->descripcion ?? 'Sin descripción', 60) }}
+                            </td>
+                            <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-700 dark:text-neutral-300">
+                                @if($plantilla->tipoAnalisis)
+                                    <flux:badge size="sm" color="cyan">
+                                        {{ $plantilla->tipoAnalisis->nombre }}
+                                    </flux:badge>
+                                @else
+                                    <span class="text-xs text-neutral-400">Sin asignar</span>
+                                @endif
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-700 dark:text-neutral-300">
                                 {{ count($plantilla->componentes ?? []) }}

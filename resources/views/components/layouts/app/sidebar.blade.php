@@ -20,7 +20,10 @@
                     </flux:sidebar.item>
                     <flux:sidebar.item icon="rectangle-group" :href="route('especies.index')" :current="request()->routeIs('especies.*')" wire:navigate>
                         {{ __('Especies') }}
-                    </flux:sidebar.item>                    
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="clipboard-document-list" :href="route('tipos-analisis.index')" :current="request()->routeIs('tipos-analisis.*')" wire:navigate>
+                        {{ __('Tipos de Análisis') }}
+                    </flux:sidebar.item>
                     <flux:sidebar.item icon="building-storefront" :href="route('veterinarias.index')" :current="request()->routeIs('veterinarias.*')" wire:navigate>
                         {{ __('Veterinarias') }}
                     </flux:sidebar.item>
@@ -32,6 +35,9 @@
                     </flux:sidebar.item>
                     <flux:sidebar.item icon="document-text" :href="route('plantillas.index')" :current="request()->routeIs('plantillas.*')" wire:navigate>
                         {{ __('Plantillas') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="clipboard-document-check" :href="route('analisis.revisar')" :current="request()->routeIs('analisis.revisar') || request()->routeIs('analisis.ver')" wire:navigate>
+                        {{ __('Revisar Análisis') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
 

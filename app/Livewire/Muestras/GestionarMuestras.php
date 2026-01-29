@@ -20,7 +20,7 @@ class GestionarMuestras extends Component
     public $codigo_muestra;
     public $tipo_muestra;
     public $fecha_recepcion;
-    public $estado = 'PENDIENTE';
+    public $estado = 'pendiente';
     public $observaciones;
     public $sucursal_id;
 
@@ -195,7 +195,7 @@ class GestionarMuestras extends Component
                     'sucursal_id' => $this->sucursal_id,
                     'tipo_muestra' => $this->tipo_muestra,
                     'fecha_recepcion' => $this->fecha_recepcion,
-                    'estado' => 'PENDIENTE',
+                    'estado' => 'pendiente',
                     'observaciones' => $this->observaciones,
                 ]);
 
@@ -205,7 +205,7 @@ class GestionarMuestras extends Component
                         'muestra_id' => $muestra->id,
                         'tipo_analisis_id' => $tipo_analisis_id,
                         'bioquimico_id' => auth()->id(),
-                        'estado' => 'PENDIENTE',
+                        'estado' => 'pendiente',
                         'fecha_inicio' => now(),
                     ]);
                 }
@@ -284,7 +284,7 @@ class GestionarMuestras extends Component
             }
 
             // Eliminar análisis pendientes
-            $muestra->analisis()->where('estado', 'PENDIENTE')->delete();
+            $muestra->analisis()->where('estado', 'pendiente')->delete();
             
             $muestra->delete();
             session()->flash('mensaje', 'Muestra eliminada exitosamente.');
@@ -328,7 +328,7 @@ class GestionarMuestras extends Component
         $this->tipos_analisis_seleccionados = [];
         $this->fecha_recepcion = now()->format('Y-m-d');
         $this->sucursal_id = auth()->user()->sucursal_id ?? Sucursal::first()?->id;
-        $this->estado = 'PENDIENTE';
+        $this->estado = 'pendiente';
     }
 
     /**

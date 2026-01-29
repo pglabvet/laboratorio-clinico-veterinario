@@ -25,13 +25,14 @@
                 @foreach($props['filas'] as $analisis)
                 <tr class="hover:bg-gray-50 dark:hover:bg-zinc-700/50">
                     <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 font-medium text-gray-900 dark:text-zinc-100">
-                        {{ $analisis }}
+                        {{ is_array($analisis) ? ($analisis['nombre'] ?? '') : $analisis }}
                     </td>
-                    @for($i = 1; $i < count($props['columnas']); $i++)
                     <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-400 dark:text-zinc-500 italic text-xs">
                         (a completar)
                     </td>
-                    @endfor
+                    <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-600 dark:text-zinc-400 text-xs">
+                        {{ is_array($analisis) ? ($analisis['rango_ref'] ?? '(a completar)') : '(a completar)' }}
+                    </td>
                 </tr>
                 @endforeach
             @else

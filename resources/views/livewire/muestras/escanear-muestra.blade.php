@@ -87,7 +87,7 @@
                             <flux:badge variant="outline" size="lg" class="font-mono">
                                 {{ $muestra->codigo_muestra }}
                             </flux:badge>
-                            <flux:badge :variant="$muestra->estado === 'PENDIENTE' ? 'warning' : ($muestra->estado === 'COMPLETADO' ? 'success' : 'outline')">
+                            <flux:badge :variant="$muestra->estado === 'pendiente' ? 'warning' : ($muestra->estado === 'completado' ? 'success' : 'outline')">
                                 {{ $muestra->estado }}
                             </flux:badge>
                         </div>
@@ -199,13 +199,14 @@
                             </div>
                             <div class="flex items-center gap-2">
                                 <flux:badge 
-                                    :variant="$analisis->estado === 'PENDIENTE' ? 'warning' : ($analisis->estado === 'COMPLETADO' ? 'success' : ($analisis->estado === 'EN_PROCESO' ? 'info' : 'outline'))"
+                                    :variant="$analisis->estado === 'pendiente' ? 'warning' : ($analisis->estado === 'finalizado' ? 'success' : ($analisis->estado === 'en_proceso' ? 'info' : 'outline'))"
                                 >
                                     {{ str_replace('_', ' ', $analisis->estado) }}
                                 </flux:badge>
                                 
-                                @if($analisis->estado === 'PENDIENTE')
+                                @if($analisis->estado === 'pendiente')
                                     <flux:button 
+                                        href="{{ route('analisis.capturar-resultados', $analisis->id) }}"
                                         size="sm"
                                         variant="primary"
                                     >

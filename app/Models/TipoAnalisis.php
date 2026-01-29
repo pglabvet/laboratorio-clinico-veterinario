@@ -48,4 +48,12 @@ class TipoAnalisis extends Model
             ->withPivot('cantidad_requerida')
             ->withTimestamps();
     }
+
+    /**
+     * Relación con plantillas de formulario
+     */
+    public function plantillas(): HasMany
+    {
+        return $this->hasMany(PlantillaFormulario::class);
+    }
 }
