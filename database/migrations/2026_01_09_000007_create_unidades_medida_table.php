@@ -11,11 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('insumos', function (Blueprint $table) {
+        Schema::create('unidades_medida', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre');
-            $table->foreignId('categoria_id')->nullable()->constrained('categorias_insumo')->onDelete('set null');
-            $table->foreignId('unidad_medida_id')->constrained('unidades_medida')->onDelete('restrict');
+            $table->string('nombre'); // Ej: Mililitros
+            $table->string('abreviatura', 10); // Ej: ml
             $table->boolean('estado')->default(true);
             $table->timestamps();
         });
@@ -26,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('insumos');
+        Schema::dropIfExists('unidades_medida');
     }
 };
