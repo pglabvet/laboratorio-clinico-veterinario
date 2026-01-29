@@ -24,6 +24,15 @@
                     <flux:sidebar.item icon="clipboard-document-list" :href="route('tipos-analisis.index')" :current="request()->routeIs('tipos-analisis.*')" wire:navigate>
                         {{ __('Tipos de Análisis') }}
                     </flux:sidebar.item>
+                    <flux:sidebar.item icon="scale" :href="route('unidades-medida.index')" :current="request()->routeIs('unidades-medida.*')" wire:navigate>
+                        {{ __('Unidades de Medida') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="cube" :href="route('insumos.index')" :current="request()->routeIs('insumos.*')" wire:navigate>
+                        {{ __('Insumos') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="tag" :href="route('categorias-insumo.index')" :current="request()->routeIs('categorias-insumo.*')" wire:navigate>
+                        {{ __('Categorías de Insumos') }}
+                    </flux:sidebar.item>
                     <flux:sidebar.item icon="building-storefront" :href="route('veterinarias.index')" :current="request()->routeIs('veterinarias.*')" wire:navigate>
                         {{ __('Veterinarias') }}
                     </flux:sidebar.item>
@@ -32,6 +41,12 @@
                     </flux:sidebar.item>
                     <flux:sidebar.item icon="viewfinder-circle" :href="route('muestras.escanear')" :current="request()->routeIs('muestras.escanear')" wire:navigate>
                         {{ __('Escanear Muestra') }}
+                    </flux:sidebar.item>
+                </flux:sidebar.group>
+
+                <flux:sidebar.group :heading="__('Inventario')" class="grid">
+                    <flux:sidebar.item icon="arrow-down-tray" :href="route('inventario.entradas')" :current="request()->routeIs('inventario.entradas')" wire:navigate>
+                        {{ __('Registrar Entrada') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
 

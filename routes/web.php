@@ -45,6 +45,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('/tipos-analisis', 'tipos-analisis.index')
         ->name('tipos-analisis.index');
     
+    Route::view('/unidades-medida', 'unidades-medida.index')
+        ->name('unidades-medida.index');
+    
+    Route::view('/insumos', 'insumos.index')
+        ->name('insumos.index');
+    
+    Route::view('/categorias-insumo', 'categorias-insumo.index')
+        ->name('categorias-insumo.index');
+    
+    // Rutas de inventario
+    Route::view('/inventario/entradas', 'inventario.entradas')
+        ->name('inventario.entradas');
+    
     Route::view('/roles', 'roles.index')
         ->name('roles.index');
     
