@@ -1,0 +1,245 @@
+<div class="min-h-screen bg-gray-50 dark:bg-zinc-800">
+    <div class="container mx-auto px-4 py-6">
+        {{-- Header con info del análisis --}}
+        <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-md p-6 mb-6">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <flux:heading size="xl">{{ $modoRevision ? 'Revisar Análisis' : 'Capturar Resultados' }}</flux:heading>
+                    <flux:subheading>{{ $analisis->tipoAnalisis->nombre }}</flux:subheading>
+                </div>
+                <div class="flex items-center gap-3">
+                    <flux:badge 
+                        :color="$analisis->estado === 'finalizado' ? 'blue' : ($analisis->estado === 'rechazado' ? 'red' : 'zinc')" 
+                        size="lg">
+                        {{ ucfirst($analisis->estado) }}
+                    </flux:badge>
+                    <flux:badge color="zinc" size="lg">
+                        Análisis #{{ $analisis->id }}
+                    </flux:badge>
+                </div>
+            </div>
+            
+            @if($analisis->estado === 'rechazado' && $analisis->observaciones_aprobador)
+                <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                    <div class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <div class="flex-1">
+                            <p class="font-semibold text-red-900 dark:text-red-100 mb-1">Análisis rechazado</p>
+                            <p class="text-sm text-red-700 dark:text-red-300">{{ $analisis->observaciones_aprobador }}</p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            {{-- Info del paciente y análisis --}}
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 bg-gray-50 dark:bg-zinc-800 rounded-lg">
+                {{-- Columna 1: Paciente --}}
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase mb-1">Paciente</p>
+                        <p class="font-semibold text-gray-900 dark:text-zinc-100">
+                            {{ $analisis->muestra->paciente_nombre }}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase mb-1">Propietario</p>
+                        <p class="text-sm text-gray-900 dark:text-zinc-100">
+                            {{ $analisis->muestra->propietario_nombre }}
+                        </p>
+                    </div>
+                </div>
+
+                {{-- Columna 2: Características del paciente --}}
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase mb-1">Especie</p>
+                        <p class="text-sm text-gray-900 dark:text-zinc-100">
+                            {{ $analisis->muestra->especie->nombre ?? 'N/A' }}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase mb-1">Raza</p>
+                        <p class="text-sm text-gray-900 dark:text-zinc-100">
+                            {{ $analisis->muestra->raza ?? 'N/A' }}
+                        </p>
+                    </div>
+                </div>
+
+                {{-- Columna 3: Edad, Sexo, Color --}}
+                <div class="space-y-3">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase mb-1">Edad</p>
+                            <p class="text-sm text-gray-900 dark:text-zinc-100">
+                                {{ $analisis->muestra->edad ?? 'N/A' }}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase mb-1">Sexo</p>
+                            <p class="text-sm text-gray-900 dark:text-zinc-100">
+                                {{ $analisis->muestra->sexo ?? 'N/A' }}
+                            </p>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase mb-1">Color</p>
+                        <p class="text-sm text-gray-900 dark:text-zinc-100">
+                            {{ $analisis->muestra->color ?? 'N/A' }}
+                        </p>
+                    </div>
+                </div>
+
+                {{-- Columna 4: Muestra e información --}}
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase mb-1">Código de Muestra</p>
+                        <p class="font-semibold text-blue-600 dark:text-blue-400">
+                            {{ $analisis->muestra->codigo_muestra }}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase mb-1">Solicitado por</p>
+                        <p class="text-sm text-gray-900 dark:text-zinc-100">
+                            {{ $analisis->muestra->veterinaria->nombre ?? 'N/A' }}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase mb-1">Fecha</p>
+                        <p class="text-sm text-gray-900 dark:text-zinc-100">
+                            {{ $analisis->created_at->format('d/m/Y H:i') }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Formulario de resultados (dinámico desde plantilla) --}}
+        <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-md p-6">
+            <flux:heading size="lg" class="mb-6">
+                {{ $plantilla->nombre }}
+            </flux:heading>
+
+            @if($plantilla->descripcion)
+            <p class="text-sm text-gray-600 dark:text-zinc-400 mb-6">{{ $plantilla->descripcion }}</p>
+            @endif
+
+            {{-- Renderizado dinámico de componentes desde JSON --}}
+            <div class="space-y-6">
+                @foreach($plantilla->componentes as $index => $componente)
+                    @if(view()->exists('livewire.resultados.componentes-edicion.' . $componente['tipo']))
+                        @include('livewire.resultados.componentes-edicion.' . $componente['tipo'], [
+                            'componente' => $componente,
+                            'index' => $index,
+                            'componentesData' => $componentesData
+                        ])
+                    @else
+                        <div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                            <p class="text-sm text-yellow-800 dark:text-yellow-300">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                Componente "{{ $componente['tipo'] }}" no encontrado
+                            </p>
+                        </div>
+                    @endif
+                @endforeach
+            </div>
+
+            {{-- Botones de acción --}}
+            <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-zinc-700">
+                <flux:button 
+                    wire:click="cancelar" 
+                    variant="ghost" 
+                    icon="arrow-left">
+                    {{ $modoRevision ? 'Volver' : 'Cancelar' }}
+                </flux:button>
+                
+                @if($modoRevision)
+                    {{-- Botones de revisión (Aprobar/Rechazar) --}}
+                    <div class="flex gap-3">
+                        @if($analisis->estado === 'aprobado')
+                            {{-- Botón PDF solo para análisis aprobados --}}
+                            <a 
+                                href="{{ route('analisis.pdf', $analisis->id) }}"
+                                target="_blank"
+                                wire:navigate.prevent
+                                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                Descargar PDF
+                            </a>
+                        @else
+                            <flux:button 
+                                wire:click="abrirModalRechazo"
+                                variant="danger" 
+                                icon="x-circle">
+                                Rechazar
+                            </flux:button>
+                            <flux:button 
+                                @click="window.dispatchEvent(new Event('antes-de-guardar')); setTimeout(() => $wire.call('finalizarYEnviar'), 150)"
+                                variant="outline" 
+                                icon="pencil">
+                                Guardar Cambios
+                            </flux:button>
+                            <flux:button 
+                                wire:click="aprobarAnalisis"
+                                variant="primary" 
+                                icon="check-circle">
+                                Aprobar
+                            </flux:button>
+                        @endif
+                    </div>
+                @else
+                    {{-- Botones normales de captura --}}
+                    <div class="flex gap-3">
+                        <flux:button 
+                            wire:click="guardarBorrador"
+                            variant="outline" 
+                            icon="document">
+                            Guardar Borrador
+                        </flux:button>
+                        <flux:button 
+                            @click="window.dispatchEvent(new Event('antes-de-guardar')); setTimeout(() => $wire.call('finalizarYEnviar'), 150)"
+                            variant="primary" 
+                            icon="check">
+                            Finalizar y Enviar
+                        </flux:button>
+                    </div>
+                @endif
+            </div>
+        </div>
+        
+        {{-- Modal de Rechazo --}}
+        <flux:modal name="rechazo" variant="flyout" wire:model="mostrarModalRechazo">
+            <div class="space-y-6">
+                <div>
+                    <flux:heading size="lg">Rechazar Análisis</flux:heading>
+                    <flux:subheading>Indique el motivo del rechazo</flux:subheading>
+                </div>
+
+                <flux:textarea 
+                    wire:model="observacionesRechazo"
+                    label="Motivo del rechazo"
+                    rows="5"
+                    placeholder="Describa los errores o problemas encontrados en el análisis..."
+                    required
+                />
+
+                <div class="flex gap-3 justify-end">
+                    <flux:button 
+                        wire:click="$set('mostrarModalRechazo', false)" 
+                        variant="ghost">
+                        Cancelar
+                    </flux:button>
+                    <flux:button 
+                        wire:click="rechazarAnalisis"
+                        variant="danger" 
+                        icon="x-circle">
+                        Confirmar Rechazo
+                    </flux:button>
+                </div>
+            </div>
+        </flux:modal>
+    </div>
+</div>

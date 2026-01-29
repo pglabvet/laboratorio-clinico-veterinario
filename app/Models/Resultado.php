@@ -14,12 +14,14 @@ class Resultado extends Model
     protected $fillable = [
         'analisis_id',
         'parametro_id',
+        'tipo',
         'valor',
         'fuera_rango',
     ];
 
     protected $casts = [
         'fuera_rango' => 'boolean',
+        'valor' => 'array',
     ];
 
     /**

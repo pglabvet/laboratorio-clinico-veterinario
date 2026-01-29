@@ -42,6 +42,12 @@
                     <flux:sidebar.item icon="viewfinder-circle" :href="route('muestras.escanear')" :current="request()->routeIs('muestras.escanear')" wire:navigate>
                         {{ __('Escanear Muestra') }}
                     </flux:sidebar.item>
+                    <flux:sidebar.item icon="document-text" :href="route('plantillas.index')" :current="request()->routeIs('plantillas.*')" wire:navigate>
+                        {{ __('Plantillas') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="clipboard-document-check" :href="route('analisis.revisar')" :current="request()->routeIs('analisis.revisar') || request()->routeIs('analisis.ver')" wire:navigate>
+                        {{ __('Revisar Análisis') }}
+                    </flux:sidebar.item>
                 </flux:sidebar.group>
 
                 <flux:sidebar.group :heading="__('Inventario')" class="grid">
