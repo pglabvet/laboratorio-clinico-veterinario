@@ -71,11 +71,37 @@ class Muestra extends Model
     public function generarCodigoBarras(): string
     {
         $generator = new BarcodeGeneratorSVG();
-        return $generator->getBarcode(
+        // Parámetros optimizados para impresora térmica 203 DPI
+        $svg = $generator->getBarcode(
             $this->codigo_muestra,
             $generator::TYPE_CODE_128,
-            2,
-            50
+            2.0, //  ancho de barra optimizado para 203 DPI
+            65 //  altura aumentada para mejor lectura del escáner
         );
+
+        // Agregar viewBox para que el SVG escale correctamente por CSS
+        preg_match('/width="([^"]+)"/', $svg, $widthMatch);
+        preg_match('/height="([^"]+)"/', $svg, $heightMatch);
+        $width = floatval($widthMatch[1] ?? 0);
+        $height = floatval($heightMatch[1] ?? 0);
+
+        // Generar ID único basado en el código de muestra para evitar problemas de caché
+        $uniqueId = 'barcode-' . $this->codigo_muestra . '-' . uniqid();
+
+        if ($width > 0 && $height > 0 && !str_contains($svg, 'viewBox=')) {
+            $svg = preg_replace(
+                '/<svg\b([^>]*)>/',
+                '<svg$1 id="' . $uniqueId . '" viewBox="0 0 ' . $width . ' ' . $height . '" preserveAspectRatio="xMidYMid meet">',
+                $svg,
+                1
+            );
+        } elseif (str_contains($svg, 'preserveAspectRatio=')) {
+            $svg = preg_replace('/preserveAspectRatio="[^"]*"/', 'preserveAspectRatio="xMidYMid meet"', $svg, 1);
+            $svg = preg_replace('/<svg\b([^>]*)>/', '<svg$1 id="' . $uniqueId . '">', $svg, 1);
+        } else {
+            $svg = preg_replace('/<svg\b([^>]*)>/', '<svg$1 id="' . $uniqueId . '" preserveAspectRatio="xMidYMid meet">', $svg, 1);
+        }
+
+        return $svg;
     }
 }

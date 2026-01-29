@@ -73,7 +73,8 @@ class EscanearMuestra extends Component
     public function updatedCodigoMuestra()
     {
         // Si el código tiene el formato completo, escanear automáticamente
-        if (strlen($this->codigo_muestra) >= 10 && str_starts_with($this->codigo_muestra, 'SC')) {
+        // Formato: AA0000 (2 letras + 4 dígitos)
+        if (strlen($this->codigo_muestra) >= 6 && preg_match('/^[A-Z]{2}\d{4}$/', $this->codigo_muestra)) {
             $this->escanear();
         }
     }

@@ -225,24 +225,65 @@ class GestionarMuestras extends Component
 
     /**
      * Generar código único para la muestra
+     * Formato: AA0000 (2 letras + 4 dígitos)
+     * Rango: AA0000 - ZZ9999 (676 * 10,000 = 6,760,000 combinaciones)
      */
     private function generarCodigoMuestra()
     {
-        $sucursal = Sucursal::find($this->sucursal_id);
-        $sucursalCodigo = $sucursal ? str_pad($sucursal->id, 2, '0', STR_PAD_LEFT) : '00';
+        // Obtener el último código de muestra
+        $ultimaMuestra = Muestra::orderBy('id', 'desc')->first();
         
-        $fecha = now()->format('Ymd');
+        if (!$ultimaMuestra) {
+            // Primera muestra
+            return 'AA0001';
+        }
         
-        // Obtener el último número de muestra del día
-        $ultimaMuestra = Muestra::whereDate('created_at', now()->toDateString())
-            ->orderBy('id', 'desc')
-            ->first();
+        // Extraer las partes del último código
+        $ultimoCodigo = $ultimaMuestra->codigo_muestra;
         
-        $numero = $ultimaMuestra ? ($ultimaMuestra->id + 1) : 1;
-        $numeroFormateado = str_pad($numero, 4, '0', STR_PAD_LEFT);
+        // Si no sigue el formato AA0000, empezar desde AA0001
+        if (!preg_match('/^([A-Z]{2})(\d{4})$/', $ultimoCodigo, $matches)) {
+            return 'AA0001';
+        }
         
-        // Formato: SC01-20260111-0001
-        return "SC{$sucursalCodigo}-{$fecha}-{$numeroFormateado}";
+        $letras = $matches[1];
+        $numero = (int)$matches[2];
+        
+        // Incrementar el número
+        $numero++;
+        
+        // Si el número excede 9999, incrementar las letras
+        if ($numero > 9999) {
+            $numero = 1;
+            $letras = $this->incrementarLetras($letras);
+        }
+        
+        return $letras . str_pad($numero, 4, '0', STR_PAD_LEFT);
+    }
+    
+    /**
+     * Incrementar las letras del código (AA -> AB -> AC ... -> AZ -> BA -> BB ... -> ZZ)
+     */
+    private function incrementarLetras($letras)
+    {
+        $letra1 = $letras[0];
+        $letra2 = $letras[1];
+        
+        // Incrementar segunda letra
+        if ($letra2 === 'Z') {
+            $letra2 = 'A';
+            // Incrementar primera letra
+            if ($letra1 === 'Z') {
+                // Se acabaron las combinaciones, volver a AA
+                return 'AA';
+            } else {
+                $letra1 = chr(ord($letra1) + 1);
+            }
+        } else {
+            $letra2 = chr(ord($letra2) + 1);
+        }
+        
+        return $letra1 . $letra2;
     }
 
     /**

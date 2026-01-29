@@ -464,7 +464,28 @@
     {{-- Modal de código de barras --}}
     <flux:modal wire:model="modalCodigoBarras" class="w-full max-w-2xl">
         @if($muestraCodigoBarras)
-            <div class="space-y-6">
+            <div class="space-y-6" 
+                 wire:key="barcode-modal-{{ $muestraCodigoBarras->id }}-{{ $muestraCodigoBarras->codigo_muestra }}"
+                 x-data="{ 
+                    muestraId: {{ $muestraCodigoBarras->id }},
+                    previousPrintWindow: null,
+                    printBarcode() {
+                        if (this.previousPrintWindow && !this.previousPrintWindow.closed) {
+                            this.previousPrintWindow.close();
+                        }
+                        const timestamp = new Date().getTime();
+                        const printUrl = `/muestras/${this.muestraId}/etiqueta?t=${timestamp}`;
+                        const windowName = `etiqueta_${this.muestraId}_${timestamp}`;
+                        this.previousPrintWindow = window.open(printUrl, windowName, 'width=800,height=600');
+                        if (this.previousPrintWindow) {
+                            this.previousPrintWindow.onload = function() {
+                                setTimeout(() => {
+                                    this.print();
+                                }, 500);
+                            };
+                        }
+                    }
+                 }">
                 {{-- Encabezado --}}
                 <div class="text-center">
                     <flux:heading size="lg" class="mb-1">Código de Barras Generado</flux:heading>
@@ -480,7 +501,7 @@
                     </div>
 
                     {{-- Código de barras --}}
-                    <div class="flex flex-col items-center mb-4 bg-white p-4 rounded">
+                    <div class="flex flex-col items-center mb-4 bg-white p-4 rounded" wire:key="barcode-{{ $muestraCodigoBarras->codigo_muestra }}">
                         <div class="mb-2">
                             {!! $muestraCodigoBarras->generarCodigoBarras() !!}
                         </div>
@@ -537,25 +558,6 @@
                     </flux:button>
                 </div>
             </div>
-
-            {{-- Script para imprimir --}}
-            @script
-            <script>
-                window.printBarcode = function() {
-                    const muestraId = {{ $muestraCodigoBarras->id }};
-                    const printUrl = `/muestras/${muestraId}/etiqueta`;
-                    const printWindow = window.open(printUrl, '_blank', 'width=800,height=600');
-                    
-                    if (printWindow) {
-                        printWindow.onload = function() {
-                            setTimeout(() => {
-                                printWindow.print();
-                            }, 500);
-                        };
-                    }
-                }
-            </script>
-            @endscript
         @endif
     </flux:modal>
 

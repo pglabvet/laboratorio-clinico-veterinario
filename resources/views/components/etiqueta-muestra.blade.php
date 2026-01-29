@@ -1,154 +1,158 @@
+{{--
+| Componente Blade: etiqueta-muestra
+| Recibe: $muestra (App\Models\Muestra)
+| Objetivo: Renderizar una etiqueta imprimible de 30mm x 20mm.
+--}}
 @props(['muestra'])
 
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Etiqueta - {{ $muestra->codigo_muestra }}</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* RESET BÁSICO */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        /* TAMAÑO DE DOCUMENTO 30mm x 20mm */
+        html, body {
+            width: 30mm;
+            height: 20mm;
+            font-family: Arial, sans-serif;
+            background-color: white; /* SIEMPRE BLANCO PARA TÉRMICA */
         }
         
-        body {
-            font-family: Arial, sans-serif;
-            background: white;
+        /* CONTENEDOR PRINCIPAL */
+        .etiqueta {
+            width: 30mm;
+            height: 20mm;
             display: flex;
+            flex-direction: column; /* Cambiado a columna para orientación horizontal del barcode */
+            background: white;
+            padding: 1mm; /* Borde de 1mm alrededor de toda la etiqueta */
+            box-sizing: border-box; /* Asegura que el padding esté incluido en las dimensiones */
+        }
+        
+        /* SECCIÓN DEL CÓDIGO DE BARRAS (SUPERIOR) */
+        .barcode-section {
+            width: 100%;
+            height: 11mm; /* Espacio para el código horizontal */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+        }
+
+        /* ENVOLTORIO DEL CÓDIGO DE BARRAS */
+        .barcode-wrap {
+            width: 26mm; /* Ancho limitado para respetar márgenes (28mm - 2mm de margen interno) */
+            height: 9mm;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+        }
+        
+        /* ESTILOS PARA EL SVG DEL CÓDIGO DE BARRAS */
+        .barcode-wrap svg {
+            width: 100% !important;
+            height: 100% !important;
+            max-width: 26mm;
+            max-height: 9mm;
+        }
+        
+        /* SECCIÓN DE INFORMACIÓN (INFERIOR) */
+        .info-section {
+            width: 100%;
+            height: 5mm; /* Espacio restante */
+            display: flex;
+            flex-direction: row; /* Texto en horizontal */
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-        }
-        
-        .etiqueta {
-            width: 10cm;
-            height: 5cm;
-            border: 2px solid #333;
-            padding: 0.5cm;
-            background: white;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-        
-        .header {
             text-align: center;
-            border-bottom: 1px solid #ccc;
-            padding-bottom: 0.2cm;
-            margin-bottom: 0.2cm;
+            gap: 3mm; /* Espacio entre LABVET y el código */
         }
         
-        .header h1 {
-            font-size: 10pt;
-            font-weight: bold;
-            margin: 0;
-            line-height: 1.2;
-        }
-        
-        .header p {
-            font-size: 7pt;
-            color: #666;
-            margin: 0;
-        }
-        
-        .barcode-section {
-            text-align: center;
-            margin: 0.1cm 0;
-        }
-        
-        .barcode-section svg {
-            width: 100%;
-            max-width: 8cm;
-            height: auto;
+        .titulo {
+            font-size: 8pt;
+            font-weight: 900;
+            color: black;
+            text-transform: uppercase;
+            line-height: 1;
         }
         
         .codigo {
-            font-size: 9pt;
+            font-size: 7pt;
             font-weight: bold;
             font-family: 'Courier New', monospace;
-            margin-top: 0.1cm;
-            letter-spacing: 0.5px;
+            color: black;
+            line-height: 1;
         }
         
-        .info {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.15cm;
-            font-size: 7pt;
-            line-height: 1.3;
-        }
-        
-        .info-item {
-            display: flex;
-            gap: 0.1cm;
-        }
-        
-        .info-label {
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .info-value {
-            color: #000;
-        }
-        
-        .info-full {
-            grid-column: span 2;
-        }
-        
+        /* REGLAS DE IMPRESIÓN */
         @media print {
-            body {
-                margin: 0;
-                padding: 0;
-            }
-            
-            .etiqueta {
-                border: 1px solid #000;
-                page-break-after: avoid;
-            }
-            
             @page {
-                size: 10cm 5cm;
+                size: 30mm 20mm;
                 margin: 0;
+            }
+            html, body {
+                width: 30mm;
+                height: 20mm;
+            }
+        }
+        
+        /* VISTA EN PANTALLA (DEBUG) */
+        @media screen {
+            html {
+                background: #333; /* Fondo oscuro para contrastar la etiqueta blanca */
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+            }
+            body {
+                box-shadow: 0 0 10px rgba(0,0,0,0.5); /* Sombra para ver los bordes */
             }
         }
     </style>
 </head>
 <body>
+    <script>
+        // Forzar recarga si la página fue cacheada
+        (function() {
+            // Verificar si la página fue cargada desde caché
+            if (performance.navigation.type === performance.navigation.TYPE_BACK_FORWARD) {
+                // Forzar recarga
+                window.location.reload(true);
+            }
+            
+            // Prevenir cualquier caché adicional
+            window.addEventListener('pageshow', function(event) {
+                if (event.persisted) {
+                    window.location.reload(true);
+                }
+            });
+        })();
+    </script>
     <div class="etiqueta">
-        <div class="header">
-            <h1>LABORATORIO CLÍNICO VETERINARIO</h1>
-            <p>{{ $muestra->sucursal->nombre ?? 'Sucursal Principal' }}</p>
+        
+        {{-- SECCIÓN BARCODE (IZQUIERDA) --}}
+        <div class="barcode-section">
+            <div class="barcode-wrap">
+                {{-- Asegúrate que tu generador no inyecte estilos inline con colores --}}
+                {!! $muestra->generarCodigoBarras() !!}
+            </div>
         </div>
         
-        <div class="barcode-section">
-            {!! $muestra->generarCodigoBarras() !!}
+        {{-- SECCIÓN TEXTO (DERECHA) --}}
+        <div class="info-section">
+            <div class="titulo">LABVET</div>
             <div class="codigo">{{ $muestra->codigo_muestra }}</div>
         </div>
-        
-        <div class="info">
-            <div class="info-item">
-                <span class="info-label">Paciente:</span>
-                <span class="info-value">{{ Str::limit($muestra->paciente_nombre, 20) }}</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Especie:</span>
-                <span class="info-value">{{ $muestra->especie->nombre ?? 'N/A' }}</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Propietario:</span>
-                <span class="info-value">{{ Str::limit($muestra->propietario_nombre, 18) }}</span>
-            </div>
-            <div class="info-item">
-                <span class="info-label">Fecha:</span>
-                <span class="info-value">{{ $muestra->fecha_recepcion->format('d/m/Y') }}</span>
-            </div>
-            <div class="info-item info-full">
-                <span class="info-label">Tipo:</span>
-                <span class="info-value">{{ $muestra->tipo_muestra }}</span>
-            </div>
-        </div>
+
     </div>
 </body>
 </html>
