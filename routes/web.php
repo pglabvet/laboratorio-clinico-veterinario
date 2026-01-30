@@ -24,6 +24,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('/muestras', 'muestras.index')
         ->name('muestras.index');
     
+    Route::view('/muestras/crear', 'muestras.crear')
+        ->name('muestras.crear');
+    
     Route::view('/muestras/escanear', 'muestras.escanear')
         ->name('muestras.escanear');
     

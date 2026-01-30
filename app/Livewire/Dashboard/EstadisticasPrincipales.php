@@ -33,29 +33,30 @@ class EstadisticasPrincipales extends Component
         /** @var User $user */
         $user = Auth::user();
         
-        // Análisis en proceso (pendiente o en_proceso)
+        // Base query
+        $baseQuery = Analisis::query();
+        
         if (!$user->can('ver-estadisticas-completas')) {
-            // Solo análisis asignados al bioquímico
-            $query = Analisis::where('bioquimico_id', $user->id)
-                ->whereIn('estado', ['pendiente', 'en_proceso']);
-        } else {
-            // Administrador ve todos
-            $query = Analisis::whereIn('estado', ['pendiente', 'en_proceso']);
+            $baseQuery->where('bioquimico_id', $user->id);
         }
         
         // Aplicar filtros de fecha
         if ($this->fechaInicio && $this->fechaFin) {
-            $query->whereBetween('created_at', [$this->fechaInicio, $this->fechaFin]);
+            $baseQuery->whereBetween('created_at', [$this->fechaInicio, $this->fechaFin]);
         }
         
         // Aplicar filtro de sucursal
         if ($this->sucursalId && $user->can('filtrar-por-sucursal')) {
-            $query->whereHas('muestra', function($q) {
+            $baseQuery->whereHas('muestra', function($q) {
                 $q->where('sucursal_id', $this->sucursalId);
             });
         }
         
-        $analisisEnProceso = $query->count();
+        // Estadísticas desglosadas por estado
+        $analisisPendientes = (clone $baseQuery)->where('estado', 'pendiente')->count();
+        $analisisEnProceso = (clone $baseQuery)->where('estado', 'en_proceso')->count();
+        $analisisFinalizados = (clone $baseQuery)->where('estado', 'finalizado')->count();
+        $analisisAprobados = (clone $baseQuery)->where('estado', 'aprobado')->count();
         
         // Muestras recibidas hoy
         $queryMuestras = Muestra::query();
@@ -97,7 +98,10 @@ class EstadisticasPrincipales extends Component
         }
 
         return view('livewire.dashboard.estadisticas-principales', [
+            'analisisPendientes' => $analisisPendientes,
             'analisisEnProceso' => $analisisEnProceso,
+            'analisisFinalizados' => $analisisFinalizados,
+            'analisisAprobados' => $analisisAprobados,
             'muestrasHoy' => $muestrasHoy,
             'insumosStockBajo' => $insumosStockBajo,
             'totalSucursales' => $totalSucursales,

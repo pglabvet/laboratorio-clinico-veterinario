@@ -33,6 +33,11 @@
         <livewire:dashboard.estadisticas-principales />
         @endcan
 
+        @can('ver-dashboard')
+        {{-- Acciones Rápidas --}}
+        <livewire:dashboard.acciones-rapidas />
+        @endcan
+
         @can('ver-graficos-estadisticas')
         {{-- Gráficos Estadísticas --}}
         <livewire:dashboard.graficos-estadisticas />
