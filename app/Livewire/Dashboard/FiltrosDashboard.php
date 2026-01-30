@@ -26,7 +26,7 @@ class FiltrosDashboard extends Component
         $user = Auth::user();
         $sucursales = [];
         
-        if ($user->hasRole('Administrador')) {
+        if ($user->can('filtrar-por-sucursal')) {
             $sucursales = Sucursal::where('estado', true)->get();
         }
 

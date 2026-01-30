@@ -40,7 +40,7 @@
 
         {{-- Filtro por Sucursal y Botón Limpiar --}}
         <div class="flex flex-wrap items-center gap-3">
-            @role('Administrador')
+            @can('filtrar-por-sucursal')
             @if(count($sucursales) > 0)
             <div class="flex items-center gap-2">
                 <span class="text-sm font-medium text-zinc-600 dark:text-zinc-400">Sucursal:</span>
@@ -55,7 +55,7 @@
                 </select>
             </div>
             @endif
-            @endrole
+            @endcan
 
             @if($rangoFecha !== 'todo' || $sucursalId)
             <flux:button 

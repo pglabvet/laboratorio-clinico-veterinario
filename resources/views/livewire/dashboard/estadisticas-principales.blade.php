@@ -1,5 +1,5 @@
-<div class="grid gap-4 {{ auth()->user()->hasRole('Administrador') ? 'lg:grid-cols-3 md:grid-cols-2' : 'md:grid-cols-2' }}">
-    @role('Administrador')
+<div class="grid gap-4 {{ auth()->user()->can('ver-estadisticas-completas') ? 'lg:grid-cols-3 md:grid-cols-2' : 'md:grid-cols-2' }}">
+    @can('ver-estadisticas-completas')
     {{-- Usuarios --}}
     <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
         <div class="flex items-start justify-between">
@@ -71,7 +71,7 @@
             </div>
         </div>
     </a>
-    @endrole
+    @endcan
 
     {{-- Análisis en Proceso --}}
     <a href="{{ route('analisis.revisar') }}" class="group block rounded-xl border border-zinc-200 bg-white p-6 transition-all hover:border-blue-300 hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-blue-700">
@@ -121,7 +121,7 @@
         </div>
     </a>
 
-    @role('Administrador')
+    @can('ver-alertas-inventario')
     {{-- Alertas de Inventario --}}
     <a href="{{ route('insumos.index') }}" class="group block rounded-xl border border-zinc-200 bg-white p-6 transition-all hover:border-blue-300 hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-blue-700">
         <div class="flex items-start justify-between">
@@ -153,5 +153,5 @@
             </div>
         </div>
     </a>
-    @endrole
+    @endcan
 </div>

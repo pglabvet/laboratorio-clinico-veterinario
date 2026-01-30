@@ -31,7 +31,7 @@ class GraficosEstadisticas extends Component
         // Análisis por estado
         $queryEstado = Analisis::select('estado', DB::raw('count(*) as total'));
         
-        if ($user->hasRole('Bioquímico')) {
+        if (!$user->can('ver-estadisticas-completas')) {
             $queryEstado->where('bioquimico_id', $user->id);
         }
         
@@ -41,7 +41,7 @@ class GraficosEstadisticas extends Component
         }
         
         // Aplicar filtro de sucursal
-        if ($this->sucursalId && $user->hasRole('Administrador')) {
+        if ($this->sucursalId && $user->can('filtrar-por-sucursal')) {
             $queryEstado->whereHas('muestra', function($q) {
                 $q->where('sucursal_id', $this->sucursalId);
             });
@@ -72,12 +72,12 @@ class GraficosEstadisticas extends Component
             $queryEspecie->where('analisis.created_at', '>=', now()->subDays(30));
         }
             
-        if ($user->hasRole('Bioquímico')) {
+        if (!$user->can('ver-estadisticas-completas')) {
             $queryEspecie->where('analisis.bioquimico_id', $user->id);
         }
         
         // Aplicar filtro de sucursal
-        if ($this->sucursalId && $user->hasRole('Administrador')) {
+        if ($this->sucursalId && $user->can('filtrar-por-sucursal')) {
             $queryEspecie->where('muestras.sucursal_id', $this->sucursalId);
         }
         

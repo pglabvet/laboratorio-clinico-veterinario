@@ -5,30 +5,42 @@
             <div>
                 <h1 class="text-2xl font-bold text-zinc-900 dark:text-white">Dashboard</h1>
                 <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-                    @role('Administrador')
+                    @can('ver-estadisticas-completas')
                     Panel de control administrativo
-                    @else
+                    @elsecan('ver-graficos-estadisticas')
                     Panel de control bioquímico
-                    @endrole
+                    @else
+                    Panel de control general
+                    @endcan
                 </p>
             </div>
         </div>
 
-        @role('Bioquímico')
+        @can('ver-graficos-estadisticas')
+        @cannot('ver-estadisticas-completas')
         {{-- Escaneo Rápido --}}
         <livewire:muestras.escaneo-rapido />
-        @endrole
+        @endcannot
+        @endcan
 
+        @can('ver-dashboard')
         {{-- Filtros Dashboard --}}
         <livewire:dashboard.filtros-dashboard />
+        @endcan
 
+        @can('ver-dashboard')
         {{-- Estadísticas Principales --}}
         <livewire:dashboard.estadisticas-principales />
+        @endcan
 
+        @can('ver-graficos-estadisticas')
         {{-- Gráficos Estadísticas --}}
         <livewire:dashboard.graficos-estadisticas />
+        @endcan
 
+        @can('ver-actividad-reciente')
         {{-- Actividad Reciente --}}
         <livewire:dashboard.actividad-reciente />
+        @endcan
     </div>
 </x-layouts.app>

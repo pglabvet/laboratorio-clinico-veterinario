@@ -34,7 +34,7 @@ class EstadisticasPrincipales extends Component
         $user = Auth::user();
         
         // Análisis en proceso (pendiente o en_proceso)
-        if ($user->hasRole('Bioquímico')) {
+        if (!$user->can('ver-estadisticas-completas')) {
             // Solo análisis asignados al bioquímico
             $query = Analisis::where('bioquimico_id', $user->id)
                 ->whereIn('estado', ['pendiente', 'en_proceso']);
@@ -48,8 +48,8 @@ class EstadisticasPrincipales extends Component
             $query->whereBetween('created_at', [$this->fechaInicio, $this->fechaFin]);
         }
         
-        // Aplicar filtro de sucursal (solo admin)
-        if ($this->sucursalId && $user->hasRole('Administrador')) {
+        // Aplicar filtro de sucursal
+        if ($this->sucursalId && $user->can('filtrar-por-sucursal')) {
             $query->whereHas('muestra', function($q) {
                 $q->where('sucursal_id', $this->sucursalId);
             });
@@ -66,15 +66,15 @@ class EstadisticasPrincipales extends Component
             $queryMuestras->whereDate('created_at', Carbon::today());
         }
         
-        if ($this->sucursalId && $user->hasRole('Administrador')) {
+        if ($this->sucursalId && $user->can('filtrar-por-sucursal')) {
             $queryMuestras->where('sucursal_id', $this->sucursalId);
         }
         
         $muestrasHoy = $queryMuestras->count();
         
-        // Insumos con stock bajo (solo admin ve esto)
+        // Insumos con stock bajo
         $insumosStockBajo = 0;
-        if ($user->hasRole('Administrador')) {
+        if ($user->can('ver-alertas-inventario')) {
             $queryInventario = DB::table('inventario_sucursal')
                 ->where('stock_actual', '<=', DB::raw('stock_minimo'));
             
@@ -86,11 +86,11 @@ class EstadisticasPrincipales extends Component
             $insumosStockBajo = $queryInventario->count();
         }
 
-        // Total de sucursales y veterinarias (solo admin)
+        // Total de sucursales y veterinarias
         $totalSucursales = 0;
         $totalVeterinarias = 0;
         $totalUsuarios = 0;
-        if ($user->hasRole('Administrador')) {
+        if ($user->can('ver-estadisticas-completas')) {
             $totalSucursales = Sucursal::count();
             $totalVeterinarias = Veterinaria::count();
             $totalUsuarios = User::count();
