@@ -44,17 +44,13 @@
         @endcan
 
         @can('ver-graficos-estadisticas')
-        @cannot('ver-estadisticas-completas')
         {{-- Últimas Muestras (Vista Bioquímico) --}}
         <livewire:dashboard.ultimas-muestras />
-        @endcannot
         @endcan
 
-        @can('ver-actividad-reciente')
         @can('ver-estadisticas-completas')
         {{-- Actividad Reciente (Vista Administrador) --}}
         <livewire:dashboard.actividad-reciente />
-        @endcan
         @endcan
     </div>
 </x-layouts.app>

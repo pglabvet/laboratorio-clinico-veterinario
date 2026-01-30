@@ -19,16 +19,14 @@ class UltimasMuestras extends Component
             ->latest()
             ->limit(5);
 
-        // Si no tiene permiso de ver estadísticas completas, solo ve sus muestras asignadas
+        // Si no es admin, filtrar por muestras asignadas o pendientes
         if (!$user->can('ver-estadisticas-completas')) {
-            $query->whereHas('analisis', function ($q) use ($user) {
-                $q->where('bioquimico_id', $user->id);
+            $query->where(function($q) use ($user) {
+                $q->whereHas('analisis', function ($subQ) use ($user) {
+                    $subQ->where('bioquimico_id', $user->id);
+                })
+                ->orWhereDoesntHave('analisis'); // Incluye muestras sin análisis aún
             });
-        }
-
-        // Si tiene permiso de filtrar por sucursal y tiene sucursal asignada
-        if ($user->can('filtrar-por-sucursal') && $user->sucursal_id) {
-            $query->where('sucursal_id', $user->sucursal_id);
         }
 
         $muestras = $query->get();
