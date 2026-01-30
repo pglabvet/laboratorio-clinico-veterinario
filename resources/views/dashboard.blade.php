@@ -43,7 +43,7 @@
         <livewire:dashboard.graficos-estadisticas />
         @endcan
 
-        @can('ver-graficos-estadisticas')
+        @can('ver-ultimas-muestras')
         {{-- Últimas Muestras (Vista Bioquímico) --}}
         <livewire:dashboard.ultimas-muestras />
         @endcan

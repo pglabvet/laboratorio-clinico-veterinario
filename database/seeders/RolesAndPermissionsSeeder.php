@@ -25,6 +25,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'ver-graficos-estadisticas',
             'ver-actividad-reciente',
             'ver-alertas-inventario',
+            'ver-ultimas-muestras',
             
             // Usuarios
             'ver-usuarios',
@@ -128,6 +129,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'ver-dashboard',
             'ver-graficos-estadisticas',
             'ver-actividad-reciente',
+            'ver-ultimas-muestras',
             'ver-muestras',
             'crear-muestras',
             'editar-muestras',
