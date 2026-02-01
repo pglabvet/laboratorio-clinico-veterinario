@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             SucursalesSeeder::class,
             EspeciesSeeder::class,
             VeterinariasSeeder::class,
+            UnidadesMedidaSeeder::class,
         ]);
     }
 }

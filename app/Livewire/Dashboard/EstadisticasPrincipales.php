@@ -1,0 +1,108 @@
+<?php
+
+namespace App\Livewire\Dashboard;
+
+use App\Models\Analisis;
+use App\Models\Muestra;
+use App\Models\Insumo;
+use App\Models\Sucursal;
+use App\Models\Veterinaria;
+use App\Models\User;
+use Livewire\Component;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
+
+class EstadisticasPrincipales extends Component
+{
+    public $fechaInicio = null;
+    public $fechaFin = null;
+    public $sucursalId = null;
+
+    protected $listeners = ['filtrosActualizados'];
+
+    public function filtrosActualizados($filtros)
+    {
+        $this->fechaInicio = $filtros['fechaInicio'] ?? null;
+        $this->fechaFin = $filtros['fechaFin'] ?? null;
+        $this->sucursalId = $filtros['sucursalId'] ?? null;
+    }
+
+    public function render()
+    {
+        /** @var User $user */
+        $user = Auth::user();
+        
+        // Análisis en proceso (pendiente o en_proceso)
+        if ($user->hasRole('Bioquímico')) {
+            // Solo análisis asignados al bioquímico
+            $query = Analisis::where('bioquimico_id', $user->id)
+                ->whereIn('estado', ['pendiente', 'en_proceso']);
+        } else {
+            // Administrador ve todos
+            $query = Analisis::whereIn('estado', ['pendiente', 'en_proceso']);
+        }
+        
+        // Aplicar filtros de fecha
+        if ($this->fechaInicio && $this->fechaFin) {
+            $query->whereBetween('created_at', [$this->fechaInicio, $this->fechaFin]);
+        }
+        
+        // Aplicar filtro de sucursal (solo admin)
+        if ($this->sucursalId && $user->hasRole('Administrador')) {
+            $query->whereHas('muestra', function($q) {
+                $q->where('sucursal_id', $this->sucursalId);
+            });
+        }
+        
+        $analisisEnProceso = $query->count();
+        
+        // Muestras recibidas hoy
+        $queryMuestras = Muestra::query();
+        
+        if ($this->fechaInicio && $this->fechaFin) {
+            $queryMuestras->whereBetween('created_at', [$this->fechaInicio, $this->fechaFin]);
+        } else {
+            $queryMuestras->whereDate('created_at', Carbon::today());
+        }
+        
+        if ($this->sucursalId && $user->hasRole('Administrador')) {
+            $queryMuestras->where('sucursal_id', $this->sucursalId);
+        }
+        
+        $muestrasHoy = $queryMuestras->count();
+        
+        // Insumos con stock bajo (solo admin ve esto)
+        $insumosStockBajo = 0;
+        if ($user->hasRole('Administrador')) {
+            $queryInventario = DB::table('inventario_sucursal')
+                ->where('stock_actual', '<=', DB::raw('stock_minimo'));
+            
+            // Aplicar filtro de sucursal
+            if ($this->sucursalId) {
+                $queryInventario->where('sucursal_id', $this->sucursalId);
+            }
+            
+            $insumosStockBajo = $queryInventario->count();
+        }
+
+        // Total de sucursales y veterinarias (solo admin)
+        $totalSucursales = 0;
+        $totalVeterinarias = 0;
+        $totalUsuarios = 0;
+        if ($user->hasRole('Administrador')) {
+            $totalSucursales = Sucursal::count();
+            $totalVeterinarias = Veterinaria::count();
+            $totalUsuarios = User::count();
+        }
+
+        return view('livewire.dashboard.estadisticas-principales', [
+            'analisisEnProceso' => $analisisEnProceso,
+            'muestrasHoy' => $muestrasHoy,
+            'insumosStockBajo' => $insumosStockBajo,
+            'totalSucursales' => $totalSucursales,
+            'totalVeterinarias' => $totalVeterinarias,
+            'totalUsuarios' => $totalUsuarios,
+        ]);
+    }
+}

@@ -17,6 +17,7 @@ class Analisis extends Model
     protected $fillable = [
         'muestra_id',
         'tipo_analisis_id',
+        'plantilla_formulario_id',
         'bioquimico_id',
         'aprobador_id',
         'estado',
@@ -47,6 +48,14 @@ class Analisis extends Model
     public function tipoAnalisis(): BelongsTo
     {
         return $this->belongsTo(TipoAnalisis::class);
+    }
+
+    /**
+     * Relación con plantilla de formulario
+     */
+    public function plantillaFormulario(): BelongsTo
+    {
+        return $this->belongsTo(PlantillaFormulario::class);
     }
 
     /**

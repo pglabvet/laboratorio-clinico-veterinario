@@ -24,6 +24,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('/muestras', 'muestras.index')
         ->name('muestras.index');
     
+    Route::view('/muestras/crear', 'muestras.crear')
+        ->name('muestras.crear');
+    
+    Route::view('/muestras/editar/{id}', 'muestras.editar')
+        ->name('muestras.editar');
+    
     Route::view('/muestras/escanear', 'muestras.escanear')
         ->name('muestras.escanear');
     
@@ -36,7 +42,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->header('Expires', '0');
     })->name('muestras.etiqueta');
 
-
+    // Ruta 
+   
     Route::view('/especies', 'especies.index')
         ->name('especies.index');
 
@@ -56,6 +63,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Rutas de inventario
     Route::view('/inventario/entradas', 'inventario.entradas')
         ->name('inventario.entradas');
+    
+    Route::get('/inventario/salidas', \App\Livewire\Inventario\RegistrarSalida::class)
+        ->name('inventario.salidas');
+    
+    Route::get('/inventario/historial', \App\Livewire\Inventario\HistorialMovimientos::class)
+        ->name('inventario.historial');
     
     Route::view('/roles', 'roles.index')
         ->name('roles.index');
@@ -94,7 +107,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/analisis/{analisisId}/editar', \App\Livewire\Resultados\CapturarResultados::class)
         ->name('analisis.editar');
     
-    // 🎨 PREVIEW: Vista de captura de resultados (frontend temporal)
+    //  PREVIEW: Vista de captura de resultados (frontend temporal)
     Route::view('/resultados/preview', 'livewire.resultados.capturar-resultados')
         ->name('resultados.preview');
     
