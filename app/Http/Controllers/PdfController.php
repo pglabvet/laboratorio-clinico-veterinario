@@ -71,4 +71,29 @@ class PdfController extends Controller
             return back()->with('error', 'Error al generar el PDF: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Guarda la imagen de la gráfica para un análisis
+     */
+    public function guardarGrafica(Request $request, int $analisisId)
+    {
+        $request->validate([
+            'image' => 'required|string',
+            'component_index' => 'required|integer',
+        ]);
+
+        $analisis = Analisis::findOrFail($analisisId);
+        
+        // Decodificar imagen base64
+        $image = $request->input('image');
+        $image = str_replace('data:image/png;base64,', '', $image);
+        $image = str_replace(' ', '+', $image);
+        $imageData = base64_decode($image);
+
+        // Guardar archivo
+        $path = "charts/{$analisisId}_{$request->input('component_index')}.png";
+        \Storage::disk('public')->put($path, $imageData);
+
+        return response()->json(['success' => true, 'path' => $path]);
+    }
 }

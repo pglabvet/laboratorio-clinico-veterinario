@@ -73,8 +73,9 @@ class EscanearMuestra extends Component
     public function updatedCodigoMuestra()
     {
         // Si el código tiene el formato completo, escanear automáticamente
-        // Formato: AA0000 (2 letras + 4 dígitos)
-        if (strlen($this->codigo_muestra) >= 6 && preg_match('/^[A-Z]{2}\d{4}$/', $this->codigo_muestra)) {
+        // Formato: PREFIJO-AA0000 (Prefijo sucursal 1-2 letras + guión + 2 letras + 4 dígitos)
+        // Ejemplo: S-AA0001, N-AA0002, C-AA0003, EQ-AA0004
+        if (strlen($this->codigo_muestra) >= 8 && preg_match('/^[A-Z]{1,2}-[A-Z]{2}\d{4}$/', $this->codigo_muestra)) {
             $this->escanear();
         }
     }

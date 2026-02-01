@@ -340,13 +340,15 @@
         $componente = $item['componente'];
         $resultado = $item['resultado'];
         $tipo = $item['tipo'];
+        $chartImage = $item['chartImage'] ?? null;
       @endphp
 
       <div class="component">
         @if(view()->exists('pdf.componentes.' . $tipo))
           @include('pdf.componentes.' . $tipo, [
             'componente' => $componente,
-            'resultado' => $resultado
+            'resultado' => $resultado,
+            'chartImage' => $chartImage
           ])
         @else
           @if(isset($componente['propiedades']['titulo']))

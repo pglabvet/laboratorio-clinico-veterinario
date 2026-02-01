@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class PlantillaFormulario extends Model
 {
@@ -40,5 +41,23 @@ class PlantillaFormulario extends Model
     public function creador(): BelongsTo
     {
         return $this->belongsTo(User::class, 'creado_por');
+    }
+
+    /**
+     * Relación muchos a muchos con insumos
+     */
+    public function insumos(): BelongsToMany
+    {
+        return $this->belongsToMany(Insumo::class, 'plantilla_insumos', 'plantilla_formulario_id', 'insumo_id')
+            ->withPivot('cantidad_requerida')
+            ->withTimestamps();
+    }
+
+    /**
+     * Obtener parámetros del tipo de análisis asociado
+     */
+    public function parametros()
+    {
+        return $this->tipoAnalisis->parametros() ?? collect([]);
     }
 }
