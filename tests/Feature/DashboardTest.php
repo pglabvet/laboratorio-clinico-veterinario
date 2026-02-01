@@ -2,9 +2,9 @@
 
 use App\Models\User;
 use Spatie\Permission\Models\Permission;
-use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(LazilyRefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 test('guests are redirected to the login page', function () {
     $response = $this->get(route('dashboard'));
