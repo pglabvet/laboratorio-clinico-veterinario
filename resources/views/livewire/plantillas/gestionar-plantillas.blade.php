@@ -69,6 +69,71 @@
                     @endforeach
                 </flux:select>
 
+                {{-- Sección de Insumos Requeridos --}}
+                <div class="border-t border-zinc-200 dark:border-zinc-700 pt-4 mt-4">
+                    <div class="flex items-center justify-between mb-3">
+                        <flux:heading size="sm">Insumos Requeridos</flux:heading>
+                        <flux:button 
+                            wire:click="agregarInsumo"
+                            size="sm"
+                            variant="ghost"
+                            icon="plus">
+                            Agregar Insumo
+                        </flux:button>
+                    </div>
+
+                    @if(empty($insumos))
+                        <p class="text-sm text-zinc-500 dark:text-zinc-400 italic">
+                            No se han agregado insumos. Esta plantilla no consumirá inventario.
+                        </p>
+                    @else
+                        <div class="space-y-3">
+                            @foreach($insumos as $index => $insumo)
+                                <div class="flex items-start gap-2 p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700">
+                                    <div class="flex-1 grid grid-cols-2 gap-2">
+                                        <div>
+                                            <flux:select 
+                                                wire:model="insumos.{{ $index }}.insumo_id"
+                                                placeholder="Seleccionar insumo"
+                                                class="text-sm"
+                                            >
+                                                <option value="">Seleccionar...</option>
+                                                @foreach($insumosDisponibles as $ins)
+                                                    <option value="{{ $ins->id }}">
+                                                        {{ $ins->nombre }} ({{ $ins->unidadMedida->abreviatura }})
+                                                    </option>
+                                                @endforeach
+                                            </flux:select>
+                                            @error("insumos.{$index}.insumo_id")
+                                                <span class="text-xs text-red-500">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                        <div>
+                                            <flux:input 
+                                                wire:model="insumos.{{ $index }}.cantidad_requerida"
+                                                type="number"
+                                                step="0.01"
+                                                min="0.01"
+                                                placeholder="Cantidad"
+                                                class="text-sm"
+                                            />
+                                            @error("insumos.{$index}.cantidad_requerida")
+                                                <span class="text-xs text-red-500">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                    <flux:button 
+                                        wire:click="eliminarInsumo({{ $index }})"
+                                        size="sm"
+                                        variant="danger"
+                                        icon="trash">
+                                    </flux:button>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+
                 <div>
                     <flux:button 
                         wire:click="guardarFormulario"

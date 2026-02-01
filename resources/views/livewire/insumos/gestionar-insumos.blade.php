@@ -98,8 +98,9 @@
                                 ? $insumo->inventarios->firstWhere('sucursal_id', $filtroSucursal)
                                 : null;
                             $stockBajo = $inventario && $inventario->tieneStockBajo();
+                            $stockIdeal = $inventario && !$stockBajo && $inventario->stock_actual > 0;
                         @endphp
-                        <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50 {{ $stockBajo ? 'bg-red-50 dark:bg-red-900/10' : '' }}" wire:key="insumo-{{ $insumo->id }}">
+                        <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50 {{ $stockBajo ? 'bg-red-50 dark:bg-red-900/10' : ($stockIdeal ? 'bg-green-50 dark:bg-green-900/10' : '') }}" wire:key="insumo-{{ $insumo->id }}">
                             <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-neutral-900 dark:text-neutral-100">
                                 <div class="flex items-center gap-2">
                                     @if($stockBajo)
@@ -145,6 +146,8 @@
                                 <div class="flex items-center gap-2">
                                     @if($stockBajo)
                                         <flux:badge color="red" size="sm">Stock bajo</flux:badge>
+                                    @elseif($stockIdeal)
+                                        <flux:badge color="green" size="sm">Stock ideal</flux:badge>
                                     @endif
                                     
                                     {{-- Botón editar --}}
