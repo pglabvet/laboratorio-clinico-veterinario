@@ -29,8 +29,8 @@ class ActividadReciente extends Component
         
         $query = Analisis::with([
             'muestra.veterinaria',
-            'tipoAnalisis',
-            'bioquimico'
+            'muestra.sucursal',
+            'tipoAnalisis'
         ]);
         
         if (!$user->can('ver-estadisticas-completas')) {

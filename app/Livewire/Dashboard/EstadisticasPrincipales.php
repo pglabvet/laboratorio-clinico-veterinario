@@ -36,8 +36,11 @@ class EstadisticasPrincipales extends Component
         // Base query
         $baseQuery = Analisis::query();
         
-        if (!$user->can('ver-estadisticas-completas')) {
-            $baseQuery->where('bioquimico_id', $user->id);
+        // Si no es admin, filtrar por sucursal del usuario automáticamente
+        if (!$user->can('ver-estadisticas-completas') && $user->sucursal_id) {
+            $baseQuery->whereHas('muestra', function($q) use ($user) {
+                $q->where('sucursal_id', $user->sucursal_id);
+            });
         }
         
         // Aplicar filtros de fecha
@@ -45,18 +48,36 @@ class EstadisticasPrincipales extends Component
             $baseQuery->whereBetween('created_at', [$this->fechaInicio, $this->fechaFin]);
         }
         
-        // Aplicar filtro de sucursal
+        // Aplicar filtro de sucursal (para admin)
         if ($this->sucursalId && $user->can('filtrar-por-sucursal')) {
             $baseQuery->whereHas('muestra', function($q) {
                 $q->where('sucursal_id', $this->sucursalId);
             });
         }
         
+        // Muestras Pendientes (estado pendiente)
+        $muestrasPendientesQuery = \App\Models\Muestra::query()
+            ->where('estado', 'pendiente');
+        
+        // Si no es admin, filtrar por sucursal del usuario automáticamente
+        if (!$user->can('ver-estadisticas-completas') && $user->sucursal_id) {
+            $muestrasPendientesQuery->where('sucursal_id', $user->sucursal_id);
+        }
+        
+        // Si es admin y tiene filtro de sucursal seleccionado
+        if ($this->sucursalId && $user->can('filtrar-por-sucursal')) {
+            $muestrasPendientesQuery->where('sucursal_id', $this->sucursalId);
+        }
+        
+        // Aplicar filtros de fecha
+        if ($this->fechaInicio && $this->fechaFin) {
+            $muestrasPendientesQuery->whereBetween('created_at', [$this->fechaInicio, $this->fechaFin]);
+        }
+        
+        $muestrasPendientes = $muestrasPendientesQuery->count();
+        
         // Estadísticas desglosadas por estado
         $analisisPendientes = (clone $baseQuery)->where('estado', 'pendiente')->count();
-        $analisisEnProceso = (clone $baseQuery)->where('estado', 'en_proceso')->count();
-        $analisisFinalizados = (clone $baseQuery)->where('estado', 'finalizado')->count();
-        $analisisAprobados = (clone $baseQuery)->where('estado', 'aprobado')->count();
         
         // Muestras recibidas hoy
         $queryMuestras = Muestra::query();
@@ -98,10 +119,8 @@ class EstadisticasPrincipales extends Component
         }
 
         return view('livewire.dashboard.estadisticas-principales', [
+            'muestrasPendientes' => $muestrasPendientes,
             'analisisPendientes' => $analisisPendientes,
-            'analisisEnProceso' => $analisisEnProceso,
-            'analisisFinalizados' => $analisisFinalizados,
-            'analisisAprobados' => $analisisAprobados,
             'muestrasHoy' => $muestrasHoy,
             'insumosStockBajo' => $insumosStockBajo,
             'totalSucursales' => $totalSucursales,

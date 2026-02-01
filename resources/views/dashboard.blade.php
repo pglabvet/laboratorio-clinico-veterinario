@@ -16,13 +16,6 @@
             </div>
         </div>
 
-        @can('ver-graficos-estadisticas')
-        @cannot('ver-estadisticas-completas')
-        {{-- Escaneo Rápido --}}
-        <livewire:muestras.escaneo-rapido />
-        @endcannot
-        @endcan
-
         @can('ver-dashboard')
         {{-- Filtros Dashboard --}}
         <livewire:dashboard.filtros-dashboard />
@@ -48,8 +41,8 @@
         <livewire:dashboard.ultimas-muestras />
         @endcan
 
-        @can('ver-estadisticas-completas')
-        {{-- Actividad Reciente (Vista Administrador) --}}
+        @can('ver-actividad-reciente')
+        {{-- Actividad Reciente --}}
         <livewire:dashboard.actividad-reciente />
         @endcan
     </div>

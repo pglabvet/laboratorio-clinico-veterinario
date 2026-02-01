@@ -29,13 +29,13 @@
                             Tipo de Análisis
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
-                            Estado
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
                             Veterinaria
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
-                            Bioquímico
+                            Sucursal
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
+                            Estado
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-600 dark:text-zinc-400">
                             Fecha
@@ -51,16 +51,16 @@
                             <td class="whitespace-nowrap px-6 py-4 text-sm text-zinc-700 dark:text-zinc-300">
                                 {{ $analisis->tipoAnalisis->nombre ?? 'N/A' }}
                             </td>
-                            <td class="whitespace-nowrap px-6 py-4 text-sm">
-                                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $this->getEstadoBadge($analisis->estado) }}">
-                                    {{ $this->getEstadoTexto($analisis->estado) }}
-                                </span>
-                            </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm text-zinc-700 dark:text-zinc-300">
                                 {{ $analisis->muestra->veterinaria->nombre ?? 'N/A' }}
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm text-zinc-700 dark:text-zinc-300">
-                                {{ $analisis->bioquimico->name ?? 'Sin asignar' }}
+                                {{ $analisis->muestra->sucursal->nombre ?? 'N/A' }}
+                            </td>
+                            <td class="whitespace-nowrap px-6 py-4 text-sm">
+                                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $this->getEstadoBadge($analisis->estado) }}">
+                                    {{ $this->getEstadoTexto($analisis->estado) }}
+                                </span>
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm text-zinc-700 dark:text-zinc-300">
                                 {{ $analisis->created_at->format('d/m/Y H:i') }}

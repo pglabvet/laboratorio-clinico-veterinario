@@ -209,7 +209,6 @@
                                         href="{{ route('analisis.capturar-resultados', $analisis->id) }}"
                                         size="sm"
                                         variant="primary"
-                                        href="{{ route('analisis.resultados', $analisis) }}"
                                     >
                                         <div class="flex items-center gap-2">
                                             <x-lucide-edit class="size-4" />

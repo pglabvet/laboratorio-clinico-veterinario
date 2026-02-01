@@ -39,11 +39,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->header('Expires', '0');
     })->name('muestras.etiqueta');
 
-    // Ruta para registrar resultados de análisis
-    Route::get('/analisis/{analisis}/resultados', function (\App\Models\Analisis $analisis) {
-        return view('analisis.registrar-resultados', ['analisisId' => $analisis->id]);
-    })->name('analisis.resultados');
-
     Route::view('/especies', 'especies.index')
         ->name('especies.index');
 
