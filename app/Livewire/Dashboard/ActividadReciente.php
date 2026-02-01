@@ -29,12 +29,12 @@ class ActividadReciente extends Component
         
         $query = Analisis::with([
             'muestra.veterinaria',
-            'tipoAnalisis',
-            'bioquimico'
+            'muestra.sucursal',
+            'tipoAnalisis'
         ]);
         
-        if ($user->hasRole('Bioquímico')) {
-            // Solo análisis asignados al bioquímico
+        if (!$user->can('ver-estadisticas-completas')) {
+            // Solo análisis asignados al usuario
             $query->where('bioquimico_id', $user->id);
         }
         
@@ -44,7 +44,7 @@ class ActividadReciente extends Component
         }
         
         // Aplicar filtro de sucursal
-        if ($this->sucursalId && $user->hasRole('Administrador')) {
+        if ($this->sucursalId && $user->can('filtrar-por-sucursal')) {
             $query->whereHas('muestra', function($q) {
                 $q->where('sucursal_id', $this->sucursalId);
             });

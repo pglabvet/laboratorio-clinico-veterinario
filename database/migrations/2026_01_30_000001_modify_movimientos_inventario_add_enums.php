@@ -14,9 +14,18 @@ return new class extends Migration
     {
         // Solo ejecutar en PostgreSQL
         if (DB::connection()->getDriverName() === 'pgsql') {
-            // Crear tipos ENUM personalizados en PostgreSQL
-            DB::statement("CREATE TYPE tipo_movimiento_enum AS ENUM ('ENTRADA', 'SALIDA_MANUAL', 'CONSUMO_ANALISIS', 'AJUSTE')");
-            DB::statement("CREATE TYPE motivo_enum AS ENUM ('MERMA', 'VENCIMIENTO', 'USO_EXTRAORDINARIO', 'CONSUMO_ANALISIS', 'AJUSTE_INVENTARIO', 'COMPRA', 'DONACION', 'OTRO')");
+            // Crear tipos ENUM personalizados en PostgreSQL (solo si no existen)
+            DB::statement("DO $$ BEGIN
+                CREATE TYPE tipo_movimiento_enum AS ENUM ('ENTRADA', 'SALIDA_MANUAL', 'CONSUMO_ANALISIS', 'AJUSTE');
+            EXCEPTION
+                WHEN duplicate_object THEN null;
+            END $$;");
+            
+            DB::statement("DO $$ BEGIN
+                CREATE TYPE motivo_enum AS ENUM ('MERMA', 'VENCIMIENTO', 'USO_EXTRAORDINARIO', 'CONSUMO_ANALISIS', 'AJUSTE_INVENTARIO', 'COMPRA', 'DONACION', 'OTRO');
+            EXCEPTION
+                WHEN duplicate_object THEN null;
+            END $$;");
             
             // Convertir columnas a tipo ENUM
             DB::statement("ALTER TABLE movimientos_inventario 
