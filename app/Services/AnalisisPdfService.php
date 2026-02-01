@@ -92,10 +92,19 @@ class AnalisisPdfService
             $tipo = $componente['tipo'];
             $resultado = $resultadosPorTipo->get($tipo)?->first();
             
+            // Buscar si hay gráfica guardada para este componente
+            $chartPath = storage_path("app/public/charts/{$analisis->id}_{$index}.png");
+            $chartBase64 = null;
+            
+            if (file_exists($chartPath)) {
+                $chartBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($chartPath));
+            }
+
             $componentesConDatos[$index] = [
                 'componente' => $componente,
                 'resultado' => $resultado?->valor ?? [],
                 'tipo' => $tipo,
+                'chartImage' => $chartBase64, // Pasar la imagen
             ];
         }
 

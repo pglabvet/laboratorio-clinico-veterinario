@@ -23,6 +23,7 @@ class GestionarPlantillas extends Component
         'antibiograma' => 'Antibiograma',
         'tabla-hematologica' => 'Tabla Hematologica',
         'tabla-dos-columnas' => 'Tabla de Dos Columnas',
+        'tabla-temporal' => 'Tabla Temporal con Gráfica',
         'campos-etiquetados' => 'Lista de Campos Etiquetados',
         'texto-libre' => 'Texto Libre',
         'lista-items' => 'Lista de Items',
@@ -226,6 +227,25 @@ class GestionarPlantillas extends Component
                 'label' => 'Campo',
                 'placeholder' => '',
                 'tipo' => 'texto', // texto, numero, fecha
+            ],
+            'tabla-temporal' => [
+                'titulo' => 'ANÁLISIS TEMPORAL',
+                'mostrar_grafica' => true,
+                'unidad_medida' => 'ug/dL',
+                'filas' => [
+                    [
+                        'analisis' => 'Cortisol basal 1ra',
+                        'rango_referencia' => '2.0 - 6.0 ug/dL',
+                    ],
+                    [
+                        'analisis' => 'Cortisol basal 2ra',
+                        'rango_referencia' => '2.0 - 6.0 ug/dL',
+                    ],
+                    [
+                        'analisis' => 'Cortisol basal 3ra',
+                        'rango_referencia' => '2.0 - 6.0 ug/dL',
+                    ],
+                ],
             ],
             default => [],
         };

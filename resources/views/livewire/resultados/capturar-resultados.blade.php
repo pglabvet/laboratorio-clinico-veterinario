@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-gray-50 dark:bg-zinc-800">
+<div class="min-h-screen bg-gray-50 dark:bg-zinc-800" x-data="gestorDescargaPDF()">
     <div class="container mx-auto px-4 py-6">
         {{-- Header con info del análisis --}}
         <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-md p-6 mb-6">
@@ -159,16 +159,16 @@
                     <div class="flex gap-3">
                         @if($analisis->estado === 'aprobado')
                             {{-- Botón PDF solo para análisis aprobados --}}
-                            <a 
-                                href="{{ route('analisis.pdf', $analisis->id) }}"
-                                target="_blank"
-                                wire:navigate.prevent
+                            <button 
+                                id="btn-descargar-pdf"
+                                @click="descargarPDF"
+                                type="button"
                                 class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                 </svg>
                                 Descargar PDF
-                            </a>
+                            </button>
                         @else
                             <flux:button 
                                 wire:click="abrirModalRechazo"
@@ -243,3 +243,74 @@
         </flux:modal>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    function gestorDescargaPDF() {
+        return {
+            async descargarPDF() {
+                // Notificar inicio
+                const btn = document.getElementById('btn-descargar-pdf');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generando PDF...';
+                btn.disabled = true;
+                
+                try {
+                    this.graficas = [];
+                    
+                    // Escuchar respuestas (una sola vez para esta ejecución)
+                    const handler = (e) => {
+                        this.graficas.push(e.detail);
+                    };
+                    window.addEventListener('grafica-lista', handler);
+                    
+                    // Solicitar exportación a todos los componentes
+                    window.dispatchEvent(new Event('exportar-graficas'));
+                    
+                    // Esperar 1 segundo para asegurar que todos respondan
+                    await new Promise(r => setTimeout(r, 1000));
+                    
+                    window.removeEventListener('grafica-lista', handler);
+                    
+                    // Enviar al backend si hay gráficas
+                    if (this.graficas.length > 0) {
+                        try {
+                            for (const g of this.graficas) {
+                                await fetch(`{{ route('analisis.guardar-grafica', $analisis->id) }}`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                    },
+                                    body: JSON.stringify({
+                                        image: g.image,
+                                        component_index: g.index
+                                    })
+                                });
+                            }
+                        } catch (e) {
+                            console.error('Error guardando gráficas', e);
+                            alert('Hubo un error guardando las gráficas, el PDF podría no incluirlas todas.');
+                        }
+                    }
+                    
+                    // Descargar PDF
+                    const url = `{{ route('analisis.pdf', $analisis->id) }}`;
+                    window.open(url, '_blank');
+                    
+                } catch (e) {
+                    console.error('Error general:', e);
+                    alert('Error al generar el PDF');
+                } finally {
+                    // Restaurar botón
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }, 500);
+                }
+            },
+            graficas: []
+        }
+    }
+</script>
+@endpush

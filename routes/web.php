@@ -36,10 +36,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->header('Expires', '0');
     })->name('muestras.etiqueta');
 
-    // Ruta para registrar resultados de análisis
-    Route::get('/analisis/{analisis}/resultados', function (\App\Models\Analisis $analisis) {
-        return view('analisis.registrar-resultados', ['analisisId' => $analisis->id]);
-    })->name('analisis.resultados');
 
     Route::view('/especies', 'especies.index')
         ->name('especies.index');
@@ -118,6 +114,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Generar y descargar PDF de análisis aprobado
     Route::get('/analisis/{analisisId}/pdf', [PdfController::class, 'descargar'])
         ->name('analisis.pdf');
+
+    // Guardar gráfica de análisis
+    Route::post('/analisis/{analisisId}/guardar-grafica', [PdfController::class, 'guardarGrafica'])
+        ->name('analisis.guardar-grafica');
 });
 
 require __DIR__.'/settings.php';
