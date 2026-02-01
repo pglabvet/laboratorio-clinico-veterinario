@@ -127,6 +127,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Generar y descargar PDF de análisis aprobado
     Route::get('/analisis/{analisisId}/pdf', [PdfController::class, 'descargar'])
         ->name('analisis.pdf');
+
+    // Guardar gráfica de análisis
+    Route::post('/analisis/{analisisId}/guardar-grafica', [PdfController::class, 'guardarGrafica'])
+        ->name('analisis.guardar-grafica');
 });
 
 require __DIR__.'/settings.php';

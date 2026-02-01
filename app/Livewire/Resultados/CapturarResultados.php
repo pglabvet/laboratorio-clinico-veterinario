@@ -319,6 +319,12 @@ class CapturarResultados extends Component
                     return !empty($item);
                 });
                 
+            case 'tabla-temporal':
+                // Filtrar filas que tengan resultado ingresado
+                return array_filter($data, function($fila) {
+                    return isset($fila['resultado']) && $fila['resultado'] !== '' && $fila['resultado'] !== null;
+                });
+                
             case 'tabla-hematologica':
                 // Filtrar valores vacíos en cada sección
                 if (isset($data['parametros'])) {
