@@ -5,6 +5,7 @@ namespace App\Livewire\Plantillas;
 use Livewire\Component;
 use App\Models\PlantillaFormulario;
 use App\Models\TipoAnalisis;
+use App\Models\Insumo;
 use Illuminate\Support\Facades\Auth;
 
 class GestionarPlantillas extends Component
@@ -15,6 +16,9 @@ class GestionarPlantillas extends Component
     public $tipo_analisis_id = null;
     public $componentes = [];
     public $componenteSeleccionado = null;
+    
+    // Insumos requeridos
+    public $insumos = []; // Array de ['insumo_id' => x, 'cantidad_requerida' => y]
     
     // Tipos de componentes disponibles
     // Nota: tabla-info no está aquí porque se incluye automáticamente en todos los análisis
@@ -59,11 +63,19 @@ class GestionarPlantillas extends Component
 
     public function cargarPlantilla($id)
     {
-        $plantilla = PlantillaFormulario::findOrFail($id);
+        $plantilla = PlantillaFormulario::with('insumos')->findOrFail($id);
         $this->plantillaId = $plantilla->id;
         $this->nombreFormulario = $plantilla->nombre;
         $this->descripcionFormulario = $plantilla->descripcion ?? '';
         $this->tipo_analisis_id = $plantilla->tipo_analisis_id;
+        
+        // Cargar insumos asociados
+        $this->insumos = $plantilla->insumos->map(function($insumo) {
+            return [
+                'insumo_id' => $insumo->id,
+                'cantidad_requerida' => $insumo->pivot->cantidad_requerida,
+            ];
+        })->toArray();
         
         // Asegurar que todos los componentes tengan ID
         $componentes = $plantilla->componentes ?? [];
@@ -231,13 +243,29 @@ class GestionarPlantillas extends Component
         };
     }
 
+    public function agregarInsumo()
+    {
+        $this->insumos[] = ['insumo_id' => '', 'cantidad_requerida' => 1];
+    }
+
+    public function eliminarInsumo($index)
+    {
+        unset($this->insumos[$index]);
+        $this->insumos = array_values($this->insumos);
+    }
+
     public function guardarFormulario()
     {
         $this->validate([
             'nombreFormulario' => 'required|min:3|max:255',
+            'insumos.*.insumo_id' => 'nullable|exists:insumos,id',
+            'insumos.*.cantidad_requerida' => 'nullable|numeric|min:0.01',
         ], [
             'nombreFormulario.required' => 'El nombre del formulario es obligatorio',
             'nombreFormulario.min' => 'El nombre debe tener al menos 3 caracteres',
+            'insumos.*.insumo_id.exists' => 'El insumo seleccionado no es válido',
+            'insumos.*.cantidad_requerida.numeric' => 'La cantidad debe ser un número',
+            'insumos.*.cantidad_requerida.min' => 'La cantidad debe ser mayor a 0',
         ]);
 
         try {
@@ -251,6 +279,9 @@ class GestionarPlantillas extends Component
                     'componentes' => $this->componentes,
                 ]);
                 
+                // Sincronizar insumos
+                $this->sincronizarInsumos($plantilla);
+                
                 $mensaje = 'Plantilla actualizada correctamente';
             } else {
                 // Crear nueva plantilla
@@ -262,6 +293,9 @@ class GestionarPlantillas extends Component
                     'activo' => true,
                     'creado_por' => Auth::id(),
                 ]);
+                
+                // Sincronizar insumos
+                $this->sincronizarInsumos($plantilla);
                 
                 $mensaje = 'Plantilla creada correctamente';
             }
@@ -275,14 +309,40 @@ class GestionarPlantillas extends Component
         }
     }
 
+    private function sincronizarInsumos($plantilla)
+    {
+        // Filtrar insumos válidos (que tengan insumo_id y cantidad)
+        $insumosValidos = collect($this->insumos)
+            ->filter(function($insumo) {
+                return !empty($insumo['insumo_id']) && !empty($insumo['cantidad_requerida']);
+            });
+
+        // Preparar array para sync
+        $syncData = [];
+        foreach ($insumosValidos as $insumo) {
+            $syncData[$insumo['insumo_id']] = [
+                'cantidad_requerida' => $insumo['cantidad_requerida']
+            ];
+        }
+
+        // Sincronizar relación
+        $plantilla->insumos()->sync($syncData);
+    }
+
     public function render()
     {
         $tiposAnalisis = TipoAnalisis::where('estado', true)
             ->orderBy('nombre')
             ->get();
 
+        $insumosDisponibles = Insumo::with('unidadMedida')
+            ->where('estado', true)
+            ->orderBy('nombre')
+            ->get();
+
         return view('livewire.plantillas.gestionar-plantillas', [
             'tiposAnalisis' => $tiposAnalisis,
+            'insumosDisponibles' => $insumosDisponibles,
         ]);
     }
 }

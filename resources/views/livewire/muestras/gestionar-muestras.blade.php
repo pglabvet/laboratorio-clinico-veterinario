@@ -2,6 +2,7 @@
     {{-- Mensajes toast --}}
     <x-toast type="success" :message="session('mensaje')" />
     <x-toast type="error" :message="session('error')" />
+    <x-toast type="warning" :message="session('warning')" />
 
     {{-- Header de la página --}}
     <div class="mb-6">
