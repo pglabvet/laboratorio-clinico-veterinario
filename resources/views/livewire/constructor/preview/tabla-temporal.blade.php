@@ -9,33 +9,33 @@
     <table class="w-full text-sm">
         <thead>
             <tr class="bg-gray-100 dark:bg-zinc-900">
-                <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-900 dark:text-zinc-100 bg-yellow-100 dark:bg-yellow-900/20">Análisis</th>
-                <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-900 dark:text-zinc-100 bg-green-100 dark:bg-green-900/20">Hora</th>
-                <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-900 dark:text-zinc-100 bg-green-100 dark:bg-green-900/20">Resultado</th>
-                <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-900 dark:text-zinc-100 bg-yellow-100 dark:bg-yellow-900/20">Rangos de referencia</th>
+                <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-900 dark:text-zinc-100">Análisis</th>
+                <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-900 dark:text-zinc-100">Hora</th>
+                <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-900 dark:text-zinc-100">Resultado</th>
+                <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-900 dark:text-zinc-100">Rangos de referencia</th>
             </tr>
         </thead>
         <tbody>
             @if(!empty($props['filas']))
                 @foreach($props['filas'] as $fila)
                 <tr>
-                    <!-- Análisis (amarillo - admin) -->
-                    <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 font-semibold bg-yellow-50 dark:bg-yellow-900/10 text-gray-900 dark:text-zinc-100">
+                    <!-- Análisis (admin) -->
+                    <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 font-semibold text-gray-900 dark:text-zinc-100">
                         {{ $fila['analisis'] ?: 'Sin nombre' }}
                     </td>
                     
-                    <!-- Hora (verde - usuario) -->
-                    <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 bg-green-50 dark:bg-green-900/10 text-gray-400 dark:text-zinc-500 italic text-center">
+                    <!-- Hora (usuario) -->
+                    <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-400 dark:text-zinc-500 italic text-center">
                         (a completar)
                     </td>
                     
-                    <!-- Resultado (verde - usuario) -->
-                    <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 bg-green-50 dark:bg-green-900/10 text-gray-400 dark:text-zinc-500 italic text-center">
+                    <!-- Resultado (usuario) -->
+                    <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-400 dark:text-zinc-500 italic text-center">
                         (a completar)
                     </td>
                     
-                    <!-- Rangos de referencia (amarillo - admin) -->
-                    <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 bg-yellow-50 dark:bg-yellow-900/10 text-gray-900 dark:text-zinc-100 text-center">
+                    <!-- Rangos de referencia (admin) -->
+                    <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-900 dark:text-zinc-100 text-center">
                         {{ $fila['rango_referencia'] ?: 'Sin rango' }}
                     </td>
                 </tr>

@@ -235,9 +235,8 @@
 
     .text-content {
       padding: 10px;
-      background-color: #f7fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 4px;
+      background-color: transparent;
+      border: none;
       white-space: pre-wrap;
     }
 
@@ -368,7 +367,9 @@
       </div>
     @endforeach
 
-    {{-- Footer con firmas --}}
+
+    {{-- Footer removed per user request --}}
+    {{--
     <div class="footer">
       <table class="footer-table">
         <tr>
@@ -393,6 +394,7 @@
         </tr>
       </table>
     </div>
+    --}}
 
     {{-- Firma --}}
     @if(isset($firmaBase64) && $firmaBase64)

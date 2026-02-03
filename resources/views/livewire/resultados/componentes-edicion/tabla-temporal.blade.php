@@ -220,22 +220,22 @@ class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:
         <table class="w-full border border-gray-300 dark:border-zinc-700 text-sm">
             <thead>
                 <tr class="bg-gray-100 dark:bg-zinc-900">
-                    <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-900 dark:text-zinc-100 bg-yellow-100 dark:bg-yellow-900/20 font-semibold">Análisis</th>
-                    <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-900 dark:text-zinc-100 bg-green-100 dark:bg-green-900/20 font-semibold">Hora</th>
-                    <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-900 dark:text-zinc-100 bg-green-100 dark:bg-green-900/20 font-semibold">Resultado</th>
-                    <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-900 dark:text-zinc-100 bg-yellow-100 dark:bg-yellow-900/20 font-semibold">Rangos de referencia</th>
+                    <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-900 dark:text-zinc-100 font-semibold">Análisis</th>
+                    <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-900 dark:text-zinc-100 font-semibold">Hora</th>
+                    <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-900 dark:text-zinc-100 font-semibold">Resultado</th>
+                    <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-900 dark:text-zinc-100 font-semibold">Rangos de referencia</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($componente['propiedades']['filas'] ?? [] as $filaIndex => $fila)
                 <tr>
-                    {{-- Análisis (solo lectura - amarillo) --}}
-                    <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 font-semibold bg-yellow-50 dark:bg-yellow-900/10 text-gray-900 dark:text-zinc-100">
+                    {{-- Análisis (solo lectura) --}}
+                    <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 font-semibold text-gray-900 dark:text-zinc-100">
                         {{ $fila['analisis'] }}
                     </td>
                     
-                    {{-- Hora (editable - verde) --}}
-                    <td class="border border-gray-300 dark:border-zinc-700 px-2 py-2 bg-green-50 dark:bg-green-900/10">
+                    {{-- Hora (editable) --}}
+                    <td class="border border-gray-300 dark:border-zinc-700 px-2 py-2">
                         <input 
                             type="time"
                             x-model="filas[{{ $filaIndex }}].hora"
@@ -244,8 +244,8 @@ class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:
                         />
                     </td>
                     
-                    {{-- Resultado (editable - verde) --}}
-                    <td class="border border-gray-300 dark:border-zinc-700 px-2 py-2 bg-green-50 dark:bg-green-900/10">
+                    {{-- Resultado (editable) --}}
+                    <td class="border border-gray-300 dark:border-zinc-700 px-2 py-2">
                         <input 
                             type="number"
                             step="0.01"
@@ -256,8 +256,8 @@ class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:
                         />
                     </td>
                     
-                    {{-- Rangos de referencia (solo lectura - amarillo) --}}
-                    <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 bg-yellow-50 dark:bg-yellow-900/10 text-gray-900 dark:text-zinc-100 text-center">
+                    {{-- Rangos de referencia (solo lectura) --}}
+                    <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-900 dark:text-zinc-100 text-center">
                         {{ $fila['rango_referencia'] }}
                     </td>
                 </tr>
