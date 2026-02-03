@@ -7,10 +7,10 @@
 <table>
     <thead>
         <tr>
-            <th style="width: 30%; background-color: #fef3c7;">Análisis</th>
-            <th style="width: 15%; background-color: #fef3c7;">Hora</th>
-            <th style="width: 20%; background-color: #d1fae5;">Resultado</th>
-            <th style="width: 35%; background-color: #fef3c7;">Rangos de referencia</th>
+            <th style="width: 30%;">Análisis</th>
+            <th style="width: 15%;">Hora</th>
+            <th style="width: 20%;">Resultado</th>
+            <th style="width: 35%;">Rangos de referencia</th>
         </tr>
     </thead>
     <tbody>
@@ -33,19 +33,16 @@
                 }
             @endphp
             <tr>
-                <td style="font-weight: bold; background-color: #fffbeb;">
+                <td style="font-weight: bold;">
                     {{ $fila['analisis'] ?? '' }}
                 </td>
-                <td style="text-align: center; background-color: #fffbeb;">
+                <td style="text-align: center;">
                     {{ $fila['hora'] ?? '' }}
                 </td>
-                <td style="text-align: center; font-weight: bold; background-color: #ecfdf5; {{ $fueraDeRango ? 'color: #dc2626;' : '' }}">
+                <td style="text-align: center; font-weight: bold; {{ $fueraDeRango ? 'color: #dc2626;' : '' }}">
                     {{ $fila['resultado'] ?? 'N/A' }}
-                    @if($fueraDeRango)
-                        <span style="color: #dc2626; font-size: 12px;"> ⚠</span>
-                    @endif
                 </td>
-                <td style="text-align: center; background-color: #fffbeb;">
+                <td style="text-align: center;">
                     {{ $fila['rango_referencia'] ?? '' }}
                 </td>
             </tr>
@@ -59,7 +56,7 @@
     @if(isset($chartImage) && $chartImage)
         <div style="margin-top: 20px; page-break-inside: avoid; text-align: center;">
             <div style="font-weight: bold; font-size: 13px; margin-bottom: 10px;">
-                📈 Gráfica de Resultados - {{ $componente['propiedades']['unidad_medida'] ?? 'ug/dL' }}
+                Gráfica de Resultados - {{ $componente['propiedades']['unidad_medida'] ?? 'ug/dL' }}
             </div>
             <img src="{{ $chartImage }}" style="max-width: 100%; height: auto; border: 1px solid #e5e7eb; padding: 10px; background: white;" alt="Gráfica de resultados">
         </div>

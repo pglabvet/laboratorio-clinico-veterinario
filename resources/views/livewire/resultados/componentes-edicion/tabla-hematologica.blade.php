@@ -65,10 +65,10 @@
         <table class="w-full border border-gray-300 dark:border-zinc-700 text-xs">
             <thead>
                 <tr>
-                    <th colspan="5" class="border border-gray-300 dark:border-zinc-700 px-2 py-2 bg-purple-100 dark:bg-purple-900/30 font-bold text-gray-900 dark:text-zinc-100">
+                    <th colspan="5" class="border border-gray-300 dark:border-zinc-700 px-2 py-2 font-bold text-gray-900 dark:text-zinc-100">
                         {{ $componente['propiedades']['titulo'] ?? 'CUADRO HEMÁTICO' }}
                     </th>
-                    <th colspan="7" class="border border-gray-300 dark:border-zinc-700 px-2 py-2 bg-purple-100 dark:bg-purple-900/30"></th>
+                    <th colspan="7" class="border border-gray-300 dark:border-zinc-700 px-2 py-2"></th>
                 </tr>
                 <tr class="bg-gray-100 dark:bg-zinc-900 text-center text-xs">
                     <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100" rowspan="2">CUADRO<br>HEMÁTICO</th>
@@ -94,7 +94,7 @@
                     {{-- Parámetros Principales (Lado Izquierdo) --}}
                     @if($i < count($componente['propiedades']['parametros_principales'] ?? []))
                         @php $param = $componente['propiedades']['parametros_principales'][$i]; @endphp
-                        <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 bg-purple-50 dark:bg-purple-900/20 font-semibold text-xs text-gray-900 dark:text-zinc-100">
+                        <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 font-semibold text-xs text-gray-900 dark:text-zinc-100">
                             {{ $param['nombre'] }}
                         </td>
                         <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1">
@@ -116,7 +116,7 @@
                     {{-- Diferenciales (Lado Derecho) --}}
                     @if($i < count($componente['propiedades']['diferenciales'] ?? []))
                         @php $dif = $componente['propiedades']['diferenciales'][$i]; @endphp
-                        <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 bg-purple-50 dark:bg-purple-900/20 font-semibold text-xs text-gray-900 dark:text-zinc-100">
+                        <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 font-semibold text-xs text-gray-900 dark:text-zinc-100">
                             {{ $dif['nombre'] }}
                         </td>
                         <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1">
@@ -143,7 +143,7 @@
                 @foreach(($componente['propiedades']['indices'] ?? []) as $index => $indice)
                 <tr>
                     @if($index === 0)
-                    <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 bg-purple-50 dark:bg-purple-900/20 font-semibold text-xs text-gray-900 dark:text-zinc-100" rowspan="{{ count($componente['propiedades']['indices'] ?? []) }}">
+                    <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 font-semibold text-xs text-gray-900 dark:text-zinc-100" rowspan="{{ count($componente['propiedades']['indices'] ?? []) }}">
                         INDICES<br>ERITROCIT.
                     </td>
                     @endif
@@ -167,7 +167,7 @@
     </div>
 
     {{-- Ayuda visual --}}
-    <div class="mt-3 p-2 bg-purple-50 dark:bg-purple-900/20 rounded text-xs text-purple-800 dark:text-purple-300">
+    <div class="mt-3 p-2 bg-gray-50 dark:bg-zinc-800 rounded text-xs text-gray-600 dark:text-zinc-400">
         <i class="fas fa-info-circle mr-1"></i>
         Complete los valores en cada campo. Los rangos de referencia se muestran como guía.
     </div>
