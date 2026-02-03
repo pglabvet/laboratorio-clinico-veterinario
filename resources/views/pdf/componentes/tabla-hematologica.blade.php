@@ -36,23 +36,23 @@
                 @if($i < count($parametros))
                     @php 
                         $param = $parametros[$i];
-                        $resultado = $param['resultado'] ?? '';
+                        $valorParam = $param['resultado'] ?? '';
                         $refMin = $componente['propiedades']['parametros_principales'][$i]['ref_min'] ?? null;
                         $refMax = $componente['propiedades']['parametros_principales'][$i]['ref_max'] ?? null;
                         $fueraRango = false;
-                        if ($resultado !== '' && $refMin !== null && $refMax !== null) {
-                            $resultadoNum = floatval(str_replace(',', '', $resultado));
+                        if ($valorParam !== '' && $refMin !== null && $refMax !== null) {
+                            $resultadoNum = floatval(str_replace(',', '', $valorParam));
                             $refMinNum = floatval(str_replace(',', '', $refMin));
                             $refMaxNum = floatval(str_replace(',', '', $refMax));
                             $fueraRango = $resultadoNum < $refMinNum || $resultadoNum > $refMaxNum;
                         }
                     @endphp
                     <td style="font-weight: bold;">{{ $param['nombre'] ?? '' }}</td>
-                    <td style="text-align: center;{{ $fueraRango ? ' color: #DC2626; font-weight: bold;' : '' }}">{{ $resultado }}</td>
+                    <td style="text-align: center;{{ $fueraRango ? ' color: #dc2626; font-weight: bold;' : '' }}">{{ $valorParam }}</td>
                     <td style="text-align: center;">{{ $param['unidad'] ?? '' }}</td>
                     <td style="text-align: center; color: #718096;" colspan="2">
                         {{ isset($componente['propiedades']['parametros_principales'][$i]) ? 
-                           ($componente['propiedades']['parametros_principales'][$i]['ref_min'] ?? '') . ' - ' . 
+                           ($componente['propiedades']['parametros_principales'][$i]['ref_min'] ?? '') . '-' . 
                            ($componente['propiedades']['parametros_principales'][$i]['ref_max'] ?? '') : '' }}
                     </td>
                 @else
@@ -89,13 +89,13 @@
                         }
                     @endphp
                     <td style="font-weight: bold;">{{ $dif['nombre'] ?? '' }}</td>
-                    <td style="text-align: center;{{ $fueraRangoRel ? ' color: #DC2626; font-weight: bold;' : '' }}">{{ $valorRel ? ($valorRel . ' %') : '' }}</td>
+                    <td style="text-align: center;{{ $fueraRangoRel ? ' color: #dc2626; font-weight: bold;' : '' }}">{{ $valorRel !== '' && $valorRel !== null ? ($valorRel . ' %') : '' }}</td>
                     <td style="text-align: center; color: #718096;">
                         {{ isset($componente['propiedades']['diferenciales'][$i]) ? 
                            ($componente['propiedades']['diferenciales'][$i]['ref_rel_min'] ?? '') . '-' . 
                            ($componente['propiedades']['diferenciales'][$i]['ref_rel_max'] ?? '') : '' }}
                     </td>
-                    <td style="text-align: center;{{ $fueraRangoAbs ? ' color: #DC2626; font-weight: bold;' : '' }}">{{ $valorAbs ? ($valorAbs . ' mm³') : '' }}</td>
+                    <td style="text-align: center;{{ $fueraRangoAbs ? ' color: #dc2626; font-weight: bold;' : '' }}">{{ $valorAbs !== '' && $valorAbs !== null ? ($valorAbs . ' mm³') : '' }}</td>
                     <td style="text-align: center; color: #718096;">
                         {{ isset($componente['propiedades']['diferenciales'][$i]) ? 
                            ($componente['propiedades']['diferenciales'][$i]['ref_abs_min'] ?? '') . '-' . 
@@ -120,18 +120,18 @@
                 
                 // Parsear el rango de referencia (formato: "vn 60-77 fl" o "8-11")
                 if ($resultado !== '' && $referencia !== '') {
-                    preg_match('/(\d+\.?\d*)\s*-\s*(\d+\.?\d*)/', $referencia, $matches);
+                    preg_match('/(-?\d+[.,]?\d*)\s*-\s*(-?\d+[.,]?\d*)/', $referencia, $matches);
                     if (count($matches) >= 3) {
-                        $resultadoNum = floatval($resultado);
-                        $refMin = floatval($matches[1]);
-                        $refMax = floatval($matches[2]);
+                        $resultadoNum = floatval(str_replace(',', '.', str_replace('.', '', $resultado)));
+                        $refMin = floatval(str_replace(',', '.', $matches[1]));
+                        $refMax = floatval(str_replace(',', '.', $matches[2]));
                         $fueraRango = $resultadoNum < $refMin || $resultadoNum > $refMax;
                     }
                 }
             @endphp
             <tr>
                 <td colspan="2" style="font-weight: bold;">{{ $indice['nombre'] ?? '' }}</td>
-                <td style="text-align: center;{{ $fueraRango ? ' color: #DC2626; font-weight: bold;' : '' }}">{{ $resultado }}</td>
+                <td style="text-align: center;{{ $fueraRango ? ' color: #dc2626; font-weight: bold;' : '' }}">{{ $resultado }}</td>
                 <td>{{ $indice['unidad'] ?? '' }}</td>
                 <td colspan="6" style="color: #718096;">
                     {{ isset($componente['propiedades']['indices'][$i]) ? 

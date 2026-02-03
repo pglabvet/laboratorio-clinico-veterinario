@@ -43,7 +43,7 @@
                                 $max = floatval($matches[2]);
                                 
                                 // Aplicar estilo rojo si está fuera de rango
-                                if ($resultado > 0 && ($resultado < $min || $resultado > $max)) {
+                                if ($valor !== '' && ($resultado < $min || $resultado > $max)) {
                                     $estiloExtra = 'color: #dc2626; font-weight: bold;';
                                 }
                             }
