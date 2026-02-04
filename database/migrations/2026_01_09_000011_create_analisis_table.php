@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('tipo_analisis_id')->constrained('tipos_analisis')->onDelete('cascade');
             $table->foreignId('bioquimico_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('aprobador_id')->nullable()->constrained('users')->onDelete('set null');
-            $table->enum('estado', ['pendiente', 'en_proceso', 'finalizado', 'aprobado', 'rechazado'])->default('pendiente');
+            $table->enum('estado', ['Pendiente', 'En revision', 'Aprobado', 'Enviado'])->default('Pendiente');
             $table->text('observaciones_bioquimico')->nullable();
             $table->text('observaciones_aprobador')->nullable();
             $table->timestamp('fecha_inicio')->nullable();

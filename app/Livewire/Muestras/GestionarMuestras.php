@@ -22,7 +22,7 @@ class GestionarMuestras extends Component
     public $codigo_muestra;
     public $tipo_muestra;
     public $fecha_recepcion;
-    public $estado = 'pendiente';
+    public $estado = 'Pendiente';
     public $observaciones;
     public $sucursal_id;
 
@@ -202,7 +202,7 @@ class GestionarMuestras extends Component
                     'sucursal_id' => $this->sucursal_id,
                     'tipo_muestra' => $this->tipo_muestra,
                     'fecha_recepcion' => $this->fecha_recepcion,
-                    'estado' => 'pendiente',
+                    'estado' => 'Pendiente',
                     'observaciones' => $this->observaciones,
                 ]);
 
@@ -212,7 +212,7 @@ class GestionarMuestras extends Component
                         'muestra_id' => $muestra->id,
                         'tipo_analisis_id' => $tipo_analisis_id,
                         'bioquimico_id' => auth()->id(),
-                        'estado' => 'pendiente',
+                        'estado' => 'Pendiente',
                         'fecha_inicio' => now(),
                     ]);
                 }
@@ -395,16 +395,16 @@ class GestionarMuestras extends Component
 
             $muestra = Muestra::findOrFail($this->muestraAEliminar);
             
-            // Verificar si tiene análisis en proceso
-            if ($muestra->analisis()->whereIn('estado', ['EN_PROCESO', 'COMPLETADO'])->count() > 0) {
-                session()->flash('error', 'No se puede eliminar la muestra porque tiene análisis en proceso o completados.');
+            // Verificar si tiene análisis en proceso o completados
+            if ($muestra->analisis()->whereIn('estado', ['En revision', 'Aprobado', 'Enviado'])->count() > 0) {
+                session()->flash('error', 'No se puede eliminar la muestra porque tiene análisis en revisión, aprobados o enviados.');
                 $this->modalEliminar = false;
                 $this->muestraAEliminar = null;
                 return;
             }
 
             // Eliminar análisis pendientes
-            $muestra->analisis()->where('estado', 'pendiente')->delete();
+            $muestra->analisis()->where('estado', 'Pendiente')->delete();
             
             $muestra->delete();
             session()->flash('mensaje', 'Muestra eliminada exitosamente.');
@@ -448,7 +448,7 @@ class GestionarMuestras extends Component
         $this->tipos_analisis_seleccionados = [];
         $this->fecha_recepcion = now()->format('Y-m-d');
         $this->sucursal_id = auth()->user()->sucursal_id ?? Sucursal::first()?->id;
-        $this->estado = 'pendiente';
+        $this->estado = 'Pendiente';
     }
 
     /**

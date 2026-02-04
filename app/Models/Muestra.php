@@ -12,6 +12,12 @@ class Muestra extends Model
 {
     use HasFactory;
 
+    // Estados disponibles
+    public const ESTADO_PENDIENTE = 'Pendiente';
+    public const ESTADO_EN_PROCESO = 'En proceso';
+    public const ESTADO_COMPLETADO = 'Completado';
+    public const ESTADO_ENVIADO = 'Enviado';
+
     protected $fillable = [
         'codigo_muestra',
         'paciente_nombre',
@@ -103,5 +109,32 @@ class Muestra extends Model
         }
 
         return $svg;
+    }
+
+    /**
+     * Obtener los estados disponibles
+     */
+    public static function getEstados(): array
+    {
+        return [
+            self::ESTADO_PENDIENTE => 'Pendiente',
+            self::ESTADO_EN_PROCESO => 'En proceso',
+            self::ESTADO_COMPLETADO => 'Completado',
+            self::ESTADO_ENVIADO => 'Enviado',
+        ];
+    }
+
+    /**
+     * Obtener el color del badge según el estado
+     */
+    public function getColorEstado(): string
+    {
+        return match($this->estado) {
+            self::ESTADO_PENDIENTE => 'amber',
+            self::ESTADO_EN_PROCESO => 'blue',
+            self::ESTADO_COMPLETADO => 'green',
+            self::ESTADO_ENVIADO => 'purple',
+            default => 'zinc',
+        };
     }
 }

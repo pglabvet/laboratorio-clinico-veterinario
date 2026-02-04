@@ -29,7 +29,7 @@ class VerAnalisis extends Component
     public function aprobar()
     {
         $this->analisis->update([
-            'estado' => 'aprobado',
+            'estado' => Analisis::ESTADO_APROBADO,
             'aprobador_id' => auth()->id(),
             'fecha_aprobacion' => now(),
         ]);
@@ -41,7 +41,7 @@ class VerAnalisis extends Component
     public function rechazar()
     {
         $this->analisis->update([
-            'estado' => 'rechazado',
+            'estado' => Analisis::ESTADO_PENDIENTE, // Volver a pendiente para que lo corrijan
             'aprobador_id' => auth()->id(),
         ]);
 
