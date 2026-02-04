@@ -32,6 +32,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'crear-usuarios',
             'editar-usuarios',
             'eliminar-usuarios',
+            'gestionar-usuarios', // Permiso compuesto para CRUD completo
             
             // Sucursales
             'ver-sucursales',

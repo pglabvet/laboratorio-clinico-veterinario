@@ -70,11 +70,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/inventario/historial', \App\Livewire\Inventario\HistorialMovimientos::class)
         ->name('inventario.historial');
     
+    Route::get('/usuarios', \App\Livewire\Usuarios\GestionarUsuarios::class)
+        ->middleware('can:ver-usuarios')
+        ->name('usuarios.index');
+    
     Route::view('/roles', 'roles.index')
         ->name('roles.index');
     
-    Route::view('/permisos', 'permisos.index')
-        ->name('permisos.index');
+    // Permisos deshabilitado - se gestionan desde el seeder
+    // Route::view('/permisos', 'permisos.index')
+    //     ->name('permisos.index');
     
     // Constructor de formularios dinámicos (Admin)
     Route::get('/plantillas', \App\Livewire\Plantillas\ListarPlantillas::class)
