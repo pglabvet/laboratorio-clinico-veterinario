@@ -67,36 +67,4 @@ class Sucursal extends Model
     {
         return $query->where('estado', false);
     }
-
-    /**
-     * Obtener el prefijo para códigos de muestra
-     * Extrae las primeras letras del nombre después de "Sucursal" para evitar conflictos
-     * Ejemplos: 
-     *   "Sucursal Centro" -> "C"
-     *   "Sucursal Sur" -> "S"
-     *   "Sucursal Equipetrol" -> "EQ"
-     */
-    public function getPrefijo(): string
-    {
-        // Eliminar "Sucursal" del nombre y limpiar espacios
-        $nombreLimpio = trim(str_replace('Sucursal', '', $this->nombre));
-        
-        // Mapeo especial para sucursales conocidas
-        $prefijosMapeados = [
-            'Centro' => 'C',
-            'Norte' => 'N',
-            'Sur' => 'S',
-            'Este' => 'E',
-            'Oeste' => 'O',
-            'Equipetrol' => 'EQ',
-        ];
-        
-        // Si existe un mapeo, usarlo
-        if (isset($prefijosMapeados[$nombreLimpio])) {
-            return $prefijosMapeados[$nombreLimpio];
-        }
-        
-        // Por defecto, usar las primeras 2 letras en mayúsculas
-        return strtoupper(substr($nombreLimpio, 0, 2));
-    }
 }
