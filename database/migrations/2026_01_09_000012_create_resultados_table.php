@@ -14,8 +14,9 @@ return new class extends Migration
         Schema::create('resultados', function (Blueprint $table) {
             $table->id();
             $table->foreignId('analisis_id')->constrained('analisis')->onDelete('cascade');
-            $table->foreignId('parametro_id')->constrained('parametros_analisis')->onDelete('cascade');
-            $table->string('valor');
+            $table->foreignId('parametro_id')->nullable()->constrained('parametros_analisis')->onDelete('cascade');
+            $table->string('tipo')->default('parametro'); // parametro, antibiograma, lista_items, etc.
+            $table->json('valor'); // Almacena valores simples o estructuras complejas como arrays
             $table->boolean('fuera_rango')->default(false);
             $table->timestamps();
         });

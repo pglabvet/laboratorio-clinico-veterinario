@@ -65,5 +65,11 @@ class User extends Authenticatable
             ->implode('');
     }
 
-
+    /**
+     * Get the sucursal that the user belongs to.
+     */
+    public function sucursal()
+    {
+        return $this->belongsTo(Sucursal::class);
+    }
 }

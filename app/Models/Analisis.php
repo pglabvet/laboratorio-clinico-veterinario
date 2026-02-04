@@ -14,19 +14,30 @@ class Analisis extends Model
 
     protected $table = 'analisis';
 
+    // Estados disponibles
+    public const ESTADO_PENDIENTE = 'Pendiente';
+    public const ESTADO_EN_REVISION = 'En revision';
+    public const ESTADO_APROBADO = 'Aprobado';
+    public const ESTADO_ENVIADO = 'Enviado';
+
     protected $fillable = [
         'muestra_id',
         'tipo_analisis_id',
+        'plantilla_formulario_id',
         'bioquimico_id',
+        'aprobador_id',
         'estado',
         'observaciones_bioquimico',
+        'observaciones_aprobador',
         'fecha_inicio',
         'fecha_finalizacion',
+        'fecha_aprobacion',
     ];
 
     protected $casts = [
         'fecha_inicio' => 'datetime',
         'fecha_finalizacion' => 'datetime',
+        'fecha_aprobacion' => 'datetime',
     ];
 
     /**
@@ -46,11 +57,27 @@ class Analisis extends Model
     }
 
     /**
+     * Relación con plantilla de formulario
+     */
+    public function plantillaFormulario(): BelongsTo
+    {
+        return $this->belongsTo(PlantillaFormulario::class);
+    }
+
+    /**
      * Relación con bioquímico (usuario)
      */
     public function bioquimico(): BelongsTo
     {
         return $this->belongsTo(User::class, 'bioquimico_id');
+    }
+
+    /**
+     * Relación con aprobador (usuario)
+     */
+    public function aprobador(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'aprobador_id');
     }
 
     /**
@@ -93,5 +120,32 @@ class Analisis extends Model
         return $this->belongsToMany(Insumo::class, 'analisis_insumos')
             ->withPivot('cantidad_usada')
             ->withTimestamps();
+    }
+
+    /**
+     * Obtener los estados disponibles
+     */
+    public static function getEstados(): array
+    {
+        return [
+            self::ESTADO_PENDIENTE => 'Pendiente',
+            self::ESTADO_EN_REVISION => 'En revision',
+            self::ESTADO_APROBADO => 'Aprobado',
+            self::ESTADO_ENVIADO => 'Enviado',
+        ];
+    }
+
+    /**
+     * Obtener el color del badge según el estado
+     */
+    public function getColorEstado(): string
+    {
+        return match($this->estado) {
+            self::ESTADO_PENDIENTE => 'amber',
+            self::ESTADO_EN_REVISION => 'blue',
+            self::ESTADO_APROBADO => 'green',
+            self::ESTADO_ENVIADO => 'purple',
+            default => 'zinc',
+        };
     }
 }
