@@ -8,6 +8,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Spatie\Permission\Models\Role;
 
 class GestionarUsuarios extends Component
@@ -30,6 +31,8 @@ class GestionarUsuarios extends Component
     public $rol_id;
     public $sucursal_id;
     public $estado = true;
+    public $mostrarPassword = false;
+    public $mostrarPasswordConfirmation = false;
 
     protected function rules()
     {
@@ -84,6 +87,68 @@ class GestionarUsuarios extends Component
         $this->resetPage();
     }
 
+    public function generarEmail()
+    {
+        if (empty($this->name)) {
+            return;
+        }
+
+        // Limpiar y procesar el nombre
+        $nombre = $this->limpiarTexto($this->name);
+        $palabras = explode(' ', $nombre);
+        $palabras = array_filter($palabras); // Eliminar espacios vacíos
+        $palabras = array_values($palabras); // Reindexar
+        
+        $totalPalabras = count($palabras);
+        
+        // Lógica según cantidad de palabras
+        if ($totalPalabras === 1) {
+            $emailBase = $palabras[0];
+        } elseif ($totalPalabras === 2) {
+            $emailBase = $palabras[0] . '.' . $palabras[1];
+        } else {
+            // 3 o más: primera + penúltima
+            $emailBase = $palabras[0] . '.' . $palabras[$totalPalabras - 2];
+        }
+        
+        // Generar email con dominio
+        $emailBase = strtolower($emailBase);
+        $emailFinal = $emailBase . '@labvet.com';
+        
+        // Verificar si ya existe y agregar contador si es necesario
+        $contador = 1;
+        while (User::where('email', $emailFinal)->exists()) {
+            $emailFinal = $emailBase . $contador . '@labvet.com';
+            $contador++;
+        }
+        
+        $this->email = $emailFinal;
+    }
+
+    public function toggleMostrarPassword()
+    {
+        $this->mostrarPassword = !$this->mostrarPassword;
+    }
+
+    public function toggleMostrarPasswordConfirmation()
+    {
+        $this->mostrarPasswordConfirmation = !$this->mostrarPasswordConfirmation;
+    }
+
+    private function limpiarTexto($texto)
+    {
+        // Remover acentos
+        $texto = Str::ascii($texto);
+        
+        // Mantener solo letras y espacios
+        $texto = preg_replace('/[^a-zA-Z\s]/', '', $texto);
+        
+        // Normalizar espacios múltiples
+        $texto = preg_replace('/\s+/', ' ', $texto);
+        
+        return trim($texto);
+    }
+
     public function abrirModal()
     {
         $this->resetearFormulario();
@@ -107,9 +172,13 @@ class GestionarUsuarios extends Component
             'rol_id',
             'sucursal_id',
             'estado',
-            'modoEdicion'
+            'modoEdicion',
+            'mostrarPassword',
+            'mostrarPasswordConfirmation'
         ]);
         $this->estado = true;
+        $this->mostrarPassword = false;
+        $this->mostrarPasswordConfirmation = false;
         $this->resetErrorBag();
     }
 
