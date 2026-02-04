@@ -17,7 +17,7 @@ class VeterinariasSeeder extends Seeder
             [
                 'nombre' => 'Clínica Veterinaria San Francisco',
                 'responsable' => 'Dr. Carlos Mendoza Rivera',
-                'telefono' => '+591 3-3334455',
+                'telefono' => '75102023',
                 'email' => 'contacto@vetsanfrancisco.com',
                 'direccion' => 'Av. Cristo Redentor 234, Santa Cruz',
                 'estado' => true,
@@ -27,7 +27,7 @@ class VeterinariasSeeder extends Seeder
             [
                 'nombre' => 'Hospital Veterinario PetCare',
                 'responsable' => 'Dra. María Elena Suárez',
-                'telefono' => '+591 3-3445566',
+                'telefono' => '75102023',
                 'email' => 'info@petcarehospital.com',
                 'direccion' => 'Calle Palmeras 567, Barrio Urbari',
                 'estado' => true,
@@ -37,7 +37,7 @@ class VeterinariasSeeder extends Seeder
             [
                 'nombre' => 'Centro Veterinario Los Ángeles',
                 'responsable' => 'Dr. Roberto Paz García',
-                'telefono' => '+591 3-3556677',
+                'telefono' => '75102023',
                 'email' => 'veterinaria.losangeles@gmail.com',
                 'direccion' => 'Av. Alemana 890, 3er Anillo',
                 'estado' => true,
@@ -47,7 +47,7 @@ class VeterinariasSeeder extends Seeder
             [
                 'nombre' => 'Clínica Veterinaria Amigos Peludos',
                 'responsable' => 'Dra. Ana Patricia Rojas',
-                'telefono' => '+591 3-3667788',
+                'telefono' => '75102023',
                 'email' => 'amigos.peludos@outlook.com',
                 'direccion' => 'Calle Beni 123, Zona Central',
                 'estado' => true,
@@ -57,7 +57,7 @@ class VeterinariasSeeder extends Seeder
             [
                 'nombre' => 'Hospital Veterinario VidaAnimal',
                 'responsable' => 'Dr. Jorge Luis Fernández',
-                'telefono' => '+591 3-3778899',
+                'telefono' => '75102023',
                 'email' => 'contacto@vidaanimal.vet',
                 'direccion' => 'Av. Banzer 456, Equipetrol',
                 'estado' => true,
@@ -67,7 +67,7 @@ class VeterinariasSeeder extends Seeder
             [
                 'nombre' => 'Clínica Veterinaria El Refugio',
                 'responsable' => 'Dra. Paola Sandoval Martínez',
-                'telefono' => '+591 3-3889900',
+                'telefono' => '75102023',
                 'email' => 'elrefugio.vet@gmail.com',
                 'direccion' => 'Calle Warnes 789, Barrio Plan 3000',
                 'estado' => true,
@@ -77,7 +77,7 @@ class VeterinariasSeeder extends Seeder
             [
                 'nombre' => 'Centro de Salud Animal VetPlus',
                 'responsable' => 'Dr. Andrés Gutiérrez López',
-                'telefono' => '+591 3-3990011',
+                'telefono' => '75102023',
                 'email' => 'info@vetplus.bo',
                 'direccion' => 'Av. Roca y Coronado 321, Zona Norte',
                 'estado' => true,
@@ -87,7 +87,7 @@ class VeterinariasSeeder extends Seeder
             [
                 'nombre' => 'Veterinaria Mascotas Felices',
                 'responsable' => 'Dra. Claudia Morales Vaca',
-                'telefono' => '+591 3-3001122',
+                'telefono' => '75102023',
                 'email' => 'mascotasfelices@hotmail.com',
                 'direccion' => 'Calle Oruro 654, Barrio Hamacas',
                 'estado' => true,
@@ -97,7 +97,7 @@ class VeterinariasSeeder extends Seeder
             [
                 'nombre' => 'Clínica Veterinaria Santa Bárbara',
                 'responsable' => 'Dr. Fernando Roca Peña',
-                'telefono' => '+591 3-3112233',
+                'telefono' => '75102023',
                 'email' => 'santabarbara.vet@yahoo.com',
                 'direccion' => 'Av. Virgen de Luján 987, Radial 26',
                 'estado' => true,
@@ -107,7 +107,7 @@ class VeterinariasSeeder extends Seeder
             [
                 'nombre' => 'Hospital Veterinario Camino Verde',
                 'responsable' => 'Dra. Laura Chávez Delgado',
-                'telefono' => '+591 3-3223344',
+                'telefono' => '75102023',
                 'email' => 'caminoverde.vet@gmail.com',
                 'direccion' => 'Radial 13, Km 5, Zona Norte',
                 'estado' => true,

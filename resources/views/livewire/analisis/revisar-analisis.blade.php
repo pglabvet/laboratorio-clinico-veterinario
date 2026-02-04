@@ -247,8 +247,7 @@
                                     @if($item->estado === 'En revision')
                                         {{-- Botón aprobar --}}
                                         <flux:button
-                                            wire:click="aprobarAnalisis({{ $item->id }})"
-                                            wire:confirm="¿Está seguro de aprobar este análisis?"
+                                            wire:click="confirmarAprobar({{ $item->id }})"
                                             variant="ghost"
                                             size="sm"
                                             icon="check"
@@ -258,8 +257,7 @@
 
                                         {{-- Botón rechazar --}}
                                         <flux:button
-                                            wire:click="rechazarAnalisis({{ $item->id }})"
-                                            wire:confirm="¿Está seguro de rechazar este análisis?"
+                                            wire:click="confirmarRechazar({{ $item->id }})"
                                             variant="ghost"
                                             size="sm"
                                             icon="x-mark"
@@ -298,4 +296,96 @@
             </div>
         @endif
     </div>
+
+    {{-- Modal de confirmación para aprobar --}}
+    <flux:modal wire:model="modalAprobar" class="w-full max-w-md">
+        <div class="space-y-6">
+            {{-- Ícono de éxito --}}
+            <div class="flex justify-center">
+                <div class="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/20">
+                    <svg class="h-6 w-6 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </div>
+
+            {{-- Título y mensaje --}}
+            <div class="text-center">
+                <flux:heading size="lg" class="mb-2">Aprobar Análisis</flux:heading>
+                <flux:subheading>
+                    ¿Está seguro de que desea aprobar este análisis? Una vez aprobado, estará disponible para su envío.
+                </flux:subheading>
+            </div>
+
+            {{-- Botones --}}
+            <div class="flex justify-end gap-3">
+                <flux:button 
+                    type="button"
+                    wire:click="cancelarAprobar"
+                    variant="ghost"
+                >
+                    Cancelar
+                </flux:button>
+                <flux:button 
+                    type="button"
+                    wire:click="aprobarAnalisis"
+                    variant="primary"
+                    icon="check"
+                >
+                    Aprobar
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
+
+    {{-- Modal de confirmación para rechazar --}}
+    <flux:modal wire:model="modalRechazar" class="w-full max-w-md">
+        <div class="space-y-6">
+            {{-- Ícono de advertencia --}}
+            <div class="flex justify-center">
+                <div class="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
+                    <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                    </svg>
+                </div>
+            </div>
+
+            {{-- Título y mensaje --}}
+            <div class="text-center">
+                <flux:heading size="lg" class="mb-2">Rechazar Análisis</flux:heading>
+                <flux:subheading>
+                    ¿Está seguro de que desea rechazar este análisis? El bioquímico deberá realizar las correcciones necesarias.
+                </flux:subheading>
+            </div>
+
+            {{-- Campo de observaciones --}}
+            <div>
+                <flux:textarea 
+                    wire:model="observacionesRechazo"
+                    label="Observaciones (opcional)"
+                    placeholder="Indique las correcciones necesarias..."
+                    rows="4"
+                />
+            </div>
+
+            {{-- Botones --}}
+            <div class="flex justify-end gap-3">
+                <flux:button 
+                    type="button"
+                    wire:click="cancelarRechazar"
+                    variant="ghost"
+                >
+                    Cancelar
+                </flux:button>
+                <flux:button 
+                    type="button"
+                    wire:click="rechazarAnalisis"
+                    variant="danger"
+                    icon="x-mark"
+                >
+                    Rechazar
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
 </div>
