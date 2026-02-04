@@ -30,7 +30,7 @@ class PdfController extends Controller
         ])->findOrFail($analisisId);
 
         // Verificar que esté aprobado
-        if ($analisis->estado !== 'aprobado') {
+        if ($analisis->estado !== Analisis::ESTADO_APROBADO) {
             abort(403, 'Solo se pueden generar PDFs de análisis aprobados. Estado actual: ' . $analisis->estado);
         }
 
@@ -60,7 +60,7 @@ class PdfController extends Controller
             'resultados'
         ])->findOrFail($analisisId);
 
-        if ($analisis->estado !== 'aprobado') {
+        if ($analisis->estado !== Analisis::ESTADO_APROBADO) {
             return back()->with('error', 'Solo se pueden ver PDFs de análisis aprobados.');
         }
 

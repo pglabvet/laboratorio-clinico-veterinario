@@ -24,8 +24,8 @@
         @endforeach
     </div>
 
-    <div class="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-800">
-        <p class="text-xs text-yellow-800 dark:text-yellow-300">
+    <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+        <p class="text-xs text-blue-800 dark:text-blue-300">
             <i class="fas fa-info-circle mr-1"></i>
             Los antibióticos se agregarán al llenar el formulario
         </p>

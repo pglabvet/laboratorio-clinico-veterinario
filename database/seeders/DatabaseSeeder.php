@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             EspeciesSeeder::class,
             VeterinariasSeeder::class,
             UnidadesMedidaSeeder::class,
+            TiposAnalisisSeeder::class,
         ]);
     }
 }

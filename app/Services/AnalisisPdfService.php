@@ -16,7 +16,7 @@ class AnalisisPdfService
     public function generar(Analisis $analisis): array
     {
         // Validar que el análisis esté aprobado
-        if ($analisis->estado !== 'aprobado') {
+        if ($analisis->estado !== Analisis::ESTADO_APROBADO) {
             throw new \Exception('Solo se pueden generar PDFs de análisis aprobados.');
         }
 

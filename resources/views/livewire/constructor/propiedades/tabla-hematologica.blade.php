@@ -162,8 +162,8 @@
         </flux:button>
     </div>
 
-    <div class="p-3 bg-purple-50 dark:bg-purple-900/20 rounded border border-purple-200 dark:border-purple-800">
-        <p class="text-xs text-purple-800 dark:text-purple-300">
+    <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+        <p class="text-xs text-blue-800 dark:text-blue-300">
             <i class="fas fa-info-circle mr-1"></i>
             Tabla especializada para análisis hematológicos con parámetros principales, diferenciales e índices eritrocitarios.
         </p>

@@ -204,7 +204,7 @@
                                     {{ str_replace('_', ' ', $analisis->estado) }}
                                 </flux:badge>
                                 
-                                @if($analisis->estado === 'pendiente')
+                                @if($analisis->estado === 'Pendiente')
                                     <flux:button 
                                         href="{{ route('analisis.capturar-resultados', $analisis->id) }}"
                                         size="sm"
