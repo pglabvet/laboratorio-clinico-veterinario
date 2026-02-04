@@ -70,6 +70,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/inventario/historial', \App\Livewire\Inventario\HistorialMovimientos::class)
         ->name('inventario.historial');
     
+    Route::get('/usuarios', \App\Livewire\Usuarios\GestionarUsuarios::class)
+        ->middleware('can:ver-usuarios')
+        ->name('usuarios.index');
+    
     Route::view('/roles', 'roles.index')
         ->name('roles.index');
     
