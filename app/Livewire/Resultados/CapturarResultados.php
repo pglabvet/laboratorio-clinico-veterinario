@@ -63,8 +63,8 @@ class CapturarResultados extends Component
             $this->cargarResultadosExistentes();
         }
         
-        // Detectar si es modo revisión (análisis finalizado, rechazado o aprobado)
-        if (in_array($this->analisis->estado, ['finalizado', 'rechazado', 'aprobado'])) {
+        // Detectar si es modo revisión (análisis en revisión o aprobado)
+        if (in_array($this->analisis->estado, ['En revision', 'Aprobado'])) {
             $this->modoRevision = true;
         }
     }
@@ -145,6 +145,35 @@ class CapturarResultados extends Component
         }
     }
     
+    /**
+     * Actualizar estado de la muestra a 'En proceso' cuando se empieza a capturar datos
+     */
+    private function actualizarMuestraEnProceso()
+    {
+        // Solo actualizar si la muestra está en estado 'Pendiente'
+        if ($this->analisis->muestra->estado === 'Pendiente') {
+            $this->analisis->muestra->update([
+                'estado' => 'En proceso'
+            ]);
+        }
+    }
+    
+    /**
+     * Verificar si todos los análisis de la muestra están completados
+     */
+    private function verificarMuestraCompletada()
+    {
+        $muestra = $this->analisis->muestra->fresh();
+        $analisisRestantes = $muestra->analisis()->whereNotIn('estado', ['En revision', 'Aprobado', 'Enviado'])->count();
+        
+        // Si no quedan análisis pendientes o en proceso, marcar muestra como completada
+        if ($analisisRestantes === 0) {
+            $muestra->update([
+                'estado' => 'Completado'
+            ]);
+        }
+    }
+
     public function guardarBorrador()
     {
         // TODO: Implementar guardado de borrador
@@ -249,15 +278,17 @@ class CapturarResultados extends Component
                 }
             }
             
-            // Actualizar estado del análisis
-            $estadoFinal = $this->modoEdicion && $this->analisis->estado === 'rechazado' 
-                ? 'finalizado' // Si estaba rechazado, volver a finalizado para reaprobación
-                : 'finalizado';
-                
+            // Actualizar estado de la muestra a 'En proceso' si estaba pendiente
+            $this->actualizarMuestraEnProceso();
+            
+            // Actualizar estado del análisis a 'En revision'
             $this->analisis->update([
-                'estado' => $estadoFinal,
+                'estado' => Analisis::ESTADO_EN_REVISION,
                 'fecha_finalizacion' => now(),
             ]);
+            
+            // Verificar si todos los análisis de la muestra están completados
+            $this->verificarMuestraCompletada();
             
             DB::commit();
             
@@ -361,10 +392,13 @@ class CapturarResultados extends Component
     {
         try {
             $this->analisis->update([
-                'estado' => 'aprobado',
+                'estado' => Analisis::ESTADO_APROBADO,
                 'aprobador_id' => auth()->id(),
                 'fecha_aprobacion' => now(),
             ]);
+            
+            // Verificar si todos los análisis de la muestra están completados
+            $this->verificarMuestraCompletada();
             
             session()->flash('success', 'Análisis aprobado exitosamente');
             return redirect()->route('analisis.revisar');
@@ -391,7 +425,7 @@ class CapturarResultados extends Component
         
         try {
             $this->analisis->update([
-                'estado' => 'rechazado',
+                'estado' => Analisis::ESTADO_PENDIENTE, // Volver a pendiente para que lo corrijan
                 'aprobador_id' => auth()->id(),
                 'observaciones_aprobador' => $this->observacionesRechazo,
                 'fecha_aprobacion' => now(),

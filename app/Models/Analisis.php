@@ -14,6 +14,12 @@ class Analisis extends Model
 
     protected $table = 'analisis';
 
+    // Estados disponibles
+    public const ESTADO_PENDIENTE = 'Pendiente';
+    public const ESTADO_EN_REVISION = 'En revision';
+    public const ESTADO_APROBADO = 'Aprobado';
+    public const ESTADO_ENVIADO = 'Enviado';
+
     protected $fillable = [
         'muestra_id',
         'tipo_analisis_id',
@@ -114,5 +120,32 @@ class Analisis extends Model
         return $this->belongsToMany(Insumo::class, 'analisis_insumos')
             ->withPivot('cantidad_usada')
             ->withTimestamps();
+    }
+
+    /**
+     * Obtener los estados disponibles
+     */
+    public static function getEstados(): array
+    {
+        return [
+            self::ESTADO_PENDIENTE => 'Pendiente',
+            self::ESTADO_EN_REVISION => 'En revision',
+            self::ESTADO_APROBADO => 'Aprobado',
+            self::ESTADO_ENVIADO => 'Enviado',
+        ];
+    }
+
+    /**
+     * Obtener el color del badge según el estado
+     */
+    public function getColorEstado(): string
+    {
+        return match($this->estado) {
+            self::ESTADO_PENDIENTE => 'amber',
+            self::ESTADO_EN_REVISION => 'blue',
+            self::ESTADO_APROBADO => 'green',
+            self::ESTADO_ENVIADO => 'purple',
+            default => 'zinc',
+        };
     }
 }
