@@ -15,10 +15,10 @@ class UsersSeeder extends Seeder
     {
         // Crear usuario Administrador
         $admin = User::firstOrCreate(
-            ['email' => 'admin@gmail.com'],
+            ['email' => 'admin@labvet.com'],
             [
                 'name' => 'Administrador',
-                'password' => Hash::make('password'),
+                'password' => Hash::make('password123'),
                 'email_verified_at' => now(),
             ]
         );

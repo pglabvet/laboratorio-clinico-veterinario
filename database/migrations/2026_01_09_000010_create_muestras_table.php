@@ -25,7 +25,7 @@ return new class extends Migration
             $table->foreignId('sucursal_id')->constrained('sucursales')->onDelete('cascade');
             $table->string('tipo_muestra');
             $table->timestamp('fecha_recepcion');
-            $table->enum('estado', ['Pendiente', 'En proceso', 'Completado', 'Enviado'])->default('Pendiente');
+            $table->string('estado');
             $table->text('observaciones')->nullable();
             $table->timestamps();
         });

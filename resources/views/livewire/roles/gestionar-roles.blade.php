@@ -10,44 +10,25 @@
     </div>
 
     {{-- Barra de acciones --}}
-    <div class="mb-6 flex flex-col gap-4">
-        <div class="flex flex-col sm:flex-row gap-4 sm:items-end sm:justify-between">
-            {{-- Búsqueda --}}
-            <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                <div class="w-full sm:w-80">
-                    <flux:input 
-                        wire:model.live.debounce.300ms="buscar"
-                        icon="magnifying-glass"
-                        placeholder="Buscar roles..."
-                        class="w-full"
-                    />
-                </div>
-
-                {{-- Botón limpiar filtro --}}
-                @if($buscar)
-                    <div class="flex items-center">
-                        <flux:button 
-                            wire:click="limpiarFiltro"
-                            variant="ghost"
-                            icon="x-mark"
-                        >
-                            Limpiar
-                        </flux:button>
-                    </div>
-                @endif
-            </div>
-
-            {{-- Botón crear --}}
-            @can('crear-roles')
-                <flux:button 
-                    wire:click="crear"
-                    icon="plus"
-                    variant="primary"
-                >
-                    Nuevo Rol
-                </flux:button>
-            @endcan
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        {{-- Búsqueda --}}
+        <div class="w-full sm:w-96">
+            <flux:input 
+                wire:model.live.debounce.300ms="buscar"
+                icon="magnifying-glass"
+                placeholder="Buscar roles..."
+                class="w-full"
+            />
         </div>
+
+        {{-- Botón crear --}}
+        <flux:button 
+            wire:click="crear"
+            icon="plus"
+            variant="primary"
+        >
+            Nuevo Rol
+        </flux:button>
     </div>
 
     {{-- Tabla de roles --}}
@@ -106,40 +87,34 @@
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
                                 <div class="flex items-center gap-2">
                                     {{-- Botón ver --}}
-                                    @can('ver-roles')
-                                        <flux:button
-                                            wire:click="ver({{ $role->id }})"
-                                            variant="ghost"
-                                            size="sm"
-                                            icon="eye"
-                                            color="neutral"
-                                            title="Ver detalles"
-                                        />
-                                    @endcan
+                                    <flux:button
+                                        wire:click="ver({{ $role->id }})"
+                                        variant="ghost"
+                                        size="sm"
+                                        icon="eye"
+                                        color="neutral"
+                                        title="Ver detalles"
+                                    />
 
                                     {{-- Botón editar --}}
-                                    @can('editar-roles')
-                                        <flux:button
-                                            wire:click="editar({{ $role->id }})"
-                                            variant="ghost"
-                                            size="sm"
-                                            icon="pencil"
-                                            color="cyan"
-                                            title="Editar"
-                                        />
-                                    @endcan
+                                    <flux:button
+                                        wire:click="editar({{ $role->id }})"
+                                        variant="ghost"
+                                        size="sm"
+                                        icon="pencil"
+                                        color="cyan"
+                                        title="Editar"
+                                    />
 
                                     {{-- Botón eliminar --}}
-                                    @can('eliminar-roles')
-                                        <flux:button
-                                            wire:click="confirmarEliminar({{ $role->id }})"
-                                            variant="ghost"
-                                            size="sm"
-                                            icon="trash"
-                                            color="red"
-                                            title="Eliminar"
-                                        />
-                                    @endcan
+                                    <flux:button
+                                        wire:click="confirmarEliminar({{ $role->id }})"
+                                        variant="ghost"
+                                        size="sm"
+                                        icon="trash"
+                                        color="red"
+                                        title="Eliminar"
+                                    />
                                 </div>
                             </td>
                         </tr>
@@ -175,7 +150,7 @@
     </div>
 
     {{-- Modal para crear/editar rol --}}
-    <flux:modal wire:model="modalAbierto" class="w-full max-w-4xl">
+    <flux:modal wire:model="modalAbierto" class="w-full max-w-3xl">
         <form wire:submit.prevent="guardar">
             <flux:heading size="lg" class="mb-2">
                 {{ $modoEdicion ? 'Editar Rol' : 'Nuevo Rol' }}
@@ -194,91 +169,20 @@
                     :error="$errors->first('name')"
                 />
 
-                {{-- Permisos agrupados --}}
+                {{-- Permisos --}}
                 <div>
-                    <div class="flex items-center justify-between mb-3">
-                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                            Permisos ({{ count($permissions) }} seleccionados)
-                        </label>
-                        <div class="flex gap-2">
-                            <flux:button 
-                                type="button"
-                                wire:click="seleccionarTodosPermisos"
-                                variant="ghost"
-                                size="sm"
-                            >
-                                Seleccionar todos
-                            </flux:button>
-                            <flux:button 
-                                type="button"
-                                wire:click="limpiarPermisos"
-                                variant="ghost"
-                                size="sm"
-                            >
-                                Limpiar
-                            </flux:button>
-                        </div>
-                    </div>
-
-                    @php
-                        // Definir permisos que pertenecen al Dashboard
-                        $permisosDashboard = [
-                            'ver-dashboard',
-                            'ver-estadisticas-completas',
-                            'filtrar-por-sucursal',
-                            'ver-graficos-estadisticas',
-                            'ver-actividad-reciente',
-                            'ver-alertas-inventario',
-                            'ver-ultimas-muestras',
-                        ];
-                        
-                        // Agrupar permisos por módulo/sección
-                        $permisosAgrupados = $allPermissions->groupBy(function($permission) use ($permisosDashboard) {
-                            $nombre = $permission->name;
-                            
-                            // Si está en la lista de permisos de Dashboard
-                            if (in_array($nombre, $permisosDashboard)) {
-                                return 'dashboard';
-                            }
-                            
-                            // Para otros permisos, tomar todo después del primer guión
-                            $parts = explode('-', $nombre);
-                            if (count($parts) > 1) {
-                                array_shift($parts);
-                                return implode('-', $parts);
-                            }
-                            
-                            return 'otros';
-                        });
-                        
-                        // Ordenar: Dashboard primero, luego el resto alfabéticamente
-                        $permisosAgrupados = $permisosAgrupados->sortKeys()->sortBy(function($permisos, $key) {
-                            return $key === 'dashboard' ? '0' : $key;
-                        });
-                    @endphp
-
-                    <div class="max-h-[500px] overflow-y-auto space-y-4 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700">
-                        @foreach($permisosAgrupados as $categoria => $permisos)
-                            <div class="bg-white dark:bg-neutral-800 rounded-lg p-4 border border-neutral-200 dark:border-neutral-700">
-                                <h4 class="text-sm font-semibold text-neutral-900 dark:text-neutral-100 mb-3 capitalize flex items-center gap-2">
-                                    <span class="flex h-6 w-6 items-center justify-center rounded bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 text-xs font-bold">
-                                        {{ $permisos->count() }}
-                                    </span>
-                                    {{ str_replace('-', ' ', $categoria) }}
-                                </h4>
-                                <div class="grid grid-cols-2 gap-3">
-                                    @foreach($permisos->sortBy('name') as $permission)
-                                        <flux:checkbox 
-                                            wire:model.live="permissions"
-                                            :value="$permission->id"
-                                            :label="$permission->name"
-                                        />
-                                    @endforeach
-                                </div>
-                            </div>
+                    <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
+                        Permisos
+                    </label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
+                        @foreach($allPermissions as $permission)
+                            <flux:checkbox 
+                                wire:model="permissions"
+                                :value="$permission->id"
+                                :label="$permission->name"
+                            />
                         @endforeach
                     </div>
-
                     @if(count($allPermissions) == 0)
                         <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-2">
                             No hay permisos disponibles. Crea permisos primero.
@@ -288,7 +192,7 @@
             </div>
 
             {{-- Botones del modal --}}
-            <div class="mt-8 flex justify-end gap-3 border-t border-neutral-200 dark:border-neutral-700 pt-4">
+            <div class="mt-8 flex justify-end gap-3">
                 <flux:button 
                     type="button"
                     wire:click="cerrarModal"
@@ -307,119 +211,65 @@
     </flux:modal>
 
     {{-- Modal para ver detalles del rol --}}
-    <flux:modal wire:model="modalVer" class="w-full max-w-3xl">
+    <flux:modal wire:model="modalVer" class="w-full max-w-2xl">
         @if($roleAVer)
             <div class="space-y-6">
                 {{-- Encabezado --}}
                 <div>
                     <flux:heading size="lg" class="mb-1">Detalles del Rol</flux:heading>
-                    <flux:subheading>{{ $roleAVer->name }}</flux:subheading>
+                    <flux:subheading>Información completa del rol</flux:subheading>
                 </div>
 
-                {{-- Información general --}}
-                <div class="grid grid-cols-2 gap-4 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
+                {{-- Contenido --}}
+                <div class="space-y-6">
+                    {{-- Nombre --}}
                     <div>
-                        <label class="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">
-                            Total de Permisos
+                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                            Nombre del Rol
                         </label>
-                        <p class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-                            {{ $roleAVer->permissions->count() }}
+                        <p class="text-base text-neutral-900 dark:text-neutral-100">
+                            {{ $roleAVer->name }}
                         </p>
                     </div>
+
+                    {{-- Permisos --}}
                     <div>
-                        <label class="block text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-1">
-                            Fecha de Creación
+                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-3">
+                            Permisos Asignados ({{ $roleAVer->permissions->count() }})
                         </label>
-                        <p class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-                            {{ $roleAVer->created_at->format('d/m/Y') }}
-                        </p>
-                    </div>
-                </div>
-
-                {{-- Permisos agrupados --}}
-                <div>
-                    <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-4">
-                        Permisos Asignados
-                    </label>
-                    
-                    @if($roleAVer->permissions->count() > 0)
-                        @php
-                            // Definir permisos que pertenecen al Dashboard
-                            $permisosDashboard = [
-                                'ver-dashboard',
-                                'ver-estadisticas-completas',
-                                'filtrar-por-sucursal',
-                                'ver-graficos-estadisticas',
-                                'ver-actividad-reciente',
-                                'ver-alertas-inventario',
-                                'ver-ultimas-muestras',
-                            ];
-                            
-                            // Agrupar permisos por módulo/sección
-                            $permisosAgrupados = $roleAVer->permissions->groupBy(function($permission) use ($permisosDashboard) {
-                                $nombre = $permission->name;
-                                
-                                // Si está en la lista de permisos de Dashboard
-                                if (in_array($nombre, $permisosDashboard)) {
-                                    return 'dashboard';
-                                }
-                                
-                                // Para otros permisos, tomar todo después del primer guión
-                                $parts = explode('-', $nombre);
-                                if (count($parts) > 1) {
-                                    array_shift($parts); // Quitar la primera parte (ver, gestionar, etc)
-                                    return implode('-', $parts);
-                                }
-                                
-                                return 'otros';
-                            });
-                            
-                            // Ordenar: Dashboard primero, luego el resto alfabéticamente
-                            $permisosAgrupados = $permisosAgrupados->sortKeys()->sortBy(function($permisos, $key) {
-                                return $key === 'dashboard' ? '0' : $key;
-                            });
-                        @endphp
-
-                        <div class="space-y-4">
-                            @foreach($permisosAgrupados as $categoria => $permisos)
-                                <div class="border border-neutral-200 dark:border-neutral-700 rounded-lg p-4">
-                                    <h4 class="text-sm font-semibold text-neutral-900 dark:text-neutral-100 mb-3 capitalize">
-                                        {{ str_replace('-', ' ', $categoria) }}
-                                        <span class="ml-2 text-xs font-normal text-neutral-500 dark:text-neutral-400">
-                                            ({{ $permisos->count() }})
-                                        </span>
-                                    </h4>
-                                    <div class="grid grid-cols-2 gap-2">
-                                        @foreach($permisos->sortBy('name') as $permission)
-                                            <div class="flex items-center gap-2 text-sm text-neutral-700 dark:text-neutral-300">
-                                                <svg class="h-4 w-4 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                </svg>
-                                                <span>{{ $permission->name }}</span>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="text-center py-8">
-                            <svg class="mx-auto h-12 w-12 text-neutral-400 dark:text-neutral-600" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                            </svg>
-                            <p class="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+                        @if($roleAVer->permissions->count() > 0)
+                            <div class="flex flex-wrap gap-2">
+                                @foreach($roleAVer->permissions as $permission)
+                                    <span class="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+                                        {{ $permission->name }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="text-sm text-neutral-500 dark:text-neutral-400">
                                 Este rol no tiene permisos asignados
                             </p>
-                        </div>
-                    @endif
+                        @endif
+                    </div>
+
+                    {{-- Fecha de creación --}}
+                    <div>
+                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+                            Fecha de Creación
+                        </label>
+                        <p class="text-base text-neutral-900 dark:text-neutral-100">
+                            {{ $roleAVer->created_at->format('d/m/Y H:i') }}
+                        </p>
+                    </div>
                 </div>
 
                 {{-- Botón cerrar --}}
-                <div class="flex justify-end border-t border-neutral-200 dark:border-neutral-700 pt-4">
+                <div class="flex justify-end">
                     <flux:button 
                         type="button"
                         wire:click="cerrarModalVer"
-                        variant="ghost"
+                        variant="primary"
+                        color="cyan"
                     >
                         Cerrar
                     </flux:button>

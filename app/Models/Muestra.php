@@ -6,17 +6,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Picqer\Barcode\BarcodeGeneratorSVG;
 
 class Muestra extends Model
 {
     use HasFactory;
-
-    // Estados disponibles
-    public const ESTADO_PENDIENTE = 'Pendiente';
-    public const ESTADO_EN_PROCESO = 'En proceso';
-    public const ESTADO_COMPLETADO = 'Completado';
-    public const ESTADO_ENVIADO = 'Enviado';
 
     protected $fillable = [
         'codigo_muestra',
@@ -69,72 +62,5 @@ class Muestra extends Model
     public function analisis(): HasMany
     {
         return $this->hasMany(Analisis::class);
-    }
-
-    /**
-     * Generar código de barras como SVG
-     */
-    public function generarCodigoBarras(): string
-    {
-        $generator = new BarcodeGeneratorSVG();
-        // Parámetros optimizados para impresora térmica 203 DPI
-        $svg = $generator->getBarcode(
-            $this->codigo_muestra,
-            $generator::TYPE_CODE_128,
-            2.0, //  ancho de barra optimizado para 203 DPI
-            65 //  altura aumentada para mejor lectura del escáner
-        );
-
-        // Agregar viewBox para que el SVG escale correctamente por CSS
-        preg_match('/width="([^"]+)"/', $svg, $widthMatch);
-        preg_match('/height="([^"]+)"/', $svg, $heightMatch);
-        $width = floatval($widthMatch[1] ?? 0);
-        $height = floatval($heightMatch[1] ?? 0);
-
-        // Generar ID único basado en el código de muestra para evitar problemas de caché
-        $uniqueId = 'barcode-' . $this->codigo_muestra . '-' . uniqid();
-
-        if ($width > 0 && $height > 0 && !str_contains($svg, 'viewBox=')) {
-            $svg = preg_replace(
-                '/<svg\b([^>]*)>/',
-                '<svg$1 id="' . $uniqueId . '" viewBox="0 0 ' . $width . ' ' . $height . '" preserveAspectRatio="xMidYMid meet">',
-                $svg,
-                1
-            );
-        } elseif (str_contains($svg, 'preserveAspectRatio=')) {
-            $svg = preg_replace('/preserveAspectRatio="[^"]*"/', 'preserveAspectRatio="xMidYMid meet"', $svg, 1);
-            $svg = preg_replace('/<svg\b([^>]*)>/', '<svg$1 id="' . $uniqueId . '">', $svg, 1);
-        } else {
-            $svg = preg_replace('/<svg\b([^>]*)>/', '<svg$1 id="' . $uniqueId . '" preserveAspectRatio="xMidYMid meet">', $svg, 1);
-        }
-
-        return $svg;
-    }
-
-    /**
-     * Obtener los estados disponibles
-     */
-    public static function getEstados(): array
-    {
-        return [
-            self::ESTADO_PENDIENTE => 'Pendiente',
-            self::ESTADO_EN_PROCESO => 'En proceso',
-            self::ESTADO_COMPLETADO => 'Completado',
-            self::ESTADO_ENVIADO => 'Enviado',
-        ];
-    }
-
-    /**
-     * Obtener el color del badge según el estado
-     */
-    public function getColorEstado(): string
-    {
-        return match($this->estado) {
-            self::ESTADO_PENDIENTE => 'amber',
-            self::ESTADO_EN_PROCESO => 'blue',
-            self::ESTADO_COMPLETADO => 'green',
-            self::ESTADO_ENVIADO => 'purple',
-            default => 'zinc',
-        };
     }
 }

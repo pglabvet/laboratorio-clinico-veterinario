@@ -15,21 +15,17 @@ class Insumo extends Model
     protected $fillable = [
         'nombre',
         'categoria_id',
-        'unidad_medida_id',
-        'estado', 
+        'unidad',
+        'stock_actual',
+        'stock_minimo',
+        'estado',
     ];
 
     protected $casts = [
+        'stock_actual' => 'decimal:2',
+        'stock_minimo' => 'decimal:2',
         'estado' => 'boolean',
     ];
-
-    /**
-     * Relación con unidad de medida
-     */
-    public function unidadMedida(): BelongsTo
-    {
-        return $this->belongsTo(UnidadMedida::class, 'unidad_medida_id');
-    }
 
     /**
      * Relación con categoría de insumo
@@ -37,14 +33,6 @@ class Insumo extends Model
     public function categoria(): BelongsTo
     {
         return $this->belongsTo(CategoriaInsumo::class, 'categoria_id');
-    }
-
-    /**
-     * Relación con inventarios por sucursal
-     */
-    public function inventarios(): HasMany
-    {
-        return $this->hasMany(InventarioSucursal::class);
     }
 
     /**
@@ -73,13 +61,5 @@ class Insumo extends Model
         return $this->belongsToMany(Analisis::class, 'analisis_insumos')
             ->withPivot('cantidad_usada')
             ->withTimestamps();
-    }
-
-    /**
-     * Scope para obtener solo insumos activos
-     */
-    public function scopeActivos($query)
-    {
-        return $query->where('estado', true);
     }
 }

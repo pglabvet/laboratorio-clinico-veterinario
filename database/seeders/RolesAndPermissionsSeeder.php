@@ -18,21 +18,11 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Crear permisos
         $permissions = [
-            // Dashboard
-            'ver-dashboard',
-            'ver-estadisticas-completas',
-            'filtrar-por-sucursal',
-            'ver-graficos-estadisticas',
-            'ver-actividad-reciente',
-            'ver-alertas-inventario',
-            'ver-ultimas-muestras',
-            
             // Usuarios
             'ver-usuarios',
             'crear-usuarios',
             'editar-usuarios',
             'eliminar-usuarios',
-            'gestionar-usuarios', // Permiso compuesto para CRUD completo
             
             // Sucursales
             'ver-sucursales',
@@ -92,8 +82,6 @@ class RolesAndPermissionsSeeder extends Seeder
         // Crear rol de Veterinario con permisos limitados
         $veterinarioRole = Role::firstOrCreate(['name' => 'Veterinario', 'guard_name' => 'web']);
         $veterinarioRole->syncPermissions([
-            'ver-dashboard',
-            'ver-actividad-reciente',
             'ver-veterinarias',
             'ver-muestras',
             'crear-muestras',
@@ -109,9 +97,6 @@ class RolesAndPermissionsSeeder extends Seeder
         // Crear rol de Laboratorista
         $laboratoristaRole = Role::firstOrCreate(['name' => 'Laboratorista', 'guard_name' => 'web']);
         $laboratoristaRole->syncPermissions([
-            'ver-dashboard',
-            'ver-actividad-reciente',
-            'ver-alertas-inventario',
             'ver-muestras',
             'editar-muestras',
             'ver-analisis',
@@ -127,10 +112,6 @@ class RolesAndPermissionsSeeder extends Seeder
         // Crear rol de Bioquímico
         $bioquimicoRole = Role::firstOrCreate(['name' => 'Bioquímico', 'guard_name' => 'web']);
         $bioquimicoRole->syncPermissions([
-            'ver-dashboard',
-            'ver-graficos-estadisticas',
-            'ver-actividad-reciente',
-            'ver-ultimas-muestras',
             'ver-muestras',
             'crear-muestras',
             'editar-muestras',
@@ -150,8 +131,6 @@ class RolesAndPermissionsSeeder extends Seeder
         // Crear rol de Recepcionista
         $recepcionistaRole = Role::firstOrCreate(['name' => 'Recepcionista', 'guard_name' => 'web']);
         $recepcionistaRole->syncPermissions([
-            'ver-dashboard',
-            'ver-actividad-reciente',
             'ver-veterinarias',
             'ver-muestras',
             'crear-muestras',
@@ -162,8 +141,6 @@ class RolesAndPermissionsSeeder extends Seeder
         // Crear rol de Usuario básico (solo lectura)
         $usuarioRole = Role::firstOrCreate(['name' => 'Usuario', 'guard_name' => 'web']);
         $usuarioRole->syncPermissions([
-            'ver-dashboard',
-            'ver-actividad-reciente',
             'ver-muestras',
             'ver-analisis',
             'ver-resultados',

@@ -11,13 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('resultados', function (Blueprint $table) {
+        Schema::create('rangos_referencia', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('analisis_id')->constrained('analisis')->onDelete('cascade');
             $table->foreignId('parametro_id')->constrained('parametros_analisis')->onDelete('cascade');
-            $table->string('valor');
-            $table->boolean('fuera_rango')->default(false);
+            $table->foreignId('especie_id')->constrained('especies')->onDelete('cascade');
+            $table->decimal('valor_minimo', 10, 2)->nullable();
+            $table->decimal('valor_maximo', 10, 2)->nullable();
+            $table->string('valor_texto')->nullable();
             $table->timestamps();
+            
+            // Índice único compuesto
+            $table->unique(['parametro_id', 'especie_id']);
         });
     }
 
@@ -26,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('resultados');
+        Schema::dropIfExists('rangos_referencia');
     }
 };
