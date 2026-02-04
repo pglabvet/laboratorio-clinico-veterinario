@@ -9,9 +9,9 @@
                 </div>
                 <div class="flex items-center gap-3">
                     <flux:badge 
-                        :color="$analisis->estado === 'finalizado' ? 'blue' : ($analisis->estado === 'rechazado' ? 'red' : 'zinc')" 
+                        :color="$analisis->estado === 'En revision' ? 'blue' : ($analisis->estado === 'Aprobado' ? 'green' : ($analisis->estado === 'Enviado' ? 'purple' : 'amber'))" 
                         size="lg">
-                        {{ ucfirst($analisis->estado) }}
+                        {{ $analisis->estado }}
                     </flux:badge>
                     <flux:badge color="zinc" size="lg">
                         Análisis #{{ $analisis->id }}
@@ -19,14 +19,14 @@
                 </div>
             </div>
             
-            @if($analisis->estado === 'rechazado' && $analisis->observaciones_aprobador)
+            @if($analisis->estado === 'Pendiente' && $analisis->observaciones_aprobador)
                 <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                     <div class="flex items-start gap-3">
                         <svg class="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                         <div class="flex-1">
-                            <p class="font-semibold text-red-900 dark:text-red-100 mb-1">Análisis rechazado</p>
+                            <p class="font-semibold text-red-900 dark:text-red-100 mb-1">Análisis devuelto para corrección</p>
                             <p class="text-sm text-red-700 dark:text-red-300">{{ $analisis->observaciones_aprobador }}</p>
                         </div>
                     </div>
@@ -157,30 +157,20 @@
                 @if($modoRevision)
                     {{-- Botones de revisión (Aprobar/Rechazar) --}}
                     <div class="flex gap-3">
-                        @if($analisis->estado === 'aprobado')
+                        @if($analisis->estado === 'Aprobado')
                             {{-- Botón PDF solo para análisis aprobados --}}
-                            <button 
-                                id="btn-descargar-pdf"
-                                @click="descargarPDF"
-                                type="button"
-                                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                </svg>
+                            <flux:button 
+                                wire:click="descargarPdf"
+                                variant="primary" 
+                                icon="document-arrow-down">
                                 Descargar PDF
-                            </button>
+                            </flux:button>
                         @else
                             <flux:button 
                                 wire:click="abrirModalRechazo"
                                 variant="danger" 
                                 icon="x-circle">
                                 Rechazar
-                            </flux:button>
-                            <flux:button 
-                                @click="window.dispatchEvent(new Event('antes-de-guardar')); setTimeout(() => $wire.call('finalizarYEnviar'), 150)"
-                                variant="outline" 
-                                icon="pencil">
-                                Guardar Cambios
                             </flux:button>
                             <flux:button 
                                 wire:click="aprobarAnalisis"
@@ -200,7 +190,7 @@
                             Guardar Borrador
                         </flux:button>
                         <flux:button 
-                            @click="window.dispatchEvent(new Event('antes-de-guardar')); setTimeout(() => $wire.call('finalizarYEnviar'), 150)"
+                            wire:click="finalizarYEnviar"
                             variant="primary" 
                             icon="check">
                             Finalizar y Enviar

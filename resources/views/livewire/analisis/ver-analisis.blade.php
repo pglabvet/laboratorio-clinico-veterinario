@@ -11,12 +11,13 @@
                     Volver
                 </flux:button>
                 
-                @if($analisis->estado === 'aprobado')
+            
+                @if($analisis->estado === 'Aprobado')
                     {{-- Botón PDF para análisis aprobados --}}
                     <flux:button href="{{ route('analisis.pdf', $analisis->id) }}" variant="primary" icon="document-arrow-down">
                         Descargar PDF
                     </flux:button>
-                @elseif($analisis->estado === 'finalizado')
+                @elseif($analisis->estado === 'En revision')
                     <flux:button href="{{ route('resultados.editar', $analisis->id) }}" variant="outline" icon="pencil">
                         Editar
                     </flux:button>

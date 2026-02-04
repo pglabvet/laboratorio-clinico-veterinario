@@ -20,7 +20,7 @@ class FormularioMuestra extends Component
     public $codigo_muestra;
     public $tipo_muestra;
     public $fecha_recepcion;
-    public $estado = 'pendiente';
+    public $estado = 'Pendiente';
     public $observaciones;
     public $sucursal_id;
 
@@ -311,7 +311,7 @@ class FormularioMuestra extends Component
                     'tipo_analisis_id' => $analisisData['tipo_analisis_id'],
                     'plantilla_formulario_id' => $analisisData['plantilla_id'],
                     'bioquimico_id' => auth()->id(),
-                    'estado' => 'pendiente',
+                    'estado' => 'Pendiente',
                 ]);
             }
 
