@@ -7,6 +7,7 @@ use App\Models\Sucursal;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 use Spatie\Permission\Models\Role;
 
 class GestionarUsuarios extends Component
@@ -192,7 +193,7 @@ class GestionarUsuarios extends Component
             $usuario = User::findOrFail($this->usuarioAEliminar);
             
             // No permitir eliminar al usuario actual
-            if ($usuario->id === auth()->id()) {
+            if ($usuario->id === Auth::id()) {
                 session()->flash('error', 'No puedes eliminar tu propio usuario');
                 $this->modalEliminar = false;
                 $this->usuarioAEliminar = null;
@@ -217,7 +218,7 @@ class GestionarUsuarios extends Component
         try {
             $usuario = User::findOrFail($id);
             
-            if ($usuario->id === auth()->id()) {
+            if ($usuario->id === Auth::id()) {
                 session()->flash('error', 'No puedes desactivar tu propio usuario');
                 return;
             }
