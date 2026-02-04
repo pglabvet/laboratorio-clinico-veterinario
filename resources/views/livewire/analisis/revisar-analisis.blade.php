@@ -13,7 +13,7 @@
     {{-- Barra de filtros --}}
     <div class="mb-6 space-y-4">
         {{-- Fila 1: Búsqueda y filtros principales --}}
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-end">
             {{-- Búsqueda --}}
             <div class="w-full sm:flex-1">
                 <flux:input 
@@ -25,105 +25,114 @@
             </div>
 
             {{-- Filtro por estado --}}
-            <div class="w-full sm:w-48">
-                <flux:select wire:model.live="filtroEstado" placeholder="Filtrado">
-                    <option value="">Todos los tipos</option>
-                    <option value="pendiente">Pendiente</option>
-                    <option value="en_proceso">En proceso</option>
-                    <option value="finalizado">Finalizado</option>
-                    <option value="aprobado">Aprobado</option>
-                    <option value="rechazado">Rechazado</option>
-                </flux:select>
+            <div class="w-full sm:w-auto">
+                <flux:dropdown>
+                    <flux:button variant="outline" icon="funnel" icon-trailing="chevron-down">
+                        {{ $filtroEstado ? $filtroEstado : 'Estado' }}
+                    </flux:button>
+
+                    <flux:menu>
+                        <flux:menu.item wire:click="$set('filtroEstado', '')" icon="bars-3">
+                            Todos los estados
+                        </flux:menu.item>
+                        <flux:menu.separator />
+                        <flux:menu.item wire:click="$set('filtroEstado', 'Pendiente')" icon="clock">
+                            Pendiente
+                        </flux:menu.item>
+                        <flux:menu.item wire:click="$set('filtroEstado', 'En revision')" icon="magnifying-glass">
+                            En revisión
+                        </flux:menu.item>
+                        <flux:menu.item wire:click="$set('filtroEstado', 'Aprobado')" icon="check-circle">
+                            Aprobado
+                        </flux:menu.item>
+                        <flux:menu.item wire:click="$set('filtroEstado', 'Enviado')" icon="paper-airplane">
+                            Enviado
+                        </flux:menu.item>
+                    </flux:menu>
+                </flux:dropdown>
             </div>
 
-            {{-- Filtro por tipo --}}
-            <div class="w-full sm:w-48">
-                <flux:select wire:model.live="filtroTipoAnalisis" placeholder="Todos los tipos">
-                    <option value="">Todos los tipos</option>
-                    @foreach($tiposAnalisis as $tipo)
-                        <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
-                    @endforeach
-                </flux:select>
+            {{-- Filtro por tipo de análisis --}}
+            <div class="w-full sm:w-auto">
+                <flux:dropdown>
+                    <flux:button variant="outline" icon="beaker" icon-trailing="chevron-down">
+                        {{ $filtroTipoAnalisis ? $tiposAnalisis->firstWhere('id', $filtroTipoAnalisis)?->nombre : 'Tipo análisis' }}
+                    </flux:button>
+
+                    <flux:menu>
+                        <flux:menu.item wire:click="$set('filtroTipoAnalisis', '')" icon="bars-3">
+                            Todos los tipos
+                        </flux:menu.item>
+                        <flux:menu.separator />
+                        @foreach($tiposAnalisis as $tipo)
+                            <flux:menu.item wire:click="$set('filtroTipoAnalisis', '{{ $tipo->id }}')" icon="document-text">
+                                {{ $tipo->nombre }}
+                            </flux:menu.item>
+                        @endforeach
+                    </flux:menu>
+                </flux:dropdown>
+            </div>
+
+            {{-- Dropdown de filtros rápidos de fecha --}}
+            <div class="w-full sm:w-auto">
+                <flux:dropdown>
+                    <flux:button variant="outline" icon="calendar-days" icon-trailing="chevron-down">
+                        Período
+                    </flux:button>
+
+                    <flux:menu>
+                        <flux:menu.item wire:click="filtrarHoy" icon="sun">
+                            Hoy
+                        </flux:menu.item>
+                        <flux:menu.item wire:click="filtrarAyer" icon="arrow-uturn-left">
+                            Ayer
+                        </flux:menu.item>
+                        <flux:menu.item wire:click="filtrarUltimos7Dias" icon="calendar">
+                            Últimos 7 días
+                        </flux:menu.item>
+                        <flux:menu.separator />
+                        <flux:menu.item wire:click="filtrarEstaSemana" icon="calendar-days">
+                            Esta semana
+                        </flux:menu.item>
+                        <flux:menu.item wire:click="filtrarEsteMes" icon="calendar-days">
+                            Este mes
+                        </flux:menu.item>
+                        <flux:menu.item wire:click="filtrarAnioActual" icon="calendar-days">
+                            Año actual
+                        </flux:menu.item>
+                    </flux:menu>
+                </flux:dropdown>
             </div>
         </div>
 
-        {{-- Fila 2: Filtros de fecha con botones rápidos --}}
-        <div class="flex flex-col gap-4">
-            {{-- Botones de filtros rápidos --}}
-            <div class="flex flex-wrap gap-2">
-                <flux:button 
-                    wire:click="filtrarHoy"
-                    variant="ghost" 
-                    size="sm"
-                >
-                    Hoy
-                </flux:button>
-                <flux:button 
-                    wire:click="filtrarAyer"
-                    variant="ghost" 
-                    size="sm"
-                >
-                    Ayer
-                </flux:button>
-                <flux:button 
-                    wire:click="filtrarUltimos7Dias"
-                    variant="ghost" 
-                    size="sm"
-                >
-                    Últimos 7 días
-                </flux:button>
-                <flux:button 
-                    wire:click="filtrarEstaSemana"
-                    variant="ghost" 
-                    size="sm"
-                >
-                    Esta semana
-                </flux:button>
-                <flux:button 
-                    wire:click="filtrarEsteMes"
-                    variant="ghost" 
-                    size="sm"
-                >
-                    Este mes
-                </flux:button>
-                <flux:button 
-                    wire:click="filtrarAnioActual"
-                    variant="ghost" 
-                    size="sm"
-                >
-                    Año actual
-                </flux:button>
+        {{-- Fila 2: Rango de fechas personalizado --}}
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-end">
+            {{-- Fecha desde --}}
+            <div class="w-full sm:w-auto">
+                <flux:input 
+                    type="date"
+                    wire:model.live="filtroFechaDesde"
+                    label="Desde"
+                />
             </div>
 
-            {{-- Inputs de fecha manual --}}
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-end">
-                {{-- Fecha desde --}}
-                <div class="w-full sm:w-auto">
-                    <flux:input 
-                        type="date"
-                        wire:model.live="filtroFechaDesde"
-                        label="Desde"
-                    />
-                </div>
-
-                {{-- Fecha hasta --}}
-                <div class="w-full sm:w-auto">
-                    <flux:input 
-                        type="date"
-                        wire:model.live="filtroFechaHasta"
-                        label="Hasta"
-                    />
-                </div>
-
-                {{-- Botón limpiar filtros --}}
-                <flux:button 
-                    wire:click="limpiarFiltros" 
-                    variant="ghost" 
-                    icon="arrow-path"
-                >
-                    Limpiar filtros
-                </flux:button>
+            {{-- Fecha hasta --}}
+            <div class="w-full sm:w-auto">
+                <flux:input 
+                    type="date"
+                    wire:model.live="filtroFechaHasta"
+                    label="Hasta"
+                />
             </div>
+
+            {{-- Botón limpiar filtros --}}
+            <flux:button 
+                wire:click="limpiarFiltros" 
+                variant="ghost" 
+                icon="arrow-path"
+            >
+                Limpiar filtros
+            </flux:button>
         </div>
     </div>
 
@@ -212,11 +221,10 @@
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
                                 @php
                                     $estadoConfig = [
-                                        'pendiente' => ['color' => 'zinc', 'texto' => 'Pendiente'],
-                                        'en_proceso' => ['color' => 'blue', 'texto' => 'En Proceso'],
-                                        'finalizado' => ['color' => 'yellow', 'texto' => 'Finalizado'],
-                                        'aprobado' => ['color' => 'green', 'texto' => 'Aprobado'],
-                                        'rechazado' => ['color' => 'red', 'texto' => 'Rechazado'],
+                                        'Pendiente' => ['color' => 'amber', 'texto' => 'Pendiente'],
+                                        'En revision' => ['color' => 'blue', 'texto' => 'En revisión'],
+                                        'Aprobado' => ['color' => 'green', 'texto' => 'Aprobado'],
+                                        'Enviado' => ['color' => 'purple', 'texto' => 'Enviado'],
                                     ];
                                     $config = $estadoConfig[$item->estado] ?? ['color' => 'zinc', 'texto' => $item->estado];
                                 @endphp
@@ -236,7 +244,7 @@
                                         title="Ver y editar resultados"
                                     />
 
-                                    @if($item->estado === 'finalizado')
+                                    @if($item->estado === 'En revision')
                                         {{-- Botón aprobar --}}
                                         <flux:button
                                             wire:click="aprobarAnalisis({{ $item->id }})"
@@ -257,16 +265,6 @@
                                             icon="x-mark"
                                             color="red"
                                             title="Rechazar"
-                                        />
-                                    @elseif($item->estado === 'rechazado')
-                                        {{-- Botón editar --}}
-                                        <flux:button
-                                            href="{{ route('resultados.editar', $item->id) }}"
-                                            variant="ghost"
-                                            size="sm"
-                                            icon="pencil"
-                                            color="cyan"
-                                            title="Corregir resultados"
                                         />
                                     @endif
                                 </div>
