@@ -147,8 +147,113 @@ class CapturarResultados extends Component
     
     public function guardarBorrador()
     {
-        // TODO: Implementar guardado de borrador
-        session()->flash('success', 'Borrador guardado correctamente');
+        try {
+            DB::beginTransaction();
+            
+            // Obtener las imágenes que se van a mantener
+            $imagenesAMantener = [];
+            foreach ($this->imagenes as $index => $imagenData) {
+                if (!empty($imagenData['preview1'])) {
+                    $imagenesAMantener[] = $imagenData['preview1'];
+                }
+                if (!empty($imagenData['preview2'])) {
+                    $imagenesAMantener[] = $imagenData['preview2'];
+                }
+            }
+            
+            // Eliminar solo las imágenes que NO se van a mantener
+            $imagenesAnteriores = $this->analisis->resultados()->where('tipo', 'campo-imagenes')->get();
+            foreach ($imagenesAnteriores as $resultado) {
+                if (isset($resultado->valor['imagen1']) && !in_array($resultado->valor['imagen1'], $imagenesAMantener)) {
+                    Storage::disk('public')->delete($resultado->valor['imagen1']);
+                }
+                if (isset($resultado->valor['imagen2']) && !in_array($resultado->valor['imagen2'], $imagenesAMantener)) {
+                    Storage::disk('public')->delete($resultado->valor['imagen2']);
+                }
+            }
+            
+            // Eliminar todos los resultados anteriores de la BD
+            $this->analisis->resultados()->delete();
+            
+            $resultadosGuardados = 0;
+            
+            // Guardar todos los resultados de componentes dinámicos
+            foreach ($this->componentesData as $index => $componenteData) {
+                $componente = $this->plantilla->componentes[$index];
+                
+                // Manejar componente de imágenes
+                if ($componenteData['tipo'] === 'campo-imagenes' && isset($this->imagenes[$index])) {
+                    $imagenesGuardadas = [];
+                    
+                    // Guardar imagen 1
+                    if (!empty($this->imagenes[$index]['imagen1'])) {
+                        // Nueva imagen subida
+                        $path1 = $this->imagenes[$index]['imagen1']->store('analisis/imagenes', 'public');
+                        $imagenesGuardadas['imagen1'] = $path1;
+                    } elseif (!empty($this->imagenes[$index]['preview1'])) {
+                        // Mantener imagen anterior (no fue eliminada ni reemplazada)
+                        $imagenesGuardadas['imagen1'] = $this->imagenes[$index]['preview1'];
+                    }
+                    
+                    // Guardar imagen 2
+                    if (!empty($this->imagenes[$index]['imagen2'])) {
+                        // Nueva imagen subida
+                        $path2 = $this->imagenes[$index]['imagen2']->store('analisis/imagenes', 'public');
+                        $imagenesGuardadas['imagen2'] = $path2;
+                    } elseif (!empty($this->imagenes[$index]['preview2'])) {
+                        // Mantener imagen anterior (no fue eliminada ni reemplazada)
+                        $imagenesGuardadas['imagen2'] = $this->imagenes[$index]['preview2'];
+                    }
+                    
+                    // Guardar en BD si hay imágenes
+                    if (!empty($imagenesGuardadas)) {
+                        Resultado::create([
+                            'analisis_id' => $this->analisis->id,
+                            'parametro_id' => null,
+                            'tipo' => 'campo-imagenes',
+                            'valor' => $imagenesGuardadas,
+                            'fuera_rango' => false,
+                        ]);
+                        
+                        $resultadosGuardados++;
+                    }
+                    
+                    continue;
+                }
+                
+                // Solo guardar si hay datos y no están vacíos
+                if (!empty($componenteData['data'])) {
+                    // Filtrar datos vacíos dependiendo del tipo
+                    $datosParaGuardar = $this->filtrarDatosVacios($componenteData['data'], $componenteData['tipo']);
+                    
+                    if (!empty($datosParaGuardar)) {
+                        Resultado::create([
+                            'analisis_id' => $this->analisis->id,
+                            'parametro_id' => null,
+                            'tipo' => $componenteData['tipo'],
+                            'valor' => $datosParaGuardar,
+                            'fuera_rango' => false,
+                        ]);
+                        
+                        $resultadosGuardados++;
+                    }
+                }
+            }
+            
+            // NO actualizar estado ni fecha_finalizacion - permanece en captura
+            
+            DB::commit();
+            
+            session()->flash('success', "Borrador guardado correctamente. Se guardaron {$resultadosGuardados} componente(s). Puedes continuar editando.");
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error al guardar borrador:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            session()->flash('error', 'Error al guardar borrador: ' . $e->getMessage());
+        }
     }
     
     public function finalizarYEnviar()

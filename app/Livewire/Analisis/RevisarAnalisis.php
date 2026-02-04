@@ -46,6 +46,42 @@ class RevisarAnalisis extends Component
         $this->filtroFechaHasta = '';
     }
 
+    public function filtrarHoy()
+    {
+        $this->filtroFechaDesde = now()->format('Y-m-d');
+        $this->filtroFechaHasta = now()->format('Y-m-d');
+    }
+
+    public function filtrarAyer()
+    {
+        $this->filtroFechaDesde = now()->subDay()->format('Y-m-d');
+        $this->filtroFechaHasta = now()->subDay()->format('Y-m-d');
+    }
+
+    public function filtrarUltimos7Dias()
+    {
+        $this->filtroFechaDesde = now()->subDays(6)->format('Y-m-d');
+        $this->filtroFechaHasta = now()->format('Y-m-d');
+    }
+
+    public function filtrarEstaSemana()
+    {
+        $this->filtroFechaDesde = now()->startOfWeek()->format('Y-m-d');
+        $this->filtroFechaHasta = now()->endOfWeek()->format('Y-m-d');
+    }
+
+    public function filtrarEsteMes()
+    {
+        $this->filtroFechaDesde = now()->startOfMonth()->format('Y-m-d');
+        $this->filtroFechaHasta = now()->endOfMonth()->format('Y-m-d');
+    }
+
+    public function filtrarAnioActual()
+    {
+        $this->filtroFechaDesde = now()->startOfYear()->format('Y-m-d');
+        $this->filtroFechaHasta = now()->format('Y-m-d');
+    }
+
     public function ordenar($campo)
     {
         if ($this->ordenarPor === $campo) {
