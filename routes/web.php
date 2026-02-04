@@ -7,6 +7,10 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
+// Ruta pública para descarga de PDF por token (no requiere autenticación)
+Route::get('/descargar/{token}', [PdfController::class, 'descargarPorToken'])
+    ->name('pdf.descargar.token');
+
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified', 'can:ver-dashboard'])
     ->name('dashboard');

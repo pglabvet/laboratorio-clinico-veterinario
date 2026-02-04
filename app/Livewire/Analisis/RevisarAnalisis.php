@@ -20,6 +20,13 @@ class RevisarAnalisis extends Component
     public $ordenarPor = 'fecha_finalizacion';
     public $ordenDireccion = 'desc';
 
+    // Modales de confirmación
+    public $modalAprobar = false;
+    public $modalRechazar = false;
+    public $analisisAAprobar = null;
+    public $analisisARechazar = null;
+    public $observacionesRechazo = '';
+
     protected $queryString = [
         'busqueda' => ['except' => ''],
         'filtroEstado' => ['except' => 'En revision'],
@@ -92,9 +99,35 @@ class RevisarAnalisis extends Component
         }
     }
 
-    public function aprobarAnalisis($analisisId)
+    public function confirmarAprobar($analisisId)
     {
-        $analisis = Analisis::findOrFail($analisisId);
+        $this->analisisAAprobar = $analisisId;
+        $this->modalAprobar = true;
+    }
+
+    public function cancelarAprobar()
+    {
+        $this->modalAprobar = false;
+        $this->analisisAAprobar = null;
+    }
+
+    public function confirmarRechazar($analisisId)
+    {
+        $this->analisisARechazar = $analisisId;
+        $this->observacionesRechazo = '';
+        $this->modalRechazar = true;
+    }
+
+    public function cancelarRechazar()
+    {
+        $this->modalRechazar = false;
+        $this->analisisARechazar = null;
+        $this->observacionesRechazo = '';
+    }
+
+    public function aprobarAnalisis()
+    {
+        $analisis = Analisis::findOrFail($this->analisisAAprobar);
         
         $analisis->update([
             'estado' => Analisis::ESTADO_APROBADO,
@@ -105,21 +138,28 @@ class RevisarAnalisis extends Component
         // Verificar si todos los análisis de la muestra están completados
         $this->verificarMuestraCompletada($analisis);
 
+        $this->modalAprobar = false;
+        $this->analisisAAprobar = null;
+
         session()->flash('success', 'Análisis aprobado correctamente.');
     }
 
-    public function rechazarAnalisis($analisisId, $observaciones = null)
+    public function rechazarAnalisis()
     {
-        $analisis = Analisis::findOrFail($analisisId);
+        $analisis = Analisis::findOrFail($this->analisisARechazar);
         
         $analisis->update([
             'estado' => Analisis::ESTADO_PENDIENTE, // Volver a pendiente para que lo corrijan
             'aprobador_id' => Auth::id(),
-            'observaciones_aprobador' => $observaciones,
+            'observaciones_aprobador' => $this->observacionesRechazo,
         ]);
 
         // Si la muestra estaba en Completado, volver a En proceso
         $this->revertirMuestraEnProceso($analisis);
+
+        $this->modalRechazar = false;
+        $this->analisisARechazar = null;
+        $this->observacionesRechazo = '';
 
         session()->flash('warning', 'Análisis rechazado. El bioquímico debe realizar correcciones.');
     }

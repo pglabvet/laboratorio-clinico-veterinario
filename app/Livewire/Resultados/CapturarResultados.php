@@ -273,7 +273,11 @@ class CapturarResultados extends Component
             
             DB::commit();
             
-            session()->flash('success', "Borrador guardado correctamente. Se guardaron {$resultadosGuardados} componente(s). Puedes continuar editando.");
+            // Guardar el código de muestra en sesión para que se cargue automáticamente
+            session()->put('codigo_escaneado', $this->analisis->muestra->codigo_muestra);
+            
+            session()->flash('success', "Borrador guardado correctamente. Se guardaron {$resultadosGuardados} componente(s).");
+            return redirect()->route('muestras.escanear');
             
         } catch (\Exception $e) {
             DB::rollBack();
@@ -397,8 +401,11 @@ class CapturarResultados extends Component
             
             DB::commit();
             
+            // Guardar el código de muestra en sesión para que se cargue automáticamente
+            session()->put('codigo_escaneado', $this->analisis->muestra->codigo_muestra);
+            
             session()->flash('success', "Resultados enviados correctamente. Se guardaron {$resultadosGuardados} componente(s).");
-            return redirect()->route('muestras.index');
+            return redirect()->route('muestras.escanear');
             
         } catch (\Exception $e) {
             DB::rollBack();
