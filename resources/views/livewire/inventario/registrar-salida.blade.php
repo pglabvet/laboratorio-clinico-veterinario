@@ -88,15 +88,20 @@
             {{-- Observación --}}
             <div class="md:col-span-2">
                 <flux:textarea 
-                    wire:model="observacion"
+                    wire:model.live="observacion"
                     label="Observación"
                     placeholder="Describa detalladamente el motivo de la salida (mínimo 10 caracteres)"
                     rows="4"
                     :error="$errors->first('observacion')"
                 />
-                <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-                    Esta información es importante para la auditoría del inventario
-                </p>
+                <div class="mt-1 flex items-center justify-between">
+                    <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                        Esta información es importante para la auditoría del inventario
+                    </p>
+                    <p class="text-sm {{ strlen($observacion ?? '') >= 10 ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400' }}">
+                        {{ strlen($observacion ?? '') }}/10 caracteres
+                    </p>
+                </div>
             </div>
         </div>
 
@@ -106,7 +111,7 @@
                 wire:click="abrirConfirmacion"
                 variant="primary"
                 icon="arrow-down-tray"
-                :disabled="!$sucursal_id || !$insumo_id || !$cantidad || !$motivo || !$observacion"
+                :disabled="!$sucursal_id || !$insumo_id || !$cantidad || $cantidad <= 0 || !$motivo || !$observacion || strlen($observacion) < 10"
             >
                 Registrar Salida
             </flux:button>
