@@ -77,8 +77,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('/roles', 'roles.index')
         ->name('roles.index');
     
-    Route::view('/permisos', 'permisos.index')
-        ->name('permisos.index');
+    // Permisos deshabilitado - se gestionan desde el seeder
+    // Route::view('/permisos', 'permisos.index')
+    //     ->name('permisos.index');
     
     // Constructor de formularios dinámicos (Admin)
     Route::get('/plantillas', \App\Livewire\Plantillas\ListarPlantillas::class)
