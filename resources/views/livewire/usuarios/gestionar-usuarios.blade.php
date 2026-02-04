@@ -69,6 +69,9 @@
                 <thead class="bg-neutral-50 dark:bg-neutral-900">
                     <tr>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
+                            #
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
                             Usuario
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
@@ -91,6 +94,9 @@
                 <tbody class="divide-y divide-neutral-200 bg-white dark:divide-neutral-700 dark:bg-neutral-800">
                     @forelse ($usuarios as $usuario)
                         <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50" wire:key="usuario-{{ $usuario->id }}">
+                            <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-500 dark:text-neutral-400">
+                                {{ $usuario->id }}
+                            </td>
                             <td class="whitespace-nowrap px-6 py-4">
                                 <div class="flex items-center">
                                     <div class="flex-shrink-0 h-10 w-10">
@@ -243,16 +249,159 @@
                 @enderror
 
                 {{-- Email --}}
-                <flux:input 
-                    type="email"
-                    wire:model="email"
-                    label="Email"
-                    placeholder="juan@ejemplo.com"
-                    required
-                />
+                <flux:field>
+                    <flux:label>Email</flux:label>
+                    <div class="flex items-center gap-2">
+                        <flux:input 
+                            type="email"
+                            wire:model="email"
+                            placeholder="juan@ejemplo.com"
+                            required
+                            class="flex-1"
+                        />
+                        @if (!$modoEdicion)
+                            <flux:button 
+                                type="button"
+                                wire:click="generarEmail"
+                                variant="ghost"
+                                title="Generar correo automáticamente"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                                </svg>
+                            </flux:button>
+                        @endif
+                    </div>
+                </flux:field>
                 @error('email')
                     <p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                 @enderror
+
+                @if (!$modoEdicion)
+                    {{-- Contraseña (solo para nuevos usuarios) --}}
+                    <flux:field>
+                        <flux:label>Contraseña</flux:label>
+                        <div class="relative">
+                            <flux:input 
+                                :type="$mostrarPassword ? 'text' : 'password'"
+                                wire:model="password"
+                                placeholder="Mínimo 8 caracteres"
+                                required
+                            />
+                            <button 
+                                type="button"
+                                wire:click="toggleMostrarPassword"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+                            >
+                                @if ($mostrarPassword)
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                    </svg>
+                                @else
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                @endif
+                            </button>
+                        </div>
+                    </flux:field>
+                    @error('password')
+                        <p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+
+                    <flux:field>
+                        <flux:label>Confirmar contraseña</flux:label>
+                        <div class="relative">
+                            <flux:input 
+                                :type="$mostrarPasswordConfirmation ? 'text' : 'password'"
+                                wire:model="password_confirmation"
+                                placeholder="Repite la contraseña"
+                                required
+                            />
+                            <button 
+                                type="button"
+                                wire:click="toggleMostrarPasswordConfirmation"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+                            >
+                                @if ($mostrarPasswordConfirmation)
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                    </svg>
+                                @else
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                @endif
+                            </button>
+                        </div>
+                    </flux:field>
+                @else
+                    {{-- Cambio de contraseña opcional --}}
+                    <div class="border-t border-neutral-200 dark:border-neutral-700 pt-4 mt-4">
+                        <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
+                            Deja en blanco para mantener la contraseña actual
+                        </p>
+                        
+                        <flux:field>
+                            <flux:label>Nueva contraseña (opcional)</flux:label>
+                            <div class="relative">
+                                <flux:input 
+                                    :type="$mostrarPassword ? 'text' : 'password'"
+                                    wire:model="password"
+                                    placeholder="Mínimo 8 caracteres"
+                                />
+                                <button 
+                                    type="button"
+                                    wire:click="toggleMostrarPassword"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+                                >
+                                    @if ($mostrarPassword)
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                        </svg>
+                                    @else
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                    @endif
+                                </button>
+                            </div>
+                        </flux:field>
+                        @error('password')
+                            <p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+
+                        <flux:field class="mt-4">
+                            <flux:label>Confirmar nueva contraseña</flux:label>
+                            <div class="relative">
+                                <flux:input 
+                                    :type="$mostrarPasswordConfirmation ? 'text' : 'password'"
+                                    wire:model="password_confirmation"
+                                    placeholder="Repite la contraseña"
+                                />
+                                <button 
+                                    type="button"
+                                    wire:click="toggleMostrarPasswordConfirmation"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+                                >
+                                    @if ($mostrarPasswordConfirmation)
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                        </svg>
+                                    @else
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                    @endif
+                                </button>
+                            </div>
+                        </flux:field>
+                    </div>
+                @endif
 
                 {{-- Rol --}}
                 <flux:select 
@@ -283,53 +432,6 @@
                 @error('sucursal_id')
                     <p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                 @enderror
-
-                @if (!$modoEdicion)
-                    {{-- Contraseña (solo para nuevos usuarios) --}}
-                    <flux:input 
-                        type="password"
-                        wire:model="password"
-                        label="Contraseña"
-                        placeholder="Mínimo 8 caracteres"
-                        required
-                    />
-                    @error('password')
-                        <p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                    @enderror
-
-                    <flux:input 
-                        type="password"
-                        wire:model="password_confirmation"
-                        label="Confirmar contraseña"
-                        placeholder="Repite la contraseña"
-                        required
-                    />
-                @else
-                    {{-- Cambio de contraseña opcional --}}
-                    <div class="border-t border-neutral-200 dark:border-neutral-700 pt-4 mt-4">
-                        <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-3">
-                            Deja en blanco para mantener la contraseña actual
-                        </p>
-                        
-                        <flux:input 
-                            type="password"
-                            wire:model="password"
-                            label="Nueva contraseña (opcional)"
-                            placeholder="Mínimo 8 caracteres"
-                        />
-                        @error('password')
-                            <p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                        @enderror
-
-                        <flux:input 
-                            type="password"
-                            wire:model="password_confirmation"
-                            label="Confirmar nueva contraseña"
-                            placeholder="Repite la contraseña"
-                            class="mt-4"
-                        />
-                    </div>
-                @endif
 
                 {{-- Estado --}}
                 <flux:select 
