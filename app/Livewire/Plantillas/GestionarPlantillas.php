@@ -310,12 +310,17 @@ class GestionarPlantillas extends Component
     {
         $this->validate([
             'nombreFormulario' => 'required|min:3|max:255',
-            'insumos.*.insumo_id' => 'nullable|exists:insumos,id',
-            'insumos.*.cantidad_requerida' => 'nullable|numeric|min:0.01',
+            'insumos' => 'required|array|min:1',
+            'insumos.*.insumo_id' => 'required|exists:insumos,id',
+            'insumos.*.cantidad_requerida' => 'required|numeric|min:0.01',
         ], [
             'nombreFormulario.required' => 'El nombre del formulario es obligatorio',
             'nombreFormulario.min' => 'El nombre debe tener al menos 3 caracteres',
+            'insumos.required' => 'Debe agregar al menos un insumo a la plantilla',
+            'insumos.min' => 'Debe agregar al menos un insumo a la plantilla',
+            'insumos.*.insumo_id.required' => 'Debe seleccionar un insumo',
             'insumos.*.insumo_id.exists' => 'El insumo seleccionado no es válido',
+            'insumos.*.cantidad_requerida.required' => 'La cantidad es obligatoria',
             'insumos.*.cantidad_requerida.numeric' => 'La cantidad debe ser un número',
             'insumos.*.cantidad_requerida.min' => 'La cantidad debe ser mayor a 0',
         ]);

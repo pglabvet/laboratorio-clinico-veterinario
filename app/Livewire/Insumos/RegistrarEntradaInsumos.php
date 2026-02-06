@@ -7,11 +7,14 @@ use App\Models\Sucursal;
 use App\Models\InventarioSucursal;
 use App\Models\MovimientoInventario;
 use Livewire\Component;
+use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
 class RegistrarEntradaInsumos extends Component
 {
+    use WithPagination;
+
     // Propiedades del formulario
     public $sucursal_id = '';
     public $insumo_id = '';
@@ -21,6 +24,10 @@ class RegistrarEntradaInsumos extends Component
 
     // Datos relacionados
     public $insumoSeleccionado = null;
+
+    // Filtros para entradas recientes
+    public $filtroSucursalEntradas = '';
+    public $filtroFechaEntradas = '';
 
     // Opciones de motivo
     public const MOTIVOS = [
@@ -134,6 +141,19 @@ class RegistrarEntradaInsumos extends Component
     }
 
     /**
+     * Resetear paginación al cambiar filtros
+     */
+    public function updatingFiltroSucursalEntradas()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFiltroFechaEntradas()
+    {
+        $this->resetPage();
+    }
+
+    /**
      * Renderizar vista
      */
     public function render()
@@ -149,9 +169,53 @@ class RegistrarEntradaInsumos extends Component
             ->orderBy('nombre')
             ->get();
 
+        // Obtener entradas recientes
+        $entradasQuery = MovimientoInventario::with(['insumo.unidadMedida', 'sucursal', 'usuario'])
+            ->where('tipo_movimiento', 'ENTRADA')
+            ->orderBy('fecha', 'desc');
+
+        // Aplicar filtro de sucursal
+        if ($this->filtroSucursalEntradas) {
+            $entradasQuery->where('sucursal_id', $this->filtroSucursalEntradas);
+        }
+
+        // Aplicar filtro de período
+        if ($this->filtroFechaEntradas) {
+            $now = now();
+            
+            switch ($this->filtroFechaEntradas) {
+                case 'hoy':
+                    $entradasQuery->whereDate('fecha', $now->toDateString());
+                    break;
+                case 'ayer':
+                    $entradasQuery->whereDate('fecha', $now->subDay()->toDateString());
+                    break;
+                case 'ultimos_7_dias':
+                    $entradasQuery->where('fecha', '>=', $now->subDays(7)->startOfDay());
+                    break;
+                case 'esta_semana':
+                    $entradasQuery->whereBetween('fecha', [
+                        $now->startOfWeek()->startOfDay(),
+                        $now->endOfWeek()->endOfDay()
+                    ]);
+                    break;
+                case 'este_mes':
+                    $entradasQuery->whereMonth('fecha', $now->month)
+                                  ->whereYear('fecha', $now->year);
+                    break;
+                case 'este_año':
+                    $entradasQuery->whereYear('fecha', $now->year);
+                    break;
+            }
+        }
+
+        $entradasRecientes = $entradasQuery->paginate(10);
+
         return view('livewire.insumos.registrar-entrada-insumos', [
             'sucursales' => $sucursales,
             'insumos' => $insumos,
+            'entradasRecientes' => $entradasRecientes,
+            'motivosDisponibles' => self::MOTIVOS,
         ]);
     }
 }

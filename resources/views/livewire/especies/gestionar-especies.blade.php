@@ -32,7 +32,7 @@
     </div>
 
     {{-- Tabla de especies --}}
-    <div class="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow dark:border-neutral-700 dark:bg-neutral-800">
+    <div class="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-md ring-1 ring-neutral-200/50 dark:border-neutral-700 dark:bg-neutral-800 dark:ring-neutral-700/50">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
                 <thead class="bg-neutral-50 dark:bg-neutral-900">
@@ -253,9 +253,9 @@
                         <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
                             Estado
                         </label>
-                        <p class="text-base text-neutral-900 dark:text-neutral-100">
+                        <span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium {{ $especieAVer->estado ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' }}">
                             {{ $especieAVer->estado ? 'Activa' : 'Inactiva' }}
-                        </p>
+                        </span>
                     </div>
 
                     {{-- Descripción --}}
@@ -298,15 +298,6 @@
                         </p>
                     </div>
 
-                    {{-- Rangos de referencia --}}
-                    <div>
-                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                            Rangos de referencia
-                        </label>
-                        <p class="text-base text-neutral-900 dark:text-neutral-100">
-                            {{ $especieAVer->rangos_referencia_count }} rangos
-                        </p>
-                    </div>
                 </div>
 
                 {{-- Botón cerrar --}}

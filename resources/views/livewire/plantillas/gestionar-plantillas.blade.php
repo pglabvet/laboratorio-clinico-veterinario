@@ -76,11 +76,17 @@
                         <flux:button 
                             wire:click="agregarInsumo"
                             size="sm"
-                            variant="ghost"
+                            variant="primary"
                             icon="plus">
                             Agregar Insumo
                         </flux:button>
                     </div>
+
+                    @error('insumos')
+                        <div class="mb-3 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
+                            {{ $message }}
+                        </div>
+                    @enderror
 
                     @if(empty($insumos))
                         <p class="text-sm text-zinc-500 dark:text-zinc-400 italic">
@@ -94,10 +100,10 @@
                                         <div>
                                             <flux:select 
                                                 wire:model="insumos.{{ $index }}.insumo_id"
-                                                placeholder="Seleccionar insumo"
+                                                placeholder=""
                                                 class="text-sm"
                                             >
-                                                <option value="">Seleccionar...</option>
+                                                <option value="">Seleccionar insumo</option>
                                                 @foreach($insumosDisponibles as $ins)
                                                     <option value="{{ $ins->id }}">
                                                         {{ $ins->nombre }} ({{ $ins->unidadMedida->abreviatura }})
@@ -266,26 +272,26 @@
                 init() {
                     // Sincronizar con Livewire
                     this.$watch('$wire.componenteSeleccionado', () => {
-                        // AquÃ­ puedes agregar lÃ³gica adicional si es necesaria
+                        // Aqui puedes agregar lógica adicional si es necesaria
                     });
                 },
                 
                 seleccionar(id) {
-                    @this.seleccionarComponente(id);
+                    this.$wire.seleccionarComponente(id);
                 },
                 
                 guardar() {
-                    if (!@this.nombreFormulario || @this.nombreFormulario.trim() === '') {
+                    if (!this.$wire.nombreFormulario || this.$wire.nombreFormulario.trim() === '') {
                         alert('Por favor ingresa un nombre para la plantilla');
                         return;
                     }
                     
-                    if (@this.componentes.length === 0) {
+                    if (this.$wire.componentes.length === 0) {
                         alert('Agrega al menos un componente al formulario');
                         return;
                     }
                     
-                    @this.guardarFormulario();
+                    this.$wire.guardarFormulario();
                 }
             }
         }

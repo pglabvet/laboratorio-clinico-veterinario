@@ -7,39 +7,57 @@
 
     {{-- Estadísticas rápidas --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Total Movimientos</p>
-                    <p class="text-2xl font-bold text-neutral-900 dark:text-neutral-100">
-                        {{ number_format($estadisticas['total_movimientos']) }}
-                    </p>
+        <div class="block rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <flux:heading size="sm" class="text-zinc-600 dark:text-zinc-400 font-medium">
+                        Total Movimientos
+                    </flux:heading>
+                    <div class="mt-2 flex items-baseline gap-2">
+                        <flux:heading size="xl" class="text-3xl font-bold text-zinc-900 dark:text-white">
+                            {{ number_format($estadisticas['total_movimientos']) }}
+                        </flux:heading>
+                    </div>
                 </div>
-                <flux:icon.clipboard-document-list class="size-12 text-neutral-400" />
+                <div class="rounded-lg bg-zinc-100 p-3 dark:bg-zinc-800">
+                    <flux:icon.clipboard-document-list class="size-6 text-zinc-600 dark:text-zinc-400" />
+                </div>
             </div>
         </div>
 
-        <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Entradas este mes</p>
-                    <p class="text-2xl font-bold text-green-600 dark:text-green-400">
-                        {{ number_format($estadisticas['entradas_mes_actual']) }}
-                    </p>
+        <div class="block rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <flux:heading size="sm" class="text-zinc-600 dark:text-zinc-400 font-medium">
+                        Entradas este mes
+                    </flux:heading>
+                    <div class="mt-2 flex items-baseline gap-2">
+                        <flux:heading size="xl" class="text-3xl font-bold text-zinc-900 dark:text-white">
+                            {{ number_format($estadisticas['entradas_mes_actual']) }}
+                        </flux:heading>
+                    </div>
                 </div>
-                <flux:icon.arrow-up-tray class="size-12 text-green-400" />
+                <div class="rounded-lg bg-green-100 p-3 dark:bg-green-900/20">
+                    <flux:icon.arrow-up-tray class="size-6 text-green-600 dark:text-green-400" />
+                </div>
             </div>
         </div>
 
-        <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-neutral-600 dark:text-neutral-400">Salidas este mes</p>
-                    <p class="text-2xl font-bold text-red-600 dark:text-red-400">
-                        {{ number_format($estadisticas['salidas_mes_actual']) }}
-                    </p>
+        <div class="block rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
+            <div class="flex items-start justify-between">
+                <div class="flex-1">
+                    <flux:heading size="sm" class="text-zinc-600 dark:text-zinc-400 font-medium">
+                        Salidas este mes
+                    </flux:heading>
+                    <div class="mt-2 flex items-baseline gap-2">
+                        <flux:heading size="xl" class="text-3xl font-bold text-zinc-900 dark:text-white">
+                            {{ number_format($estadisticas['salidas_mes_actual']) }}
+                        </flux:heading>
+                    </div>
                 </div>
-                <flux:icon.arrow-down-tray class="size-12 text-red-400" />
+                <div class="rounded-lg bg-red-100 p-3 dark:bg-red-900/20">
+                    <flux:icon.arrow-down-tray class="size-6 text-red-600 dark:text-red-400" />
+                </div>
             </div>
         </div>
     </div>
@@ -50,7 +68,7 @@
             <flux:heading size="lg">Filtros</flux:heading>
             <flux:button 
                 wire:click="limpiarFiltros"
-                variant="ghost"
+                variant="outline"
                 icon="x-mark"
                 size="sm"
             >
@@ -69,9 +87,9 @@
             {{-- Filtro por sucursal --}}
             <flux:select 
                 wire:model.live="filtroSucursal"
-                placeholder="Todas las sucursales"
+                placeholder=""
             >
-                <option value="">Todas las sucursales</option>
+                <option value="">Sucursales</option>
                 @foreach($sucursales as $sucursal)
                     <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
                 @endforeach

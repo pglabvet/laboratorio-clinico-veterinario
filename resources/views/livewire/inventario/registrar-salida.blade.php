@@ -118,7 +118,7 @@
             
             <flux:button 
                 wire:click="resetearFormulario"
-                variant="ghost"
+                variant="outline"
                 icon="arrow-path"
             >
                 Limpiar
@@ -129,19 +129,69 @@
     {{-- Historial reciente --}}
     <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700">
         <div class="p-6 border-b border-neutral-200 dark:border-neutral-700">
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <flux:heading size="lg">Salidas Recientes</flux:heading>
                 
-                <div class="w-64">
-                    <flux:select 
-                        wire:model.live="filtroSucursal"
-                        placeholder="Todas las sucursales"
-                    >
-                        <option value="">Todas las sucursales</option>
-                        @foreach($sucursales as $sucursal)
-                            <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
-                        @endforeach
-                    </flux:select>
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    {{-- Filtro de Sucursal --}}
+                    <flux:dropdown>
+                        <flux:button variant="outline" icon="building-office-2" icon-trailing="chevron-down">
+                            {{ $filtroSucursal ? $sucursales->firstWhere('id', $filtroSucursal)?->nombre : 'Sucursales' }}
+                        </flux:button>
+
+                        <flux:menu>
+                            <flux:menu.item wire:click="$set('filtroSucursal', '')" icon="bars-3">
+                                Todas las sucursales
+                            </flux:menu.item>
+                            <flux:menu.separator />
+                            @foreach($sucursales as $sucursal)
+                                <flux:menu.item wire:click="$set('filtroSucursal', '{{ $sucursal->id }}')" icon="building-storefront">
+                                    {{ $sucursal->nombre }}
+                                </flux:menu.item>
+                            @endforeach
+                        </flux:menu>
+                    </flux:dropdown>
+
+                    {{-- Filtro de Período --}}
+                    <flux:dropdown>
+                        <flux:button variant="outline" icon="calendar" icon-trailing="chevron-down">
+                            {{ match($filtroPeriodo) {
+                                'hoy' => 'Hoy',
+                                'ayer' => 'Ayer',
+                                'ultimos_7_dias' => 'Últimos 7 días',
+                                'esta_semana' => 'Esta semana',
+                                'este_mes' => 'Este mes',
+                                'este_año' => 'Año actual',
+                                default => 'Período'
+                            } }}
+                        </flux:button>
+
+                        <flux:menu>
+                            <flux:menu.item wire:click="$set('filtroPeriodo', '')" icon="bars-3">
+                                Todos
+                            </flux:menu.item>
+                            <flux:menu.separator />
+                            <flux:menu.item wire:click="$set('filtroPeriodo', 'hoy')" icon="sun">
+                                Hoy
+                            </flux:menu.item>
+                            <flux:menu.item wire:click="$set('filtroPeriodo', 'ayer')" icon="arrow-uturn-left">
+                                Ayer
+                            </flux:menu.item>
+                            <flux:menu.item wire:click="$set('filtroPeriodo', 'ultimos_7_dias')" icon="calendar-days">
+                                Últimos 7 días
+                            </flux:menu.item>
+                            <flux:menu.separator />
+                            <flux:menu.item wire:click="$set('filtroPeriodo', 'esta_semana')" icon="calendar">
+                                Esta semana
+                            </flux:menu.item>
+                            <flux:menu.item wire:click="$set('filtroPeriodo', 'este_mes')" icon="calendar">
+                                Este mes
+                            </flux:menu.item>
+                            <flux:menu.item wire:click="$set('filtroPeriodo', 'este_año')" icon="calendar">
+                                Año actual
+                            </flux:menu.item>
+                        </flux:menu>
+                    </flux:dropdown>
                 </div>
             </div>
         </div>

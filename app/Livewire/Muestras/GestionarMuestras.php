@@ -109,6 +109,12 @@ class GestionarMuestras extends Component
     {
         $this->fecha_recepcion = now()->format('Y-m-d');
         $this->sucursal_id = auth()->user()->sucursal_id ?? Sucursal::first()?->id;
+
+        // Si hay una muestra recién creada, abrir su modal automáticamente
+        if (session()->has('muestra_recien_creada_id')) {
+            $muestraId = session()->pull('muestra_recien_creada_id');
+            $this->verCodigoBarras($muestraId);
+        }
     }
 
     /**
@@ -128,7 +134,8 @@ class GestionarMuestras extends Component
             'especie',
             'veterinaria',
             'sucursal',
-            'analisis.tipoAnalisis'
+            'analisis.tipoAnalisis',
+            'analisis.plantillaFormulario'
         ])->findOrFail($id);
         $this->modalVer = true;
     }
