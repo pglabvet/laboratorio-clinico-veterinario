@@ -276,8 +276,9 @@ class CapturarResultados extends Component
             // Guardar el código de muestra en sesión para que se cargue automáticamente
             session()->put('codigo_escaneado', $this->analisis->muestra->codigo_muestra);
             
-            session()->flash('success', "Borrador guardado correctamente. Se guardaron {$resultadosGuardados} componente(s).");
-            return redirect()->route('muestras.escanear');
+            return redirect()
+                ->route('muestras.escanear')
+                ->with('success', "Borrador guardado correctamente. Se guardaron {$resultadosGuardados} componente(s).");
             
         } catch (\Exception $e) {
             DB::rollBack();
@@ -494,6 +495,12 @@ class CapturarResultados extends Component
                     return (!empty($data['valor']) || !empty($data['contenido'])) ? $data : null;
                 }
                 return !empty($data) ? $data : null;
+                
+            case 'carga-viral':
+                // Filtrar campos que tengan valor ingresado
+                return array_filter($data, function($campo) {
+                    return isset($campo['valor']) && $campo['valor'] !== '' && $campo['valor'] !== null;
+                });
                 
             default:
                 return $data;
