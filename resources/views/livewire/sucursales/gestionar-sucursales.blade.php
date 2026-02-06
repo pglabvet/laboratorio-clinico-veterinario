@@ -10,14 +10,29 @@
         </div>
     {{-- Barra de acciones --}}
     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        {{-- Búsqueda --}}
-        <div class="w-full sm:w-96">
-            <flux:input 
-                wire:model.live.debounce.300ms="buscar"
-                icon="magnifying-glass"
-                placeholder="Buscar sucursales..."
-                class="w-full"
-            />
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
+            {{-- Búsqueda --}}
+            <div class="w-full sm:w-96">
+                <flux:input 
+                    wire:model.live.debounce.300ms="buscar"
+                    icon="magnifying-glass"
+                    placeholder="Buscar sucursales..."
+                    class="w-full"
+                />
+            </div>
+
+            {{-- Botón limpiar filtro --}}
+            @if($buscar)
+                <div class="flex items-center">
+                    <flux:button 
+                        wire:click="limpiarBuscar"
+                        variant="ghost"
+                        icon="x-mark"
+                    >
+                        Limpiar
+                    </flux:button>
+                </div>
+            @endif
         </div>
 
         {{-- Botón crear --}}
@@ -38,7 +53,7 @@
                     <tr>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
                             <button wire:click="ordenarPor('codigo')" class="flex items-center gap-1 hover:text-neutral-900 dark:hover:text-neutral-100">
-                                <span>Código</span>
+                                <span>CÓDIGO</span>
                                 @if($sortBy === 'codigo')
                                     <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                                         @if($sortDirection === 'asc')
@@ -52,7 +67,7 @@
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
                             <button wire:click="ordenarPor('nombre')" class="flex items-center gap-1 hover:text-neutral-900 dark:hover:text-neutral-100">
-                                <span>Nombre</span>
+                                <span>NOMBRE</span>
                                 @if($sortBy === 'nombre')
                                     <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                                         @if($sortDirection === 'asc')
@@ -66,7 +81,7 @@
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
                             <button wire:click="ordenarPor('direccion')" class="flex items-center gap-1 hover:text-neutral-900 dark:hover:text-neutral-100">
-                                <span>Dirección</span>
+                                <span>DIRECCIÓN</span>
                                 @if($sortBy === 'direccion')
                                     <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                                         @if($sortDirection === 'asc')
@@ -80,7 +95,7 @@
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
                             <button wire:click="ordenarPor('telefono')" class="flex items-center gap-1 hover:text-neutral-900 dark:hover:text-neutral-100">
-                                <span>Teléfono</span>
+                                <span>TELÉFONO</span>
                                 @if($sortBy === 'telefono')
                                     <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                                         @if($sortDirection === 'asc')
@@ -94,7 +109,7 @@
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
                             <button wire:click="ordenarPor('estado')" class="flex items-center gap-1 hover:text-neutral-900 dark:hover:text-neutral-100">
-                                <span>Estado</span>
+                                <span>ESTADO</span>
                                 @if($sortBy === 'estado')
                                     <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                                         @if($sortDirection === 'asc')
@@ -107,7 +122,7 @@
                             </button>
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-                            Acciones
+                            ACCIONES
                         </th>
                     </tr>
                 </thead>
@@ -209,7 +224,16 @@
                 {{ $modoEdicion ? 'Actualiza la información de la sucursal' : 'Ingresa los datos de la nueva sucursal' }}
             </flux:subheading>
 
-            <div class="space-y-6">
+            <div class="space-y-4">
+                {{-- Código (solo al editar, no editable) --}}
+                @if($modoEdicion)
+                    <flux:input 
+                        value="{{ $codigo }}"
+                        label="Código"
+                        disabled
+                    />
+                @endif
+
                 {{-- Nombre --}}
                 <flux:input 
                     wire:model="nombre"
@@ -239,11 +263,13 @@
                 />
 
                 {{-- Estado --}}
-                <flux:checkbox 
+                <flux:select 
                     wire:model="estado"
-                    label="Sucursal activa"
-                    description="Indica si la sucursal está operativa"
-                />
+                    label="Estado"
+                >
+                    <option value="1">Activo</option>
+                    <option value="0">Inactivo</option>
+                </flux:select>
             </div>
 
             {{-- Botones del modal --}}
@@ -258,8 +284,6 @@
                 <flux:button 
                     type="submit"
                     variant="primary"
-                    color="cyan"
-                    icon="check"
                 >
                     {{ $modoEdicion ? 'Actualizar' : 'Guardar' }}
                 </flux:button>
@@ -271,73 +295,74 @@
     <flux:modal wire:model="modalVer" class="w-full max-w-2xl">
         @if($sucursalAVer)
             <div class="space-y-6">
-                {{-- Encabezado --}}
+                {{-- Encabezado con código y estado --}}
                 <div>
-                    <flux:heading size="lg" class="mb-1">Detalles de la Sucursal</flux:heading>
-                    <flux:subheading>Información completa de la sucursal</flux:subheading>
+                    <div class="flex items-center gap-3 mb-1">
+                        <flux:heading size="lg">{{ $sucursalAVer->nombre }}</flux:heading>
+                        <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $sucursalAVer->estado ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' }}">
+                            {{ $sucursalAVer->estado ? 'Activa' : 'Inactiva' }}
+                        </span>
+                    </div>
+                    <flux:subheading>Código: {{ $sucursalAVer->codigo }}</flux:subheading>
                 </div>
 
-                {{-- Contenido --}}
-                <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    {{-- Código --}}
-                    <div>
-                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                            Código
-                        </label>
-                        <p class="text-base text-neutral-900 dark:text-neutral-100">
-                            {{ $sucursalAVer->codigo }}
-                        </p>
-                    </div>
-
-                    {{-- Nombre --}}
-                    <div>
-                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                            Nombre
-                        </label>
-                        <p class="text-base text-neutral-900 dark:text-neutral-100">
-                            {{ $sucursalAVer->nombre }}
-                        </p>
-                    </div>
-
+                {{-- Información principal --}}
+                <div class="rounded-lg border border-neutral-200 dark:border-neutral-700 divide-y divide-neutral-200 dark:divide-neutral-700">
                     {{-- Dirección --}}
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                            Dirección
-                        </label>
-                        <p class="text-base text-neutral-900 dark:text-neutral-100">
-                            {{ $sucursalAVer->direccion }}
-                        </p>
+                    <div class="flex items-start gap-3 px-4 py-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-neutral-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <div>
+                            <p class="text-xs font-medium text-neutral-500 dark:text-neutral-400">DIRECCIÓN</p>
+                            <p class="text-sm text-neutral-900 dark:text-neutral-100">{{ $sucursalAVer->direccion }}</p>
+                        </div>
                     </div>
 
                     {{-- Teléfono --}}
-                    <div>
-                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                            Teléfono
-                        </label>
-                        <p class="text-base text-neutral-900 dark:text-neutral-100">
-                            {{ $sucursalAVer->telefono }}
-                        </p>
+                    <div class="flex items-start gap-3 px-4 py-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-neutral-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                        <div>
+                            <p class="text-xs font-medium text-neutral-500 dark:text-neutral-400">TELÉFONO</p>
+                            <p class="text-sm text-neutral-900 dark:text-neutral-100">{{ $sucursalAVer->telefono }}</p>
+                        </div>
                     </div>
 
                     {{-- Fecha de creación --}}
-                    <div>
-                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                            Fecha de creación
-                        </label>
-                        <p class="text-base text-neutral-900 dark:text-neutral-100">
-                            {{ $sucursalAVer->created_at->format('d/m/Y H:i') }}
-                        </p>
+                    <div class="flex items-start gap-3 px-4 py-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-neutral-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <div>
+                            <p class="text-xs font-medium text-neutral-500 dark:text-neutral-400">FECHA DE CREACIÓN</p>
+                            <p class="text-sm text-neutral-900 dark:text-neutral-100">{{ $sucursalAVer->created_at->format('d/m/Y H:i') }}</p>
+                        </div>
                     </div>
+                </div>
 
-                    {{-- Estado --}}
-                    <div>
-                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                            Estado
-                        </label>
-                        <p class="text-base text-neutral-900 dark:text-neutral-100">
-                            {{ $sucursalAVer->estado ? 'Activa' : 'Inactiva' }}
-                        </p>
-                    </div>
+                {{-- Usuarios asignados --}}
+                <div>
+                    <p class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-2">USUARIOS ASIGNADOS ({{ $sucursalAVer->users->count() }})</p>
+                    @if($sucursalAVer->users->count() > 0)
+                        <div class="rounded-lg border border-neutral-200 dark:border-neutral-700 divide-y divide-neutral-200 dark:divide-neutral-700">
+                            @foreach($sucursalAVer->users as $user)
+                                <div class="flex items-center gap-3 px-4 py-2.5">
+                                    <div class="h-8 w-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-semibold shrink-0">
+                                        {{ strtoupper(substr($user->name, 0, 1)) }}
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100 truncate">{{ $user->name }}</p>
+                                        <p class="text-xs text-neutral-500 dark:text-neutral-400 truncate">{{ $user->email }}</p>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <p class="text-sm text-neutral-500 dark:text-neutral-400 italic">No hay usuarios asignados a esta sucursal</p>
+                    @endif
                 </div>
 
                 {{-- Botón cerrar --}}
@@ -345,8 +370,7 @@
                     <flux:button 
                         type="button"
                         wire:click="cerrarModalVer"
-                        variant="primary"
-                        color="cyan"
+                        variant="ghost"
                     >
                         Cerrar
                     </flux:button>

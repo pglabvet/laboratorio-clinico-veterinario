@@ -7,6 +7,11 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
+// Ruta pública para descarga de PDF por token (no requiere autenticación)
+Route::get('/descargar/{token}', [PdfController::class, 'descargarPorToken'])
+    ->middleware('throttle:60,1')
+    ->name('pdf.descargar.token');
+
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified', 'can:ver-dashboard'])
     ->name('dashboard');
@@ -46,10 +51,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
    
     Route::view('/especies', 'especies.index')
         ->name('especies.index');
-
-    
-    Route::view('/tipos-analisis', 'tipos-analisis.index')
-        ->name('tipos-analisis.index');
     
     Route::view('/unidades-medida', 'unidades-medida.index')
         ->name('unidades-medida.index');
@@ -70,11 +71,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/inventario/historial', \App\Livewire\Inventario\HistorialMovimientos::class)
         ->name('inventario.historial');
     
+    Route::get('/usuarios', \App\Livewire\Usuarios\GestionarUsuarios::class)
+        ->middleware('can:ver-usuarios')
+        ->name('usuarios.index');
+    
     Route::view('/roles', 'roles.index')
         ->name('roles.index');
     
-    Route::view('/permisos', 'permisos.index')
-        ->name('permisos.index');
+    // Permisos deshabilitado - se gestionan desde el seeder
+    // Route::view('/permisos', 'permisos.index')
+    //     ->name('permisos.index');
     
     // Constructor de formularios dinámicos (Admin)
     Route::get('/plantillas', \App\Livewire\Plantillas\ListarPlantillas::class)

@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Analisis;
+use App\Models\TokenDescarga;
+use App\Models\LogDescarga;
 use App\Services\AnalisisPdfService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class PdfController extends Controller
 {
@@ -95,5 +98,65 @@ class PdfController extends Controller
         \Storage::disk('public')->put($path, $imageData);
 
         return response()->json(['success' => true, 'path' => $path]);
+    }
+
+    /**
+     * Descarga un PDF usando un token de descarga (ruta pública)
+     */
+    public function descargarPorToken(string $token)
+    {
+        // Buscar token válido
+        $tokenDescarga = TokenDescarga::buscarValido($token);
+
+        if (!$tokenDescarga) {
+            abort(404, 'El enlace de descarga ha expirado o no es válido.');
+        }
+
+        // Cargar relaciones
+        $tokenDescarga->load('pdf.analisis.muestra');
+        
+        $pdf = $tokenDescarga->pdf;
+        
+        if (!$pdf) {
+            abort(404, 'El PDF no fue encontrado.');
+        }
+
+        // Verificar que el archivo existe, si no, regenerarlo
+        if (!Storage::disk('public')->exists($pdf->ruta_archivo)) {
+            // Intentar regenerar el PDF
+            try {
+                $analisis = $pdf->analisis;
+                if ($analisis) {
+                    $pdfService = app(AnalisisPdfService::class);
+                    $resultado = $pdfService->generar($analisis);
+                    // Actualizar la ruta del PDF existente
+                    $pdf->update(['ruta_archivo' => $resultado['ruta']]);
+                } else {
+                    abort(404, 'El archivo PDF no existe y no se puede regenerar.');
+                }
+            } catch (\Exception $e) {
+                abort(404, 'El archivo PDF no existe: ' . $e->getMessage());
+            }
+        }
+
+        // Verificar límite de descargas (máximo 10)
+        $totalDescargas = $tokenDescarga->logsDescarga()->count();
+        if ($totalDescargas >= 10) {
+            abort(403, 'Se ha excedido el límite de descargas permitidas para este enlace.');
+        }
+
+        // Registrar log de descarga
+        LogDescarga::create([
+            'token_id' => $tokenDescarga->id,
+            'ip' => request()->ip(),
+            'fecha' => now(),
+        ]);
+
+        // Generar nombre de archivo
+        $analisis = $pdf->analisis;
+        $nombreArchivo = 'Resultado_' . ($analisis->muestra->codigo_muestra ?? 'PDF') . '_' . $analisis->id . '.pdf';
+
+        // Descargar el archivo
+        return Storage::disk('public')->download($pdf->ruta_archivo, $nombreArchivo);
     }
 }

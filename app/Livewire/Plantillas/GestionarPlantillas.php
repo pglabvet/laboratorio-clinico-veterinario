@@ -28,6 +28,7 @@ class GestionarPlantillas extends Component
         'tabla-hematologica' => 'Tabla Hematologica',
         'tabla-dos-columnas' => 'Tabla de Dos Columnas',
         'tabla-temporal' => 'Tabla Temporal con Gráfica',
+        'carga-viral' => 'Carga Viral qPCR',
         'campos-etiquetados' => 'Lista de Campos Etiquetados',
         'texto-libre' => 'Texto Libre',
         'lista-items' => 'Lista de Items',
@@ -258,6 +259,34 @@ class GestionarPlantillas extends Component
                         'rango_referencia' => '2.0 - 6.0 ug/dL',
                     ],
                 ],
+            ],
+            'carga-viral' => [
+                'titulo' => 'DETECCIÓN POR qPCR EN TIEMPO REAL',
+                'patogeno' => 'FeLV',
+                'nombre_completo' => 'Virus de la Leucemia Felina',
+                'umbral_valor' => 10,
+                'umbral_exponente' => 5,
+                'unidad' => 'copias/ml',
+                'campos' => [
+                    ['etiqueta' => 'MUESTRA ANALIZADA', 'tipo' => 'texto'],
+                    ['etiqueta' => 'RESULTADO', 'tipo' => 'select'],
+                    ['etiqueta' => 'CARGA VIRAL', 'tipo' => 'numero_cientifico'],
+                ],
+                'interpretaciones' => [
+                    'no_detectado' => [
+                        'etiqueta' => 'NO DETECTADO',
+                        'descripcion' => 'Sin detección de ADN viral en la muestra analizada.',
+                    ],
+                    'regresivo' => [
+                        'etiqueta' => 'INFECCIÓN REGRESIVA',
+                        'descripcion' => 'Carga viral baja, posible infección en fase de resolución.',
+                    ],
+                    'progresivo' => [
+                        'etiqueta' => 'INFECCIÓN PROGRESIVA',
+                        'descripcion' => 'Carga viral alta, infección activa y progresiva.',
+                    ],
+                ],
+                'mostrar_grafica' => true,
             ],
             default => [],
         };

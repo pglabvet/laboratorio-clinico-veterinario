@@ -132,7 +132,8 @@
                         @include('livewire.resultados.componentes-edicion.' . $componente['tipo'], [
                             'componente' => $componente,
                             'index' => $index,
-                            'componentesData' => $componentesData
+                            'componentesData' => $componentesData,
+                            'analisis' => $analisis
                         ])
                     @else
                         <div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
@@ -201,21 +202,35 @@
         </div>
         
         {{-- Modal de Rechazo --}}
-        <flux:modal name="rechazo" variant="flyout" wire:model="mostrarModalRechazo">
+        <flux:modal wire:model="mostrarModalRechazo" class="w-full max-w-md">
             <div class="space-y-6">
-                <div>
-                    <flux:heading size="lg">Rechazar Análisis</flux:heading>
+                {{-- Ícono de advertencia --}}
+                <div class="flex justify-center">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
+                        <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                        </svg>
+                    </div>
+                </div>
+
+                {{-- Título y mensaje --}}
+                <div class="text-center">
+                    <flux:heading size="lg" class="mb-2">Rechazar Análisis</flux:heading>
                     <flux:subheading>Indique el motivo del rechazo</flux:subheading>
                 </div>
 
-                <flux:textarea 
-                    wire:model="observacionesRechazo"
-                    label="Motivo del rechazo"
-                    rows="5"
-                    placeholder="Describa los errores o problemas encontrados en el análisis..."
-                    required
-                />
+                {{-- Campo de observaciones --}}
+                <div>
+                    <flux:textarea 
+                        wire:model="observacionesRechazo"
+                        label="Motivo del rechazo"
+                        rows="5"
+                        placeholder="Describa los errores o problemas encontrados en el análisis..."
+                        required
+                    />
+                </div>
 
+                {{-- Botones --}}
                 <div class="flex gap-3 justify-end">
                     <flux:button 
                         wire:click="$set('mostrarModalRechazo', false)" 

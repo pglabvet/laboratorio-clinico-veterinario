@@ -10,26 +10,157 @@
         <flux:subheading>Registra y administra las muestras del laboratorio</flux:subheading>
     </div>
 
-    {{-- Barra de acciones --}}
-    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        {{-- Búsqueda --}}
-        <div class="w-full sm:w-96">
-            <flux:input 
-                wire:model.live.debounce.300ms="buscar"
-                icon="magnifying-glass"
-                placeholder="Buscar por código, paciente, propietario..."
-                class="w-full"
-            />
+    {{-- Barra de filtros --}}
+    <div class="mb-6 space-y-4">
+        {{-- Fila 1: Búsqueda y filtros principales --}}
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-end">
+            {{-- Búsqueda --}}
+            <div class="w-full sm:flex-1">
+                <flux:input 
+                    wire:model.live.debounce.300ms="buscar"
+                    icon="magnifying-glass"
+                    placeholder="Buscar por código, paciente, propietario..."
+                    class="w-full"
+                />
+            </div>
+
+            {{-- Filtro por estado --}}
+            <div class="w-full sm:w-auto">
+                <flux:dropdown>
+                    <flux:button variant="outline" icon="funnel" icon-trailing="chevron-down">
+                        {{ $filtroEstado ?: 'Estado' }}
+                    </flux:button>
+
+                    <flux:menu>
+                        <flux:menu.item wire:click="$set('filtroEstado', '')" icon="bars-3">
+                            Todos los estados
+                        </flux:menu.item>
+                        <flux:menu.separator />
+                        <flux:menu.item wire:click="$set('filtroEstado', 'Pendiente')" icon="clock">
+                            Pendiente
+                        </flux:menu.item>
+                        <flux:menu.item wire:click="$set('filtroEstado', 'En proceso')" icon="arrow-path">
+                            En proceso
+                        </flux:menu.item>
+                        <flux:menu.item wire:click="$set('filtroEstado', 'Completado')" icon="check-circle">
+                            Completado
+                        </flux:menu.item>
+                    </flux:menu>
+                </flux:dropdown>
+            </div>
+
+            {{-- Filtro por especie --}}
+            <div class="w-full sm:w-auto">
+                <flux:dropdown>
+                    <flux:button variant="outline" icon="heart" icon-trailing="chevron-down">
+                        {{ $filtroEspecie ? $especies->firstWhere('id', $filtroEspecie)?->nombre : 'Especie' }}
+                    </flux:button>
+
+                    <flux:menu>
+                        <flux:menu.item wire:click="$set('filtroEspecie', '')" icon="bars-3">
+                            Todas las especies
+                        </flux:menu.item>
+                        <flux:menu.separator />
+                        @foreach($especies as $especie)
+                            <flux:menu.item wire:click="$set('filtroEspecie', '{{ $especie->id }}')" icon="heart">
+                                {{ $especie->nombre }}
+                            </flux:menu.item>
+                        @endforeach
+                    </flux:menu>
+                </flux:dropdown>
+            </div>
+
+            {{-- Filtro por veterinaria --}}
+            <div class="w-full sm:w-auto">
+                <flux:dropdown>
+                    <flux:button variant="outline" icon="building-office" icon-trailing="chevron-down">
+                        {{ $filtroVeterinaria ? Str::limit($veterinarias->firstWhere('id', $filtroVeterinaria)?->nombre, 15) : 'Veterinaria' }}
+                    </flux:button>
+
+                    <flux:menu>
+                        <flux:menu.item wire:click="$set('filtroVeterinaria', '')" icon="bars-3">
+                            Todas las veterinarias
+                        </flux:menu.item>
+                        <flux:menu.separator />
+                        @foreach($veterinarias as $veterinaria)
+                            <flux:menu.item wire:click="$set('filtroVeterinaria', '{{ $veterinaria->id }}')" icon="building-office">
+                                {{ $veterinaria->nombre }}
+                            </flux:menu.item>
+                        @endforeach
+                    </flux:menu>
+                </flux:dropdown>
+            </div>
+
+            {{-- Dropdown de filtros rápidos de fecha --}}
+            <div class="w-full sm:w-auto">
+                <flux:dropdown>
+                    <flux:button variant="outline" icon="calendar-days" icon-trailing="chevron-down">
+                        Período
+                    </flux:button>
+
+                    <flux:menu>
+                        <flux:menu.item wire:click="filtrarHoy" icon="sun">
+                            Hoy
+                        </flux:menu.item>
+                        <flux:menu.item wire:click="filtrarAyer" icon="arrow-uturn-left">
+                            Ayer
+                        </flux:menu.item>
+                        <flux:menu.item wire:click="filtrarUltimos7Dias" icon="calendar">
+                            Últimos 7 días
+                        </flux:menu.item>
+                        <flux:menu.separator />
+                        <flux:menu.item wire:click="filtrarEstaSemana" icon="calendar-days">
+                            Esta semana
+                        </flux:menu.item>
+                        <flux:menu.item wire:click="filtrarEsteMes" icon="calendar-days">
+                            Este mes
+                        </flux:menu.item>
+                        <flux:menu.item wire:click="filtrarAnioActual" icon="calendar-days">
+                            Año actual
+                        </flux:menu.item>
+                    </flux:menu>
+                </flux:dropdown>
+            </div>
+
+            {{-- Botón crear --}}
+            <flux:button 
+                wire:click="crear"
+                icon="plus"
+                variant="primary"
+            >
+                Registrar Muestra
+            </flux:button>
         </div>
 
-        {{-- Botón crear --}}
-        <flux:button 
-            wire:click="crear"
-            icon="plus"
-            variant="primary"
-        >
-            Registrar Muestra
-        </flux:button>
+        {{-- Fila 2: Rango de fechas personalizado --}}
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-end">
+            {{-- Fecha desde --}}
+            <div class="w-full sm:w-auto">
+                <flux:input 
+                    type="date"
+                    wire:model.live="filtroFechaDesde"
+                    label="Desde"
+                />
+            </div>
+
+            {{-- Fecha hasta --}}
+            <div class="w-full sm:w-auto">
+                <flux:input 
+                    type="date"
+                    wire:model.live="filtroFechaHasta"
+                    label="Hasta"
+                />
+            </div>
+
+            {{-- Botón limpiar filtros --}}
+            <flux:button 
+                wire:click="limpiarFiltros" 
+                variant="ghost" 
+                icon="arrow-path"
+            >
+                Limpiar filtros
+            </flux:button>
+        </div>
     </div>
 
     {{-- Tabla de muestras --}}
@@ -99,30 +230,30 @@
                                 </span>
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
-                                @php
-                                    $estadoClasses = [
-                                        'pendiente' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
-                                        'EN_PROCESO' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400',
-                                        'COMPLETADO' => 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
-                                        'CANCELADO' => 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
-                                    ];
-                                @endphp
-                                <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $estadoClasses[$muestra->estado] ?? 'bg-neutral-100 text-neutral-800 dark:bg-neutral-900/20 dark:text-neutral-400' }}">
+                                <flux:badge size="sm" color="{{ $muestra->getColorEstado() }}" inset="top bottom">
                                     {{ $muestra->estado }}
-                                </span>
+                                </flux:badge>
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-700 dark:text-neutral-300">
                                 {{ $muestra->fecha_recepcion->format('d/m/Y') }}
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
                                 <div class="flex items-center gap-2">
+                                    {{-- Botón ver análisis --}}
+                                    <flux:button
+                                        wire:click="verAnalisis({{ $muestra->id }})"
+                                        variant="ghost"
+                                        size="sm"
+                                        icon="envelope-open"
+                                        title="Enviar resultados"
+                                    />
+
                                     {{-- Botón código de barras --}}
                                     <flux:button
                                         wire:click="verCodigoBarras({{ $muestra->id }})"
                                         variant="ghost"
                                         size="sm"
                                         icon="qr-code"
-                                        color="purple"
                                         title="Ver código de barras"
                                     />
 
@@ -132,7 +263,6 @@
                                         variant="ghost"
                                         size="sm"
                                         icon="eye"
-                                        color="neutral"
                                         title="Ver detalles"
                                     />
 
@@ -142,7 +272,6 @@
                                         variant="ghost"
                                         size="sm"
                                         icon="trash"
-                                        color="red"
                                         title="Eliminar"
                                     />
                                 </div>
@@ -618,4 +747,131 @@
             </div>
         </div>
     </flux:modal>
+
+    {{-- Modal para ver análisis de la muestra --}}
+    <flux:modal wire:model="modalAnalisis" class="w-full max-w-4xl">
+        @if($muestraAnalisis)
+            <div class="space-y-6">
+                {{-- Encabezado --}}
+                <div>
+                    <flux:heading size="lg" class="mb-1">Análisis de la Muestra</flux:heading>
+                    <flux:subheading>{{ $muestraAnalisis->codigo_muestra }} - {{ $muestraAnalisis->paciente_nombre }}</flux:subheading>
+                </div>
+
+                {{-- Información general --}}
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
+                    <div>
+                        <label class="block text-xs font-medium text-neutral-500 dark:text-neutral-400">Especie</label>
+                        <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $muestraAnalisis->especie->nombre ?? 'N/A' }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-neutral-500 dark:text-neutral-400">Veterinaria</label>
+                        <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $muestraAnalisis->veterinaria->nombre ?? 'N/A' }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-neutral-500 dark:text-neutral-400">Fecha Recepción</label>
+                        <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $muestraAnalisis->fecha_recepcion->format('d/m/Y') }}</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-neutral-500 dark:text-neutral-400">Estado Muestra</label>
+                        <flux:badge size="sm" color="{{ $muestraAnalisis->getColorEstado() }}" inset="top bottom">
+                            {{ $muestraAnalisis->estado }}
+                        </flux:badge>
+                    </div>
+                </div>
+
+                {{-- Tabla de análisis --}}
+                <div class="overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700">
+                    <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
+                        <thead class="bg-neutral-50 dark:bg-neutral-900">
+                            <tr>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
+                                    Tipo de Análisis
+                                </th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
+                                    Estado
+                                </th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
+                                    Acciones
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-neutral-200 bg-white dark:divide-neutral-700 dark:bg-neutral-800">
+                            @forelse($muestraAnalisis->analisis as $analisis)
+                                <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
+                                    <td class="whitespace-nowrap px-4 py-3 text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                                        {{ $analisis->tipoAnalisis->nombre ?? 'N/A' }}
+                                    </td>
+                                    <td class="whitespace-nowrap px-4 py-3 text-sm">
+                                        <flux:badge size="sm" color="{{ $analisis->getColorEstado() }}" inset="top bottom">
+                                            {{ $analisis->estado }}
+                                        </flux:badge>
+                                    </td>
+                                    <td class="whitespace-nowrap px-4 py-3 text-sm">
+                                        <flux:button
+                                            wire:click="enviarWhatsApp({{ $analisis->id }})"
+                                            variant="ghost"           
+                                            icon="paper-airplane"
+                                            title="Enviar por WhatsApp"
+                                        >
+                                            Enviar
+                                        </flux:button>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="3" class="px-4 py-8 text-center text-sm text-neutral-500 dark:text-neutral-400">
+                                        No hay análisis registrados para esta muestra
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                {{-- Resumen de estados --}}
+                @if($muestraAnalisis->analisis->count() > 0)
+                    <div class="flex flex-wrap gap-3">
+                        @php
+                            $conteoEstados = $muestraAnalisis->analisis->groupBy('estado')->map->count();
+                        @endphp
+                        @foreach($conteoEstados as $estado => $cantidad)
+                            <div class="flex items-center gap-2 px-3 py-2 bg-neutral-100 dark:bg-neutral-800 rounded-lg">
+                                <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ ucfirst(str_replace('_', ' ', $estado)) }}:</span>
+                                <span class="text-sm font-bold text-neutral-900 dark:text-neutral-100">{{ $cantidad }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+
+                {{-- Botones --}}
+                <div class="flex justify-end gap-3">
+                    <flux:button 
+                        type="button"
+                        wire:click="enviarTodoWhatsApp"
+                        variant="primary"
+                        icon="paper-airplane"
+                    >
+                        Enviar todo
+                    </flux:button>
+                    <flux:button 
+                        type="button"
+                        wire:click="cerrarModalAnalisis"
+                        variant="ghost"
+                    >
+                        Cerrar
+                    </flux:button>
+                </div>
+            </div>
+        @endif
+    </flux:modal>
+
+    {{-- Script para abrir WhatsApp --}}
+    @script
+    <script>
+        $wire.on('abrir-whatsapp', ({ url }) => {
+            window.open(url, '_blank');
+        });
+    </script>
+    @endscript
 </div>

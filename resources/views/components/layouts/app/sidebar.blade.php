@@ -58,11 +58,13 @@
         </flux:sidebar.group>
 
         <flux:sidebar.group :heading="__('Administración')" class="grid">
+            @can('ver-usuarios')
+            <flux:sidebar.item icon="users" :href="route('usuarios.index')" :current="request()->routeIs('usuarios.*')" wire:navigate>
+                {{ __('Usuarios') }}
+            </flux:sidebar.item>
+            @endcan
             <flux:sidebar.item icon="shield-check" :href="route('roles.index')" :current="request()->routeIs('roles.*')" wire:navigate>
                 {{ __('Roles') }}
-            </flux:sidebar.item>
-            <flux:sidebar.item icon="lock-closed" :href="route('permisos.index')" :current="request()->routeIs('permisos.*')" wire:navigate>
-                {{ __('Permisos') }}
             </flux:sidebar.item>
         </flux:sidebar.group>
     </flux:sidebar.nav>
