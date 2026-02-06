@@ -291,6 +291,15 @@ class GestionarSucursales extends Component
     }
 
     /**
+     * Limpiar búsqueda
+     */
+    public function limpiarBuscar()
+    {
+        $this->buscar = '';
+        $this->resetPage();
+    }
+
+    /**
      * Cambiar ordenamiento
      */
     public function ordenarPor($field)
