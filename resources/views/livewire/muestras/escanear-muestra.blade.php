@@ -45,12 +45,10 @@
             @if($muestra || $mensaje_error)
                 <flux:button 
                     wire:click="limpiar" 
-                    variant="ghost"
+                    variant="outline"
+                    icon="x-mark"
                 >
-                    <div class="flex items-center gap-2">
-                        <x-lucide-x class="size-4" />
-                        <span>Limpiar</span>
-                    </div>
+                    Limpiar
                 </flux:button>
             @endif
         </div>

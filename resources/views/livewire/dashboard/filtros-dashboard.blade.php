@@ -60,7 +60,7 @@
             @if($rangoFecha !== 'todo' || $sucursalId)
             <flux:button 
                 wire:click="limpiarFiltros"
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 icon="x-mark"
             >

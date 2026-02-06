@@ -33,6 +33,7 @@ class RegistrarSalida extends Component
     // Búsqueda y filtros
     public $buscar = '';
     public $filtroSucursal = '';
+    public $filtroPeriodo = '';
 
     // Opciones de motivo
     public $motivosDisponibles = [
@@ -247,6 +248,36 @@ class RegistrarSalida extends Component
 
         if ($this->filtroSucursal) {
             $movimientosQuery->where('sucursal_id', $this->filtroSucursal);
+        }
+
+        // Aplicar filtro de período
+        if ($this->filtroPeriodo) {
+            $now = now();
+            
+            switch ($this->filtroPeriodo) {
+                case 'hoy':
+                    $movimientosQuery->whereDate('fecha', $now->toDateString());
+                    break;
+                case 'ayer':
+                    $movimientosQuery->whereDate('fecha', $now->copy()->subDay()->toDateString());
+                    break;
+                case 'ultimos_7_dias':
+                    $movimientosQuery->where('fecha', '>=', $now->copy()->subDays(7)->startOfDay());
+                    break;
+                case 'esta_semana':
+                    $movimientosQuery->whereBetween('fecha', [
+                        $now->copy()->startOfWeek()->startOfDay(),
+                        $now->copy()->endOfWeek()->endOfDay()
+                    ]);
+                    break;
+                case 'este_mes':
+                    $movimientosQuery->whereMonth('fecha', $now->month)
+                                      ->whereYear('fecha', $now->year);
+                    break;
+                case 'este_año':
+                    $movimientosQuery->whereYear('fecha', $now->year);
+                    break;
+            }
         }
 
         $movimientos = $movimientosQuery->paginate(10);
