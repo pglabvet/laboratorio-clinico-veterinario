@@ -132,7 +132,8 @@
                         @include('livewire.resultados.componentes-edicion.' . $componente['tipo'], [
                             'componente' => $componente,
                             'index' => $index,
-                            'componentesData' => $componentesData
+                            'componentesData' => $componentesData,
+                            'analisis' => $analisis
                         ])
                     @else
                         <div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">

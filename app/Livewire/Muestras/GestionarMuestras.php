@@ -237,12 +237,14 @@ class GestionarMuestras extends Component
             // Construir mensaje de WhatsApp
             $mensaje = $this->construirMensajeWhatsApp($analisis, $urlDescarga);
 
-            // Construir URL de WhatsApp - limpiar teléfono a solo dígitos
-            $telefonoLimpio = preg_replace('/[^0-9]/', '', $telefono);
-            $telefonoFormateado = '591' . ltrim($telefonoLimpio, '0');
+            // Construir URL de WhatsApp
+            $telefonoFormateado = $this->formatearTelefonoWhatsApp($telefono);
             $urlWhatsApp = 'https://wa.me/' . $telefonoFormateado . '?text=' . rawurlencode($mensaje);
 
-            // Cambiar estado a Enviado
+            // Emitir evento para abrir URL en nueva pestaña
+            $this->dispatch('abrir-whatsapp', url: $urlWhatsApp);
+
+            // Cambiar estado a Enviado SOLO si todo salió bien
             $analisis->update(['estado' => Analisis::ESTADO_ENVIADO]);
 
             // Actualizar el modal si está abierto
@@ -250,13 +252,19 @@ class GestionarMuestras extends Component
                 $this->muestraAnalisis->load('analisis.tipoAnalisis');
             }
 
-            // Emitir evento para abrir URL en nueva pestaña
-            $this->dispatch('abrir-whatsapp', url: $urlWhatsApp);
-
             session()->flash('mensaje', 'Enlace de WhatsApp generado. El análisis ha sido marcado como enviado.');
 
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al generar enlace: ' . $e->getMessage());
+            // Registrar el error para poder investigarlo
+            \Log::error('Error al generar enlace de WhatsApp para análisis '.$analisisId.': '.$e->getMessage(), [
+                'exception' => $e,
+            ]);
+
+            // Informar claramente al usuario que el análisis no fue marcado como enviado
+            session()->flash(
+                'error',
+                'No se pudo generar el enlace de WhatsApp. El análisis no ha sido marcado como enviado. Detalle técnico: '.$e->getMessage()
+            );
         }
     }
 
@@ -331,9 +339,8 @@ class GestionarMuestras extends Component
             // Construir mensaje consolidado
             $mensaje = $this->construirMensajeWhatsAppMultiple($this->muestraAnalisis, $linksDescarga);
 
-            // Construir URL de WhatsApp - limpiar teléfono a solo dígitos
-            $telefonoLimpio = preg_replace('/[^0-9]/', '', $telefono);
-            $telefonoFormateado = '591' . ltrim($telefonoLimpio, '0');
+            // Construir URL de WhatsApp
+            $telefonoFormateado = $this->formatearTelefonoWhatsApp($telefono);
             $urlWhatsApp = 'https://wa.me/' . $telefonoFormateado . '?text=' . rawurlencode($mensaje);
 
             // Actualizar el modal
@@ -347,6 +354,16 @@ class GestionarMuestras extends Component
         } catch (\Exception $e) {
             session()->flash('error', 'Error al generar enlaces: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Formatear número de teléfono para WhatsApp
+     * Limpia caracteres no numéricos y añade código de país de Bolivia (591)
+     */
+    private function formatearTelefonoWhatsApp(string $telefono): string
+    {
+        $telefonoLimpio = preg_replace('/[^0-9]/', '', $telefono);
+        return '591' . ltrim($telefonoLimpio, '0');
     }
 
     /**

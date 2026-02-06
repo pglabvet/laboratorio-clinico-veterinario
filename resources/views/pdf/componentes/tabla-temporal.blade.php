@@ -54,11 +54,13 @@
 {{-- Gráfica de líneas --}}
 @if(($componente['propiedades']['mostrar_grafica'] ?? true))
     @if(isset($chartImage) && $chartImage)
-        <div style="margin-top: 20px; page-break-inside: avoid; text-align: center;">
-            <div style="font-weight: bold; font-size: 13px; margin-bottom: 10px;">
+        <div style="margin-top: 15px; text-align: center;">
+            <div style="font-weight: bold; font-size: 11px; margin-bottom: 8px; color: #1e3a5f;">
                 Gráfica de Resultados - {{ $componente['propiedades']['unidad_medida'] ?? 'ug/dL' }}
             </div>
-            <img src="{{ $chartImage }}" style="max-width: 100%; height: auto; border: 1px solid #e5e7eb; padding: 10px; background: white;" alt="Gráfica de resultados">
+            <div style="width: 100%; height: 150px; overflow: hidden;">
+                <img src="{{ $chartImage }}" style="width: 100%; height: 150px;" alt="Gráfica de resultados">
+            </div>
         </div>
     @else
         {{-- Fallback a generación manual si no hay imagen (código anterior) --}}

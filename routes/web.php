@@ -9,6 +9,7 @@ Route::get('/', function () {
 
 // Ruta pública para descarga de PDF por token (no requiere autenticación)
 Route::get('/descargar/{token}', [PdfController::class, 'descargarPorToken'])
+    ->middleware('throttle:60,1')
     ->name('pdf.descargar.token');
 
 Route::view('dashboard', 'dashboard')
@@ -50,10 +51,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
    
     Route::view('/especies', 'especies.index')
         ->name('especies.index');
-
-    
-    Route::view('/tipos-analisis', 'tipos-analisis.index')
-        ->name('tipos-analisis.index');
     
     Route::view('/unidades-medida', 'unidades-medida.index')
         ->name('unidades-medida.index');

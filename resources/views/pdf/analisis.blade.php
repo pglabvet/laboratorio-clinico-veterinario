@@ -220,17 +220,19 @@
       margin-top: 3px;
     }
 
+    /* Firma fija en la parte inferior de cada página */
     .signature-image-container {
+      position: fixed;
+      bottom: -20pt;
+      left: 0;
+      right: 0;
       text-align: center;
-      margin-top: 20px;
-      padding: 15px;
-      background-color: transparent;
-      border-radius: 4px;
+      z-index: 2;
     }
 
     .signature-image {
-      max-width: 200px;
-      max-height: 120px;
+      max-width: 180px;
+      max-height: 100px;
     }
 
     .text-content {
@@ -276,10 +278,12 @@
     </div>
   @endif
 
-  {{-- Info generación fija (no crea hoja extra) --}}
-  <div class="generation-info">
-    PDF generado el {{ $fechaGeneracion }} | Análisis #{{ $analisis->id }}
-  </div>
+  {{-- Firma fija en la parte inferior de cada página --}}
+  @if(isset($firmaBase64) && $firmaBase64)
+    <div class="signature-image-container">
+      <img src="{{ $firmaBase64 }}" alt="Firma" class="signature-image">
+    </div>
+  @endif
 
   <div class="container">
         {{-- Título del análisis --}}
@@ -340,9 +344,11 @@
         $resultado = $item['resultado'];
         $tipo = $item['tipo'];
         $chartImage = $item['chartImage'] ?? null;
+        // Permitir saltos de página en componentes grandes como carga-viral
+        $allowPageBreak = in_array($tipo, ['carga-viral', 'tabla-temporal']);
       @endphp
 
-      <div class="component">
+      <div class="component" @if($allowPageBreak) style="page-break-inside: auto;" @endif>
         @if(view()->exists('pdf.componentes.' . $tipo))
           @include('pdf.componentes.' . $tipo, [
             'componente' => $componente,
@@ -396,12 +402,7 @@
     </div>
     --}}
 
-    {{-- Firma --}}
-    @if(isset($firmaBase64) && $firmaBase64)
-      <div class="signature-image-container">
-        <img src="{{ $firmaBase64 }}" alt="Firma" class="signature-image">
-      </div>
-    @endif
+{{-- Firma movida fuera del container para posición fija --}}
   </div>
 </body>
 </html>
