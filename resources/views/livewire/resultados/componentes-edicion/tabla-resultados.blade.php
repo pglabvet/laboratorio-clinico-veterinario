@@ -15,7 +15,8 @@
                 {{ $rowIndex }}: {
                     nombre: '{{ addslashes(is_array($analisis) ? ($analisis['nombre'] ?? '') : $analisis) }}',
                     col_0: '',
-                    col_1: '{{ addslashes(is_array($analisis) ? ($analisis['rango_ref'] ?? '') : '') }}'
+                    col_1: '{{ addslashes(is_array($analisis) ? ($analisis['rango_ref'] ?? '') : '') }}',
+                    unidad: '{{ addslashes(is_array($analisis) ? ($analisis['unidad'] ?? '') : '') }}'
                 }{{ $loop->last ? '' : ',' }}
             @endforeach
         },
@@ -94,8 +95,15 @@
                             />
                         @else
                             {{-- Segunda columna y siguientes: RANGOS DE REFERENCIA (solo lectura - texto estático) --}}
+                            @php
+                                $rangoRef = is_array($analisis) ? ($analisis['rango_ref'] ?? '') : '';
+                                $unidadRef = is_array($analisis) ? ($analisis['unidad'] ?? '') : '';
+                            @endphp
                             <div class="px-3 py-2 text-gray-600 dark:text-zinc-400 text-center">
-                                {{ is_array($analisis) ? ($analisis['rango_ref'] ?? '...') : '...' }}
+                                {{ $rangoRef ?: '...' }}
+                                @if($unidadRef)
+                                    <span class="text-gray-500 dark:text-zinc-500 ml-2">{{ $unidadRef }}</span>
+                                @endif
                             </div>
                         @endif
                     </td>

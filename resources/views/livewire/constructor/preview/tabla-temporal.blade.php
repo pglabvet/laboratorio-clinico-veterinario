@@ -37,6 +37,9 @@
                     <!-- Rangos de referencia (admin) -->
                     <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-900 dark:text-zinc-100 text-center">
                         {{ $fila['rango_referencia'] ?: 'Sin rango' }}
+                        @if(!empty($fila['unidad']))
+                            <span class="text-gray-500 dark:text-zinc-500 ml-2">{{ $fila['unidad'] }}</span>
+                        @endif
                     </td>
                 </tr>
                 @endforeach

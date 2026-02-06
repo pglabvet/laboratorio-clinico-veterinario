@@ -74,16 +74,28 @@
                     </div>
 
 
-                    <!-- Rangos de referencia -->
-                    <div>
-                        <label class="block text-xs font-medium text-gray-600 dark:text-zinc-400 mb-1">
-                            <i class="fas fa-ruler mr-1 text-yellow-500"></i> Rangos de Referencia
-                        </label>
-                        <input 
-                            type="text"
-                            wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.filas.{{ $filaIndex }}.rango_referencia"
-                            placeholder="Ej: 2.0 - 6.0 ug/dL"
-                            class="w-full px-2 py-1 border border-gray-300 dark:border-zinc-700 rounded text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
+                    <!-- Rangos de referencia y unidad -->
+                    <div class="grid grid-cols-2 gap-2 items-end">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 dark:text-zinc-400 mb-1">
+                                Rango de Referencia
+                            </label>
+                            <input 
+                                type="text"
+                                wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.filas.{{ $filaIndex }}.rango_referencia"
+                                placeholder="Ej: 2.0 - 6.0"
+                                class="w-full px-2 py-1 border border-gray-300 dark:border-zinc-700 rounded text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 dark:text-zinc-400 mb-1">
+                                Unidad
+                            </label>
+                            <input 
+                                type="text"
+                                wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.filas.{{ $filaIndex }}.unidad"
+                                placeholder="Ej: ug/dL"
+                                class="w-full px-2 py-1 border border-gray-300 dark:border-zinc-700 rounded text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -91,7 +103,7 @@
         </div>
 
         <flux:button 
-            wire:click="$set('componentes.{{ $indiceComponente }}.propiedades.filas', {{ json_encode(array_merge($props['filas'] ?? [], [['analisis' => '', 'rango_referencia' => '']])) }})"
+            wire:click="$set('componentes.{{ $indiceComponente }}.propiedades.filas', {{ json_encode(array_merge($props['filas'] ?? [], [['analisis' => '', 'rango_referencia' => '', 'unidad' => '']])) }})"
             variant="primary" 
             icon="plus" 
             class="w-full mt-3">

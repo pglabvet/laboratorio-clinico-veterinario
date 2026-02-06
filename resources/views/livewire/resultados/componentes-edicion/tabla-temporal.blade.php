@@ -7,6 +7,7 @@
             'analisis' => $fila['analisis'] ?? '',
             'hora' => '',  // El bioquímico ingresa la hora
             'rango_referencia' => $fila['rango_referencia'] ?? '',
+            'unidad' => $fila['unidad'] ?? '',
             'resultado' => ''
         ];
     }
@@ -305,6 +306,9 @@ class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:
                     {{-- Rangos de referencia (solo lectura) --}}
                     <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-900 dark:text-zinc-100 text-center">
                         {{ $fila['rango_referencia'] }}
+                        @if(!empty($fila['unidad']))
+                            <span class="text-gray-500 dark:text-zinc-500 ml-2">{{ $fila['unidad'] }}</span>
+                        @endif
                     </td>
                 </tr>
                 @endforeach

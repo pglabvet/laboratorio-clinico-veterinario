@@ -620,6 +620,27 @@ class CapturarResultados extends Component
         }
     }
     
+    /**
+     * Actualizar datos en modo revisión sin cambiar estado
+     */
+    public function actualizarDatosRevision()
+    {
+        try {
+            DB::beginTransaction();
+            
+            // Guardar los cambios de resultados
+            $this->guardarResultadosInterno();
+            
+            DB::commit();
+            
+            session()->flash('success', 'Datos actualizados correctamente.');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            session()->flash('error', 'Error al actualizar los datos: ' . $e->getMessage());
+        }
+    }
+    
     public function abrirModalRechazo()
     {
         $this->mostrarModalRechazo = true;

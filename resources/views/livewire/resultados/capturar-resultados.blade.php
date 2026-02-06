@@ -167,6 +167,13 @@
                                 Descargar PDF
                             </flux:button>
                         @else
+                            {{-- Botón Actualizar Datos para guardar cambios --}}
+                            <flux:button 
+                                wire:click="actualizarDatosRevision"
+                                variant="outline" 
+                                icon="arrow-path">
+                                Actualizar Datos
+                            </flux:button>
                             <flux:button 
                                 wire:click="abrirModalRechazo"
                                 variant="danger" 

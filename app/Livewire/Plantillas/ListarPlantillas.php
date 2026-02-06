@@ -45,6 +45,15 @@ class ListarPlantillas extends Component
      */
     public function confirmarEliminar($plantillaId)
     {
+        $plantilla = PlantillaFormulario::findOrFail($plantillaId);
+        
+        // Verificar si la plantilla está en uso
+        if ($plantilla->estaEnUso()) {
+            $count = $plantilla->contarAnalisis();
+            session()->flash('error', "Esta plantilla ya fue usada en {$count} análisis y no puede eliminarse. Solo puede desactivarla.");
+            return;
+        }
+        
         $this->plantillaAEliminar = $plantillaId;
         $this->modalEliminar = true;
     }
