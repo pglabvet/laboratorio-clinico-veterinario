@@ -22,6 +22,9 @@ class DatabaseSeeder extends Seeder
             VeterinariasSeeder::class,
             UnidadesMedidaSeeder::class,
             TiposAnalisisSeeder::class,
+            CategoriasInsumoSeeder::class,
+            InsumosSeeder::class,
+            EntradasInventarioSeeder::class,
         ]);
     }
 }
