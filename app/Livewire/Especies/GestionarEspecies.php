@@ -64,7 +64,7 @@ class GestionarEspecies extends Component
      */
     public function ver($id)
     {
-        $this->especieAVer = Especie::withCount(['muestras', 'rangosReferencia'])->findOrFail($id);
+        $this->especieAVer = Especie::withCount(['muestras'])->findOrFail($id);
         $this->modalVer = true;
     }
 

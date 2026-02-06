@@ -188,7 +188,10 @@ class FormularioMuestra extends Component
             'plantilla_nombre' => $plantilla->nombre,
         ];
 
-        $this->cerrarModalAnalisis();
+        // Limpiar los campos después de agregar
+        $this->tipoAnalisisTemp = null;
+        $this->plantillasDisponibles = [];
+        $this->plantillaSeleccionadaTemp = null;
     }
 
     /**
@@ -317,7 +320,15 @@ class FormularioMuestra extends Component
 
             DB::commit();
 
-            session()->flash('mensaje', $this->muestra_id ? 'Muestra actualizada exitosamente.' : 'Muestra registrada exitosamente.');
+            // Si es edición, redirigir directamente
+            if ($this->muestra_id) {
+                session()->flash('mensaje', 'Muestra actualizada exitosamente.');
+                return redirect()->route('muestras.index');
+            }
+
+            // Si es nueva muestra, guardar ID en sesión para mostrar modal en la vista de gestión
+            session()->flash('mensaje', 'Muestra registrada exitosamente.');
+            session()->flash('muestra_recien_creada_id', $muestra->id);
             return redirect()->route('muestras.index');
 
         } catch (\Exception $e) {

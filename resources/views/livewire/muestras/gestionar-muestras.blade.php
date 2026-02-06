@@ -164,7 +164,7 @@
     </div>
 
     {{-- Tabla de muestras --}}
-    <div class="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow dark:border-neutral-700 dark:bg-neutral-800">
+    <div class="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-md ring-1 ring-neutral-200/50 dark:border-neutral-700 dark:bg-neutral-800 dark:ring-neutral-700/50">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
                 <thead class="bg-neutral-50 dark:bg-neutral-900">
@@ -480,109 +480,125 @@
     </flux:modal>
 
     {{-- Modal para ver detalles de la muestra --}}
-    <flux:modal wire:model="modalVer" class="w-full max-w-3xl">
+    <flux:modal wire:model="modalVer" class="w-full max-w-2xl">
         @if($muestraAVer)
-            <div class="space-y-6">
-                {{-- Encabezado --}}
-                <div>
-                    <flux:heading size="lg" class="mb-1">Detalles de la Muestra</flux:heading>
-                    <flux:subheading>{{ $muestraAVer->codigo_muestra }}</flux:subheading>
-                </div>
-
-                {{-- Contenido --}}
-                <div class="space-y-6">
-                    {{-- Datos del Paciente --}}
-                    <div>
-                        <h3 class="text-base font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Datos del Paciente</h3>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Nombre</label>
-                                <p class="text-base text-neutral-900 dark:text-neutral-100">{{ $muestraAVer->paciente_nombre }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Especie</label>
-                                <p class="text-base text-neutral-900 dark:text-neutral-100">{{ $muestraAVer->especie->nombre ?? 'N/A' }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Raza</label>
-                                <p class="text-base text-neutral-900 dark:text-neutral-100">{{ $muestraAVer->raza ?: 'No especificada' }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Edad</label>
-                                <p class="text-base text-neutral-900 dark:text-neutral-100">{{ $muestraAVer->edad }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Sexo</label>
-                                <p class="text-base text-neutral-900 dark:text-neutral-100">{{ $muestraAVer->sexo == 'M' ? 'Macho' : 'Hembra' }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Color</label>
-                                <p class="text-base text-neutral-900 dark:text-neutral-100">{{ $muestraAVer->color ?: 'No especificado' }}</p>
-                            </div>
-                            <div class="col-span-2">
-                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Propietario</label>
-                                <p class="text-base text-neutral-900 dark:text-neutral-100">{{ $muestraAVer->propietario_nombre }}</p>
-                            </div>
+            @php
+                $estadoBadge = [
+                    'Pendiente' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
+                    'En proceso' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400',
+                    'Completado' => 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
+                    'Enviado' => 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400',
+                ];
+            @endphp
+            <div class="space-y-5">
+                {{-- Encabezado: Nombre paciente + Badge estado --}}
+                <div class="pb-4 border-b border-neutral-200 dark:border-neutral-700">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <h2 class="text-xl font-semibold text-neutral-900 dark:text-neutral-100">{{ $muestraAVer->paciente_nombre }}</h2>
+                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $estadoBadge[$muestraAVer->estado] ?? 'bg-neutral-100 text-neutral-800 dark:bg-neutral-900/20 dark:text-neutral-400' }}">
+                                {{ $muestraAVer->estado }}
+                            </span>
                         </div>
                     </div>
+                    <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1">Código: <span class="font-mono font-medium">{{ $muestraAVer->codigo_muestra }}</span></p>
+                </div>
 
-                    {{-- Datos de la Muestra --}}
-                    <div>
-                        <h3 class="text-base font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Datos de la Muestra</h3>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Veterinaria</label>
-                                <p class="text-base text-neutral-900 dark:text-neutral-100">{{ $muestraAVer->veterinaria->nombre ?? 'N/A' }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Sucursal</label>
-                                <p class="text-base text-neutral-900 dark:text-neutral-100">{{ $muestraAVer->sucursal->nombre ?? 'N/A' }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Tipo de Muestra</label>
-                                <p class="text-base text-neutral-900 dark:text-neutral-100">{{ $muestraAVer->tipo_muestra }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Fecha de Recepción</label>
-                                <p class="text-base text-neutral-900 dark:text-neutral-100">{{ $muestraAVer->fecha_recepcion->format('d/m/Y') }}</p>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Estado</label>
-                                <p class="text-base text-neutral-900 dark:text-neutral-100">{{ $muestraAVer->estado }}</p>
-                            </div>
+                {{-- Datos del Paciente --}}
+                <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 divide-y divide-neutral-200 dark:divide-neutral-700 overflow-hidden bg-white dark:bg-neutral-800/50">
+                    <div class="flex items-start gap-3 px-4 py-3.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                        <svg class="w-5 h-5 text-indigo-500 dark:text-indigo-400 mt-0.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-0.5">Propietario</p>
+                            <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $muestraAVer->propietario_nombre }}</p>
                         </div>
-                        @if($muestraAVer->observaciones)
-                            <div class="mt-4">
-                                <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">Observaciones</label>
-                                <p class="text-base text-neutral-900 dark:text-neutral-100">{{ $muestraAVer->observaciones }}</p>
-                            </div>
-                        @endif
                     </div>
-
-                    {{-- Análisis Solicitados --}}
-                    <div>
-                        <h3 class="text-base font-semibold text-neutral-900 dark:text-neutral-100 mb-3">Análisis Solicitados ({{ $muestraAVer->analisis->count() }})</h3>
-                        @if($muestraAVer->analisis->count() > 0)
-                            <div class="flex flex-wrap gap-2">
-                                @foreach($muestraAVer->analisis as $analisis)
-                                    <span class="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
-                                        {{ $analisis->tipoAnalisis->nombre }}
-                                    </span>
-                                @endforeach
-                            </div>
-                        @else
-                            <p class="text-sm text-neutral-500 dark:text-neutral-400">No hay análisis registrados</p>
-                        @endif
+                    <div class="flex items-start gap-3 px-4 py-3.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                        <svg class="w-5 h-5 text-amber-500 dark:text-amber-400 mt-0.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" /></svg>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-0.5">Especie / Raza</p>
+                            <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $muestraAVer->especie->nombre ?? 'N/A' }} <span class="text-neutral-400">—</span> {{ $muestraAVer->raza ?: 'Sin raza' }}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3 px-4 py-3.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                        <svg class="w-5 h-5 text-pink-500 dark:text-pink-400 mt-0.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6Z" /></svg>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-0.5">Edad / Sexo / Color</p>
+                            <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $muestraAVer->edad }} <span class="text-neutral-400">·</span> {{ $muestraAVer->sexo == 'M' ? 'Macho' : 'Hembra' }} <span class="text-neutral-400">·</span> {{ $muestraAVer->color ?: 'Sin color' }}</p>
+                        </div>
                     </div>
                 </div>
+
+                {{-- Datos de la Muestra --}}
+                <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 divide-y divide-neutral-200 dark:divide-neutral-700 overflow-hidden bg-white dark:bg-neutral-800/50">
+                    <div class="flex items-start gap-3 px-4 py-3.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                        <svg class="w-5 h-5 text-blue-500 dark:text-blue-400 mt-0.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3H21m-3.75 3H21" /></svg>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-0.5">Veterinaria</p>
+                            <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $muestraAVer->veterinaria->nombre ?? 'N/A' }}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3 px-4 py-3.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                        <svg class="w-5 h-5 text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" /></svg>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-0.5">Sucursal</p>
+                            <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $muestraAVer->sucursal->nombre ?? 'N/A' }}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3 px-4 py-3.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                        <svg class="w-5 h-5 text-cyan-500 dark:text-cyan-400 mt-0.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M19 14.5l-2.47 2.47a2.25 2.25 0 0 1-1.59.659H9.06a2.25 2.25 0 0 1-1.591-.659L5 14.5m14 0-3.375-3.375M5 14.5l3.375-3.375" /></svg>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-0.5">Tipo de Muestra</p>
+                            <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $muestraAVer->tipo_muestra }}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3 px-4 py-3.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                        <svg class="w-5 h-5 text-violet-500 dark:text-violet-400 mt-0.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-0.5">Fecha de Recepción</p>
+                            <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $muestraAVer->fecha_recepcion->format('d/m/Y H:i') }}</p>
+                        </div>
+                    </div>
+                    @if($muestraAVer->observaciones)
+                        <div class="flex items-start gap-3 px-4 py-3.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                            <svg class="w-5 h-5 text-orange-500 dark:text-orange-400 mt-0.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" /></svg>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-0.5">Observaciones</p>
+                                <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $muestraAVer->observaciones }}</p>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+
+                {{-- Análisis Solicitados --}}
+                @if($muestraAVer->analisis->count() > 0)
+                    <div>
+                        <h3 class="text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-3">Análisis Solicitados ({{ $muestraAVer->analisis->count() }})</h3>
+                        <div class="grid gap-2.5">
+                            @foreach($muestraAVer->analisis as $analisis)
+                                <div class="flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 border border-blue-100 dark:border-blue-900/30">
+                                    <svg class="w-5 h-5 text-blue-500 dark:text-blue-400 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M19 14.5l-2.47 2.47a2.25 2.25 0 0 1-1.59.659H9.06a2.25 2.25 0 0 1-1.591-.659L5 14.5m14 0-3.375-3.375M5 14.5l3.375-3.375" /></svg>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <span class="inline-flex items-center rounded-full bg-blue-600 px-2.5 py-0.5 text-xs font-semibold text-white">
+                                                {{ $analisis->tipoAnalisis->nombre ?? 'Sin tipo' }}
+                                            </span>
+                                            <span class="text-neutral-400 dark:text-neutral-500">·</span>
+                                            <span class="text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ $analisis->plantillaFormulario->nombre ?? 'Sin plantilla' }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
 
                 {{-- Botón cerrar --}}
-                <div class="flex justify-end">
+                <div class="flex justify-end pt-2">
                     <flux:button 
                         type="button"
                         wire:click="cerrarModalVer"
                         variant="primary"
-                        color="cyan"
                     >
                         Cerrar
                     </flux:button>

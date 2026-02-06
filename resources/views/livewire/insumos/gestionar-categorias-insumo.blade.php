@@ -32,7 +32,7 @@
     </div>
 
     {{-- Tabla de categorías --}}
-    <div class="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow dark:border-neutral-700 dark:bg-neutral-800">
+    <div class="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-md ring-1 ring-neutral-200/50 dark:border-neutral-700 dark:bg-neutral-800 dark:ring-neutral-700/50">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
                 <thead class="bg-neutral-50 dark:bg-neutral-900">

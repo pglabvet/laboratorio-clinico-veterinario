@@ -27,12 +27,4 @@ class Especie extends Model
     {
         return $this->hasMany(Muestra::class);
     }
-
-    /**
-     * Relación con rangos de referencia
-     */
-    public function rangosReferencia(): HasMany
-    {
-        return $this->hasMany(RangoReferencia::class);
-    }
 }

@@ -10,9 +10,9 @@
     </div>
 
     {{-- Barra de acciones y filtros --}}
-    <div class="mb-6 flex flex-col gap-4">
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            {{-- Búsqueda --}}
+    <div class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        {{-- Búsqueda y Filtros --}}
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center flex-1">
             <div class="w-full sm:w-96">
                 <flux:input 
                     wire:model.live.debounce.300ms="buscar"
@@ -22,42 +22,49 @@
                 />
             </div>
 
-            {{-- Botón crear --}}
-            <flux:button 
-                wire:click="crear"
-                icon="plus"
-                variant="primary"
-            >
-                Nuevo Insumo
-            </flux:button>
-        </div>
+            {{-- Filtro de Sucursal (Dropdown estilo botón) --}}
+            <flux:dropdown>
+                <flux:button variant="outline" icon="building-office-2" icon-trailing="chevron-down">
+                    {{ $filtroSucursal ? $sucursales->firstWhere('id', $filtroSucursal)?->nombre : 'Sucursales' }}
+                </flux:button>
 
-        {{-- Filtros adicionales --}}
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <div class="w-full sm:w-64">
-                <flux:select wire:model.live="filtroSucursal" placeholder="Filtrar por sucursal">
-                    <option value="">Todas las sucursales</option>
+                <flux:menu>
+                    <flux:menu.item wire:click="$set('filtroSucursal', '')" icon="bars-3">
+                        Todas las sucursales
+                    </flux:menu.item>
+                    <flux:menu.separator />
                     @foreach($sucursales as $sucursal)
-                        <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
+                        <flux:menu.item wire:click="$set('filtroSucursal', '{{ $sucursal->id }}')" icon="building-storefront">
+                            {{ $sucursal->nombre }}
+                        </flux:menu.item>
                     @endforeach
-                </flux:select>
-            </div>
+                </flux:menu>
+            </flux:dropdown>
 
             @if($filtroSucursal)
                 <flux:checkbox wire:model.live="mostrarSoloStockBajo" label="Solo stock bajo" />
             @endif
         </div>
+
+        {{-- Botón crear --}}
+        <flux:button 
+            wire:click="crear"
+            icon="plus"
+            variant="primary"
+        >
+            Nuevo Insumo
+        </flux:button>
     </div>
 
     {{-- Tabla de insumos --}}
-    <div class="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow dark:border-neutral-700 dark:bg-neutral-800">
+    <div class="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-md ring-1 ring-neutral-200/50 dark:border-neutral-700 dark:bg-neutral-800 dark:ring-neutral-700/50">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
                 <thead class="bg-neutral-50 dark:bg-neutral-900">
                     <tr>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
                             <button wire:click="ordenarPor('nombre')" class="flex items-center gap-1 hover:text-neutral-900 dark:hover:text-neutral-100">
-                                <span>Nombre</span>
+                                <span>NOMBRE</span>
                                 @if($sortBy === 'nombre')
                                     <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                                         @if($sortDirection === 'asc')
@@ -222,8 +229,8 @@
                 </flux:input.group>
 
                 <flux:input.group label="Categoría" :error="$errors->first('categoria_id')">
-                    <flux:select wire:model="categoria_id" placeholder="Selecciona una categoría (opcional)">
-                        <option value="">Sin categoría</option>
+                    <flux:select wire:model="categoria_id" placeholder="">
+                        <option value="">Seleccione una categoria</option>
                         @foreach($categorias as $categoria)
                             <option value="{{ $categoria->id }}">{{ $categoria->nombre }}</option>
                         @endforeach
@@ -231,7 +238,8 @@
                 </flux:input.group>
 
                 <flux:input.group label="Unidad de medida" :error="$errors->first('unidad_medida_id')" required>
-                    <flux:select wire:model="unidad_medida_id" placeholder="Selecciona una unidad">
+                    <flux:select wire:model="unidad_medida_id" placeholder="">
+                         <option value="">Selecciona una unidad de medida</option>
                         @foreach($unidadesMedida as $unidad)
                             <option value="{{ $unidad->id }}">{{ $unidad->nombre }} ({{ $unidad->abreviatura }})</option>
                         @endforeach
