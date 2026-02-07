@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             CategoriasInsumoSeeder::class,
             InsumosSeeder::class,
             EntradasInventarioSeeder::class,
+            MuestrasSeeder::class,
         ]);
     }
 }

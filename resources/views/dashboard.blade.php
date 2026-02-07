@@ -16,7 +16,7 @@
             </div>
         </div>
 
-        @can('ver-dashboard')
+        @can('ver-filtros-dashboard')
         {{-- Filtros Dashboard --}}
         <livewire:dashboard.filtros-dashboard />
         @endcan
@@ -26,7 +26,7 @@
         <livewire:dashboard.estadisticas-principales />
         @endcan
 
-        @can('ver-dashboard')
+        @can('ver-acciones-rapidas')
         {{-- Acciones Rápidas --}}
         <livewire:dashboard.acciones-rapidas />
         @endcan

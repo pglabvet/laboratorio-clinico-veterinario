@@ -77,7 +77,7 @@ class EstadisticasPrincipales extends Component
         $muestrasPendientes = $muestrasPendientesQuery->count();
         
         // Estadísticas desglosadas por estado
-        $analisisPendientes = (clone $baseQuery)->where('estado', 'Pendiente')->count();
+        $analisisPendientes = (clone $baseQuery)->where('estado', 'pendiente')->count();
         
         // Muestras recibidas hoy
         $queryMuestras = Muestra::query();
@@ -88,6 +88,12 @@ class EstadisticasPrincipales extends Component
             $queryMuestras->whereDate('created_at', Carbon::today());
         }
         
+        // Si no es admin, filtrar por sucursal del usuario automáticamente
+        if (!$user->can('ver-estadisticas-completas') && $user->sucursal_id) {
+            $queryMuestras->where('sucursal_id', $user->sucursal_id);
+        }
+        
+        // Si es admin y tiene filtro de sucursal seleccionado
         if ($this->sucursalId && $user->can('filtrar-por-sucursal')) {
             $queryMuestras->where('sucursal_id', $this->sucursalId);
         }
@@ -100,8 +106,13 @@ class EstadisticasPrincipales extends Component
             $queryInventario = DB::table('inventario_sucursal')
                 ->where('stock_actual', '<=', DB::raw('stock_minimo'));
             
-            // Aplicar filtro de sucursal
-            if ($this->sucursalId) {
+            // Si no es admin, filtrar por sucursal del usuario automáticamente
+            if (!$user->can('ver-estadisticas-completas') && $user->sucursal_id) {
+                $queryInventario->where('sucursal_id', $user->sucursal_id);
+            }
+            
+            // Si es admin y tiene filtro de sucursal seleccionado
+            if ($this->sucursalId && $user->can('filtrar-por-sucursal')) {
                 $queryInventario->where('sucursal_id', $this->sucursalId);
             }
             
