@@ -62,11 +62,10 @@ class ActividadReciente extends Component
     public function getEstadoBadge($estado)
     {
         return match($estado) {
-            'pendiente' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
-            'en_proceso' => 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400',
-            'finalizado' => 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400',
-            'aprobado' => 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
-            'rechazado' => 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
+            Analisis::ESTADO_PENDIENTE => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
+            Analisis::ESTADO_EN_REVISION => 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400',
+            Analisis::ESTADO_APROBADO => 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
+            Analisis::ESTADO_ENVIADO => 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400',
             default => 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400',
         };
     }
@@ -74,11 +73,10 @@ class ActividadReciente extends Component
     public function getEstadoTexto($estado)
     {
         return match($estado) {
-            'pendiente' => 'Pendiente',
-            'en_proceso' => 'En Proceso',
-            'finalizado' => 'Finalizado',
-            'aprobado' => 'Aprobado',
-            'rechazado' => 'Rechazado',
+            Analisis::ESTADO_PENDIENTE => 'Pendiente',
+            Analisis::ESTADO_EN_REVISION => 'En Revisión',
+            Analisis::ESTADO_APROBADO => 'Aprobado',
+            Analisis::ESTADO_ENVIADO => 'Enviado',
             default => ucfirst($estado),
         };
     }

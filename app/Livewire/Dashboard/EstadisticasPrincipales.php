@@ -77,7 +77,7 @@ class EstadisticasPrincipales extends Component
         $muestrasPendientes = $muestrasPendientesQuery->count();
         
         // Estadísticas desglosadas por estado
-        $analisisPendientes = (clone $baseQuery)->where('estado', 'pendiente')->count();
+        $analisisPendientes = (clone $baseQuery)->where('estado', Analisis::ESTADO_PENDIENTE)->count();
         
         // Muestras recibidas hoy
         $queryMuestras = Muestra::query();
