@@ -51,8 +51,8 @@ class GraficosEstadisticas extends Component
             ->pluck('total', 'estado')
             ->toArray();
 
-        // Ordenar estados en orden lógico (deben coincidir con los valores de la migración)
-        $ordenEstados = ['Pendiente', 'En revision', 'Aprobado', 'Enviado'];
+        // Ordenar estados en orden lógico (valores en minúscula como en la BD)
+        $ordenEstados = ['pendiente', 'en_proceso', 'finalizado', 'aprobado', 'rechazado'];
         $analisisOrdenado = [];
         foreach ($ordenEstados as $estado) {
             if (isset($analisisPorEstado[$estado])) {

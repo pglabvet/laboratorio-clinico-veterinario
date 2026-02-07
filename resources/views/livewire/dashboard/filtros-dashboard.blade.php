@@ -5,62 +5,62 @@
     </div>
 
     <div class="space-y-4">
-        {{-- Filtros de Fecha --}}
-        <div class="flex flex-wrap items-center gap-2">
-            <span class="text-sm font-medium text-zinc-600 dark:text-zinc-400">Período:</span>
-            
-            <button 
-                wire:click="$set('rangoFecha', 'hoy')"
-                class="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors {{ $rangoFecha === 'hoy' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700' }}"
-            >
-                Hoy
-            </button>
-            
-            <button 
-                wire:click="$set('rangoFecha', 'semana')"
-                class="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors {{ $rangoFecha === 'semana' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700' }}"
-            >
-                Esta Semana
-            </button>
-            
-            <button 
-                wire:click="$set('rangoFecha', 'mes')"
-                class="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors {{ $rangoFecha === 'mes' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700' }}"
-            >
-                Este Mes
-            </button>
-            
-            <button 
-                wire:click="$set('rangoFecha', 'todo')"
-                class="rounded-lg px-3 py-1.5 text-sm font-medium transition-colors {{ $rangoFecha === 'todo' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700' }}"
-            >
-                Todo
-            </button>
-        </div>
-
-        {{-- Filtro por Sucursal y Botón Limpiar --}}
+        {{-- Filtros de Fecha con Dropdown --}}
         <div class="flex flex-wrap items-center gap-3">
+            <flux:dropdown>
+                <flux:button variant="outline" icon="calendar-days" icon-trailing="chevron-down" size="sm">
+                    {{ $periodoSeleccionado }}
+                </flux:button>
+
+                <flux:menu>
+                    <flux:menu.item wire:click="filtrarHoy" icon="sun">
+                        Hoy
+                    </flux:menu.item>
+                    <flux:menu.item wire:click="filtrarAyer" icon="arrow-uturn-left">
+                        Ayer
+                    </flux:menu.item>
+                    <flux:menu.item wire:click="filtrarUltimos7Dias" icon="calendar">
+                        Últimos 7 días
+                    </flux:menu.item>
+                    <flux:menu.separator />
+                    <flux:menu.item wire:click="filtrarEstaSemana" icon="calendar-days">
+                        Esta semana
+                    </flux:menu.item>
+                    <flux:menu.item wire:click="filtrarEsteMes" icon="calendar-days">
+                        Este mes
+                    </flux:menu.item>
+                    <flux:menu.item wire:click="filtrarAnioActual" icon="calendar-days">
+                        Año actual
+                    </flux:menu.item>
+                </flux:menu>
+            </flux:dropdown>
+
             @can('filtrar-por-sucursal')
             @if(count($sucursales) > 0)
-            <div class="flex items-center gap-2">
-                <span class="text-sm font-medium text-zinc-600 dark:text-zinc-400">Sucursal:</span>
-                <select 
-                    wire:model.live="sucursalId"
-                    class="rounded-lg border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 focus:border-blue-500 focus:ring-blue-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
-                >
-                    <option value="">Todas</option>
+            <flux:dropdown>
+                <flux:button variant="outline" icon="building-office" icon-trailing="chevron-down" size="sm">
+                    {{ $sucursalSeleccionada }}
+                </flux:button>
+
+                <flux:menu>
+                    <flux:menu.item wire:click="seleccionarSucursal('', 'Todas')" icon="bars-3">
+                        Todas
+                    </flux:menu.item>
+                    <flux:menu.separator />
                     @foreach($sucursales as $sucursal)
-                        <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
+                        <flux:menu.item wire:click="seleccionarSucursal('{{ $sucursal->id }}', '{{ $sucursal->nombre }}')" icon="building-office">
+                            {{ $sucursal->nombre }}
+                        </flux:menu.item>
                     @endforeach
-                </select>
-            </div>
+                </flux:menu>
+            </flux:dropdown>
             @endif
             @endcan
 
-            @if($rangoFecha !== 'todo' || $sucursalId)
+            @if($fechaInicio || $sucursalId)
             <flux:button 
                 wire:click="limpiarFiltros"
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 icon="x-mark"
             >
