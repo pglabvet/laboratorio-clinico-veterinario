@@ -19,14 +19,9 @@ class UltimasMuestras extends Component
             ->latest()
             ->limit(5);
 
-        // Si no es admin, filtrar por muestras asignadas o pendientes
-        if (!$user->can('ver-estadisticas-completas')) {
-            $query->where(function($q) use ($user) {
-                $q->whereHas('analisis', function ($subQ) use ($user) {
-                    $subQ->where('bioquimico_id', $user->id);
-                })
-                ->orWhereDoesntHave('analisis'); // Incluye muestras sin análisis aún
-            });
+        // Si no es admin, filtrar por sucursal del usuario automáticamente
+        if (!$user->can('ver-estadisticas-completas') && $user->sucursal_id) {
+            $query->where('sucursal_id', $user->sucursal_id);
         }
 
         $muestras = $query->get();
@@ -37,41 +32,18 @@ class UltimasMuestras extends Component
     }
 
     /**
-     * Obtener el estado de la muestra
+     * Obtener badge de estado usando los colores del modelo Muestra
      */
-    public function getEstadoMuestra($muestra)
+    public function getEstadoBadge($muestra)
     {
-        $analisis = $muestra->analisis->first();
-        return $analisis?->estado ?? 'pendiente';
-    }
-
-    /**
-     * Obtener badge de estado
-     */
-    public function getEstadoBadge($estado)
-    {
-        return match($estado) {
-            'pendiente' => 'bg-zinc-100 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300',
-            'en_proceso' => 'bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400',
-            'finalizado' => 'bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400',
-            'aprobado' => 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400',
-            'rechazado' => 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400',
+        $color = $muestra->getColorEstado();
+        
+        return match($color) {
+            'amber' => 'bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400',
+            'blue' => 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400',
+            'green' => 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400',
+            'purple' => 'bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400',
             default => 'bg-zinc-100 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300',
-        };
-    }
-
-    /**
-     * Obtener texto del estado
-     */
-    public function getEstadoTexto($estado)
-    {
-        return match($estado) {
-            'pendiente' => 'Pendiente',
-            'en_proceso' => 'En Proceso',
-            'finalizado' => 'En Revisión',
-            'aprobado' => 'Aprobado',
-            'rechazado' => 'Rechazado',
-            default => 'Desconocido',
         };
     }
 }

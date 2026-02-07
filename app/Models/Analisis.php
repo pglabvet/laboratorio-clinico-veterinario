@@ -14,11 +14,12 @@ class Analisis extends Model
 
     protected $table = 'analisis';
 
-    // Estados disponibles
-    public const ESTADO_PENDIENTE = 'Pendiente';
-    public const ESTADO_EN_REVISION = 'En revision';
-    public const ESTADO_APROBADO = 'Aprobado';
-    public const ESTADO_ENVIADO = 'Enviado';
+    // Estados disponibles (deben coincidir con CHECK constraint en DB)
+    public const ESTADO_PENDIENTE = 'pendiente';
+    public const ESTADO_EN_PROCESO = 'en_proceso';
+    public const ESTADO_FINALIZADO = 'finalizado';
+    public const ESTADO_APROBADO = 'aprobado';
+    public const ESTADO_RECHAZADO = 'rechazado';
 
     protected $fillable = [
         'muestra_id',
@@ -129,9 +130,10 @@ class Analisis extends Model
     {
         return [
             self::ESTADO_PENDIENTE => 'Pendiente',
-            self::ESTADO_EN_REVISION => 'En revision',
+            self::ESTADO_EN_PROCESO => 'En Proceso',
+            self::ESTADO_FINALIZADO => 'Finalizado',
             self::ESTADO_APROBADO => 'Aprobado',
-            self::ESTADO_ENVIADO => 'Enviado',
+            self::ESTADO_RECHAZADO => 'Rechazado',
         ];
     }
 
@@ -142,10 +144,72 @@ class Analisis extends Model
     {
         return match($this->estado) {
             self::ESTADO_PENDIENTE => 'amber',
-            self::ESTADO_EN_REVISION => 'blue',
+            self::ESTADO_EN_PROCESO => 'blue',
+            self::ESTADO_FINALIZADO => 'cyan',
             self::ESTADO_APROBADO => 'green',
-            self::ESTADO_ENVIADO => 'purple',
+            self::ESTADO_RECHAZADO => 'red',
             default => 'zinc',
         };
+    }
+    
+    /**
+     * Sincronizar estado de la muestra basándose en los estados de sus análisis
+     */
+    protected static function booted()
+    {
+        static::saved(function ($analisis) {
+            $analisis->sincronizarEstadoMuestra();
+        });
+        
+        static::deleted(function ($analisis) {
+            $analisis->sincronizarEstadoMuestra();
+        });
+    }
+    
+    /**
+     * Sincronizar el estado de la muestra según los estados de todos sus análisis
+     */
+    public function sincronizarEstadoMuestra(): void
+    {
+        $muestra = $this->muestra;
+        if (!$muestra) {
+            return;
+        }
+        
+        $analisis = $muestra->analisis;
+        
+        // Si no tiene análisis, la muestra queda pendiente
+        if ($analisis->isEmpty()) {
+            $muestra->estado = Muestra::ESTADO_PENDIENTE;
+            $muestra->saveQuietly();
+            return;
+        }
+        
+        $totalAnalisis = $analisis->count();
+        $pendientes = $analisis->where('estado', self::ESTADO_PENDIENTE)->count();
+        $enProceso = $analisis->where('estado', self::ESTADO_EN_PROCESO)->count();
+        $finalizados = $analisis->where('estado', self::ESTADO_FINALIZADO)->count();
+        $aprobados = $analisis->where('estado', self::ESTADO_APROBADO)->count();
+        
+        // Lógica de sincronización:
+        // - Si TODOS están aprobados → Muestra "Enviado"
+        // - Si TODOS están finalizados o aprobados → Muestra "Completado"
+        // - Si al menos uno está en proceso, finalizado o aprobado → Muestra "En proceso"
+        // - Si TODOS están pendientes → Muestra "Pendiente"
+        
+        if ($aprobados === $totalAnalisis) {
+            $nuevoEstado = Muestra::ESTADO_ENVIADO;
+        } elseif (($finalizados + $aprobados) === $totalAnalisis) {
+            $nuevoEstado = Muestra::ESTADO_COMPLETADO;
+        } elseif ($enProceso > 0 || $finalizados > 0 || $aprobados > 0) {
+            $nuevoEstado = Muestra::ESTADO_EN_PROCESO;
+        } else {
+            $nuevoEstado = Muestra::ESTADO_PENDIENTE;
+        }
+        
+        if ($muestra->estado !== $nuevoEstado) {
+            $muestra->estado = $nuevoEstado;
+            $muestra->saveQuietly();
+        }
     }
 }

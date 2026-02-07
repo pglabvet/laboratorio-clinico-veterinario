@@ -222,14 +222,24 @@
 
                     @php
                         // Definir permisos que pertenecen al Dashboard
+                        // Todos estos permisos se agruparán bajo "Dashboard" en la UI
                         $permisosDashboard = [
+                            // Tarjetas de estadísticas
                             'ver-dashboard',
                             'ver-estadisticas-completas',
+                            // Filtros
+                            'ver-filtros-dashboard',
                             'filtrar-por-sucursal',
+                            // Gráficos
                             'ver-graficos-estadisticas',
+                            // Secciones de información
                             'ver-actividad-reciente',
                             'ver-alertas-inventario',
                             'ver-ultimas-muestras',
+                            // Acciones rápidas
+                            'ver-acciones-rapidas',
+                            'registrar-muestras',
+                            'escanear-muestras',
                         ];
                         
                         // Agrupar permisos por módulo/sección

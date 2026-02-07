@@ -1,4 +1,5 @@
 <div class="grid gap-4 md:grid-cols-2">
+    @can('registrar-muestras')
     {{-- Registrar Nueva Muestra --}}
     <a href="{{ route('muestras.crear') }}" class="group relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 p-8 text-white shadow-lg transition-all hover:shadow-2xl hover:scale-[1.02]">
         <div class="relative">
@@ -23,7 +24,9 @@
             </svg>
         </div>
     </a>
+    @endcan
 
+    @can('escanear-muestras')
     {{-- Escanear Código --}}
     <a href="{{ route('muestras.escanear') }}" class="group relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-500 to-purple-700 p-8 text-white shadow-lg transition-all hover:shadow-2xl hover:scale-[1.02]">
         <div class="relative">
@@ -49,4 +52,5 @@
             </svg>
         </div>
     </a>
+    @endcan
 </div>

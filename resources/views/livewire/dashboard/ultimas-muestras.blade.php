@@ -35,8 +35,8 @@
                                     <flux:heading size="sm" class="font-semibold text-zinc-900 dark:text-white">
                                         {{ $muestra->codigo_muestra }}
                                     </flux:heading>
-                                    <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $this->getEstadoBadge($this->getEstadoMuestra($muestra)) }}">
-                                        {{ $this->getEstadoTexto($this->getEstadoMuestra($muestra)) }}
+                                    <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $this->getEstadoBadge($muestra) }}">
+                                        {{ $muestra->estado }}
                                     </span>
                                 </div>
 
