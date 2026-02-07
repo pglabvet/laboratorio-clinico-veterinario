@@ -23,7 +23,6 @@
         });
     }
 }"
-x-init="$watch('valor', () => enviarDatos())"
 class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:bg-zinc-900">
     <label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">
         {{ $componente['propiedades']['label'] ?? 'Campo' }}

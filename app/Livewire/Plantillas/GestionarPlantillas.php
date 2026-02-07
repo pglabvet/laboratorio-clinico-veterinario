@@ -33,7 +33,7 @@ class GestionarPlantillas extends Component
         'texto-libre' => 'Texto Libre',
         'lista-items' => 'Lista de Items',
         'subtitulo' => 'Subtitulo',
-        'campo-imagenes' => 'Campo de Imagenes',
+        // 'campo-imagenes' => 'Campo de Imagenes', // TODO: Deshabilitado temporalmente - Fase 2
         'campo-texto' => 'Campo de Texto Simple',
     ];
 

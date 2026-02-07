@@ -316,20 +316,22 @@
                         </select>
                     @elseif(($campo['tipo'] ?? 'texto') === 'numero_cientifico')
                         {{-- Número con notación científica --}}
-                        <div class="flex items-center gap-2">
-                            <span class="text-gray-500 dark:text-zinc-400 text-sm">qPCR:</span>
-                            <input 
-                                type="number"
-                                step="0.01"
-                                x-model="valores[{{ $i }}].valor"
-                                @change="sincronizarConLivewire(); actualizarGrafica();"
-                                @blur="sincronizarConLivewire(); actualizarGrafica();"
-                                placeholder="0.00"
-                                class="flex-1 px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
-                            />
-                            <span class="text-gray-600 dark:text-zinc-400 text-sm whitespace-nowrap">
-                                × 10<sup>{{ $umbralExponente }}</sup> {{ $unidad }}
-                            </span>
+                        <div class="flex items-center">
+                            <div class="flex items-center flex-1 px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800">
+                                <span class="text-gray-500 dark:text-zinc-400 text-sm mr-2">qPCR:</span>
+                                <input 
+                                    type="number"
+                                    step="0.01"
+                                    x-model="valores[{{ $i }}].valor"
+                                    @change="sincronizarConLivewire(); actualizarGrafica();"
+                                    @blur="sincronizarConLivewire(); actualizarGrafica();"
+                                    placeholder="0.00"
+                                    class="flex-1 min-w-0 border-0 p-0 focus:ring-0 bg-transparent text-gray-900 dark:text-zinc-100 text-center font-medium"
+                                />
+                                <span class="text-gray-600 dark:text-zinc-400 text-sm ml-2 whitespace-nowrap">
+                                    × 10<sup>{{ $umbralExponente }}</sup> {{ $unidad }}
+                                </span>
+                            </div>
                         </div>
                     @else
                         {{-- Texto libre --}}

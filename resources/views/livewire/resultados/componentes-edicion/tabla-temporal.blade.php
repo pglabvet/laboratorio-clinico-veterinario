@@ -23,6 +23,8 @@
     chartInstance: null,
     canvasId: 'chart-{{ $index }}-' + Date.now(),
     index: {{ $index }},
+    graficaGuardada: null,
+    intentosGuardado: 0,
     
     init() {
         // Cargar datos existentes si existen
@@ -69,18 +71,20 @@
         $wire.set('componentesData.{{ $index }}.data', Object.values(this.filas));
     },
     
-    // Guardar la gráfica automáticamente al servidor
+    // Guardar la gráfica automáticamente al servidor con reintentos
     async guardarGraficaEnServidor() {
         // Verificar que existe chartInstance y tiene el método toBase64Image
         if (!this.chartInstance || !this.mostrarGrafica || typeof this.chartInstance.toBase64Image !== 'function') {
             return;
         }
         
+        const maxIntentos = 3;
+        
         try {
             const image = this.chartInstance.toBase64Image();
             if (!image) return;
             
-            await fetch(`/analisis/{{ $analisis->id ?? 0 }}/guardar-grafica`, {
+            const response = await fetch(`/analisis/{{ $analisis->id ?? 0 }}/guardar-grafica`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -91,8 +95,23 @@
                     component_index: this.index
                 })
             });
+            
+            if (response.ok) {
+                this.graficaGuardada = true;
+                this.intentosGuardado = 0;
+            } else {
+                throw new Error('Respuesta no OK: ' + response.status);
+            }
         } catch (e) {
-            // Silenciar error - no es crítico
+            this.intentosGuardado++;
+            console.warn(`Gráfica: Intento ${this.intentosGuardado}/${maxIntentos} fallido:`, e.message);
+            
+            if (this.intentosGuardado < maxIntentos) {
+                // Reintentar después de 2 segundos
+                setTimeout(() => this.guardarGraficaEnServidor(), 2000);
+            } else {
+                this.graficaGuardada = false;
+            }
         }
     },
     
@@ -286,6 +305,7 @@ class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:
                         <input 
                             type="time"
                             x-model="filas[{{ $filaIndex }}].hora"
+                            @change="onResultadoChange()"
                             @blur="onResultadoChange()"
                             class="w-full px-2 py-1 border-0 focus:ring-2 focus:ring-green-500 rounded bg-transparent text-gray-900 dark:text-zinc-100 text-center font-semibold"
                         />
@@ -297,6 +317,7 @@ class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:
                             type="number"
                             step="0.01"
                             x-model="filas[{{ $filaIndex }}].resultado"
+                            @change="onResultadoChange()"
                             @blur="onResultadoChange()"
                             placeholder="Ingresar valor..."
                             class="w-full px-2 py-1 border-0 focus:ring-2 focus:ring-green-500 rounded bg-transparent text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500 text-center font-semibold"
@@ -341,6 +362,20 @@ class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:
                 <i class="fas fa-info-circle mr-1"></i>
                 La gráfica se actualiza automáticamente al ingresar los resultados
             </p>
+            
+            <!-- Estado de guardado de gráfica -->
+            <template x-if="graficaGuardada === true">
+                <p class="text-xs text-green-600 dark:text-green-400 text-center mt-2">
+                    <i class="fas fa-check-circle mr-1"></i>
+                    Gráfica guardada correctamente
+                </p>
+            </template>
+            <template x-if="graficaGuardada === false">
+                <p class="text-xs text-amber-600 dark:text-amber-400 text-center mt-2">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                    No se pudo guardar la gráfica. Se generará al crear el PDF.
+                </p>
+            </template>
         </div>
     </div>
     @endif
