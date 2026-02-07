@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Analisis;
 use App\Models\Muestra;
 use Illuminate\Console\Command;
 
@@ -49,16 +50,16 @@ class SincronizarEstadosMuestras extends Command
                 $nuevoEstado = Muestra::ESTADO_PENDIENTE;
             } else {
                 $totalAnalisis = $analisis->count();
-                $pendientes = $analisis->where('estado', 'pendiente')->count();
-                $enProceso = $analisis->where('estado', 'en_proceso')->count();
-                $finalizados = $analisis->where('estado', 'finalizado')->count();
-                $aprobados = $analisis->where('estado', 'aprobado')->count();
+                $pendientes = $analisis->where('estado', Analisis::ESTADO_PENDIENTE)->count();
+                $enRevision = $analisis->where('estado', Analisis::ESTADO_EN_REVISION)->count();
+                $aprobados = $analisis->where('estado', Analisis::ESTADO_APROBADO)->count();
+                $enviados = $analisis->where('estado', Analisis::ESTADO_ENVIADO)->count();
                 
-                if ($aprobados === $totalAnalisis) {
+                if ($enviados === $totalAnalisis) {
                     $nuevoEstado = Muestra::ESTADO_ENVIADO;
-                } elseif (($finalizados + $aprobados) === $totalAnalisis) {
+                } elseif ($aprobados === $totalAnalisis) {
                     $nuevoEstado = Muestra::ESTADO_COMPLETADO;
-                } elseif ($enProceso > 0 || $finalizados > 0 || $aprobados > 0) {
+                } elseif ($enRevision > 0 || $aprobados > 0 || $enviados > 0) {
                     $nuevoEstado = Muestra::ESTADO_EN_PROCESO;
                 } else {
                     $nuevoEstado = Muestra::ESTADO_PENDIENTE;

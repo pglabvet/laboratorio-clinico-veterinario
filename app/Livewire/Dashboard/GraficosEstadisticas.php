@@ -51,8 +51,8 @@ class GraficosEstadisticas extends Component
             ->pluck('total', 'estado')
             ->toArray();
 
-        // Ordenar estados en orden lógico (valores en minúscula como en la BD)
-        $ordenEstados = ['pendiente', 'en_proceso', 'finalizado', 'aprobado', 'rechazado'];
+        // Ordenar estados en orden lógico
+        $ordenEstados = [Analisis::ESTADO_PENDIENTE, Analisis::ESTADO_EN_REVISION, Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO];
         $analisisOrdenado = [];
         foreach ($ordenEstados as $estado) {
             if (isset($analisisPorEstado[$estado])) {
@@ -97,11 +97,10 @@ class GraficosEstadisticas extends Component
     public function getEstadoColor($estado)
     {
         return match($estado) {
-            'pendiente' => '#eab308', // yellow
-            'en_proceso' => '#3b82f6', // blue
-            'finalizado' => '#a855f7', // purple
-            'aprobado' => '#22c55e', // green
-            'rechazado' => '#ef4444', // red
+            Analisis::ESTADO_PENDIENTE => '#eab308', // yellow
+            Analisis::ESTADO_EN_REVISION => '#3b82f6', // blue
+            Analisis::ESTADO_APROBADO => '#22c55e', // green
+            Analisis::ESTADO_ENVIADO => '#a855f7', // purple
             default => '#6b7280', // gray
         };
     }
@@ -109,11 +108,10 @@ class GraficosEstadisticas extends Component
     public function getEstadoLabel($estado)
     {
         return match($estado) {
-            'pendiente' => 'Pendiente',
-            'en_proceso' => 'En Proceso',
-            'finalizado' => 'Finalizado',
-            'aprobado' => 'Aprobado',
-            'rechazado' => 'Rechazado',
+            Analisis::ESTADO_PENDIENTE => 'Pendiente',
+            Analisis::ESTADO_EN_REVISION => 'En Revisión',
+            Analisis::ESTADO_APROBADO => 'Aprobado',
+            Analisis::ESTADO_ENVIADO => 'Enviado',
             default => ucfirst($estado),
         };
     }

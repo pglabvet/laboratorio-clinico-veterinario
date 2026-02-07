@@ -44,7 +44,7 @@ class MuestrasSeeder extends Seeder
         ];
 
         $estadosMuestra = [Muestra::ESTADO_PENDIENTE, Muestra::ESTADO_EN_PROCESO, Muestra::ESTADO_COMPLETADO, Muestra::ESTADO_ENVIADO];
-        $estadosAnalisis = ['pendiente', 'en_proceso', 'finalizado', 'aprobado'];
+        $estadosAnalisis = [Analisis::ESTADO_PENDIENTE, Analisis::ESTADO_EN_REVISION, Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO];
 
         // Crear 30 muestras con sus análisis
         for ($i = 1; $i <= 30; $i++) {
@@ -85,18 +85,18 @@ class MuestrasSeeder extends Seeder
             for ($j = 0; $j < $numAnalisis; $j++) {
                 // El estado del análisis depende del estado de la muestra
                 if ($estadoMuestra === Muestra::ESTADO_PENDIENTE) {
-                    $estadoAnalisis = 'pendiente';
+                    $estadoAnalisis = Analisis::ESTADO_PENDIENTE;
                 } elseif ($estadoMuestra === Muestra::ESTADO_EN_PROCESO) {
-                    $estadoAnalisis = rand(1, 10) <= 7 ? 'pendiente' : 'en_proceso';
+                    $estadoAnalisis = rand(1, 10) <= 7 ? Analisis::ESTADO_PENDIENTE : Analisis::ESTADO_EN_REVISION;
                 } else {
                     $estadoAnalisis = $estadosAnalisis[array_rand($estadosAnalisis)];
                 }
 
-                $fechaInicio = $estadoAnalisis !== 'pendiente' ? $fechaRecepcion->copy()->addHours(rand(1, 24)) : null;
-                $fechaFinalizacion = in_array($estadoAnalisis, ['finalizado', 'aprobado']) && $fechaInicio 
+                $fechaInicio = $estadoAnalisis !== Analisis::ESTADO_PENDIENTE ? $fechaRecepcion->copy()->addHours(rand(1, 24)) : null;
+                $fechaFinalizacion = in_array($estadoAnalisis, [Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO]) && $fechaInicio 
                     ? $fechaInicio->copy()->addHours(rand(2, 48)) 
                     : null;
-                $fechaAprobacion = in_array($estadoAnalisis, ['aprobado']) && $fechaFinalizacion 
+                $fechaAprobacion = $estadoAnalisis === Analisis::ESTADO_APROBADO && $fechaFinalizacion 
                     ? $fechaFinalizacion->copy()->addHours(rand(1, 12)) 
                     : null;
 
