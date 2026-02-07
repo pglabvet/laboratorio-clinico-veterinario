@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PlantillaFormulario extends Model
 {
@@ -20,11 +21,14 @@ class PlantillaFormulario extends Model
         'componentes',
         'activo',
         'creado_por',
+        'version',
+        'plantilla_base_id',
     ];
 
     protected $casts = [
         'componentes' => 'array',
         'activo' => 'boolean',
+        'version' => 'integer',
     ];
 
     /**
@@ -54,6 +58,46 @@ class PlantillaFormulario extends Model
     }
 
     /**
+     * Relación con análisis que usan esta plantilla
+     */
+    public function analisis(): HasMany
+    {
+        return $this->hasMany(Analisis::class, 'plantilla_formulario_id');
+    }
+
+    /**
+     * Relación con la plantilla base (para versiones)
+     */
+    public function plantillaBase(): BelongsTo
+    {
+        return $this->belongsTo(PlantillaFormulario::class, 'plantilla_base_id');
+    }
+
+    /**
+     * Relación con versiones derivadas de esta plantilla
+     */
+    public function versiones(): HasMany
+    {
+        return $this->hasMany(PlantillaFormulario::class, 'plantilla_base_id');
+    }
+
+    /**
+     * Verificar si la plantilla está en uso (tiene análisis asociados)
+     */
+    public function estaEnUso(): bool
+    {
+        return $this->analisis()->exists();
+    }
+
+    /**
+     * Contar análisis que usan esta plantilla
+     */
+    public function contarAnalisis(): int
+    {
+        return $this->analisis()->count();
+    }
+
+    /**
      * Obtener parámetros del tipo de análisis asociado
      */
     public function parametros()
@@ -61,3 +105,4 @@ class PlantillaFormulario extends Model
         return $this->tipoAnalisis->parametros() ?? collect([]);
     }
 }
+

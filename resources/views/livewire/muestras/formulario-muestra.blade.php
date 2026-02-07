@@ -230,6 +230,9 @@
                                                         <div class="flex-1">
                                                             <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                                                                 {{ $plantilla->nombre }}
+                                                                @if($plantilla->version > 1)
+                                                                    <span class="ml-1 inline-flex items-center rounded bg-blue-100 px-1.5 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">v{{ $plantilla->version }}</span>
+                                                                @endif
                                                             </p>
                                                             @if($plantilla->descripcion)
                                                                 <p class="text-xs text-neutral-600 dark:text-neutral-400">
@@ -287,6 +290,9 @@
                                     </p>
                                     <p class="text-sm text-neutral-600 dark:text-neutral-400">
                                         Plantilla: {{ $analisis['plantilla_nombre'] }}
+                                        @if(($analisis['plantilla_version'] ?? 1) > 1)
+                                            <span class="ml-1 inline-flex items-center rounded bg-blue-100 px-1.5 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">v{{ $analisis['plantilla_version'] }}</span>
+                                        @endif
                                     </p>
                                 </div>
                                 <flux:button 

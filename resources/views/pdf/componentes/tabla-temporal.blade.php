@@ -44,6 +44,9 @@
                 </td>
                 <td style="text-align: center;">
                     {{ $fila['rango_referencia'] ?? '' }}
+                    @if(!empty($fila['unidad']))
+                        <span style="margin-left: 8px; color: #718096;">{{ $fila['unidad'] }}</span>
+                    @endif
                 </td>
             </tr>
             @endif

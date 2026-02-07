@@ -44,7 +44,6 @@
         $wire.set('componentesData.{{ $index }}.data', Object.values(this.datos));
     }
 }"
-x-init="$watch('datos', () => enviarDatos(), { deep: true })"
 class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:bg-zinc-900">
     @if(isset($componente['propiedades']['titulo']))
     <h4 class="font-bold text-gray-800 dark:text-zinc-100 text-center text-lg mb-4">

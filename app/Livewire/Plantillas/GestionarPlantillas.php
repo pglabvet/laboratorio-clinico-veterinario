@@ -33,7 +33,7 @@ class GestionarPlantillas extends Component
         'texto-libre' => 'Texto Libre',
         'lista-items' => 'Lista de Items',
         'subtitulo' => 'Subtitulo',
-        'campo-imagenes' => 'Campo de Imagenes',
+        // 'campo-imagenes' => 'Campo de Imagenes', // TODO: Deshabilitado temporalmente - Fase 2
         'campo-texto' => 'Campo de Texto Simple',
     ];
 
@@ -248,15 +248,18 @@ class GestionarPlantillas extends Component
                 'filas' => [
                     [
                         'analisis' => 'Cortisol basal 1ra',
-                        'rango_referencia' => '2.0 - 6.0 ug/dL',
+                        'rango_referencia' => '2.0 - 6.0',
+                        'unidad' => 'ug/dL',
                     ],
                     [
                         'analisis' => 'Cortisol basal 2ra',
-                        'rango_referencia' => '2.0 - 6.0 ug/dL',
+                        'rango_referencia' => '2.0 - 6.0',
+                        'unidad' => 'ug/dL',
                     ],
                     [
                         'analisis' => 'Cortisol basal 3ra',
-                        'rango_referencia' => '2.0 - 6.0 ug/dL',
+                        'rango_referencia' => '2.0 - 6.0',
+                        'unidad' => 'ug/dL',
                     ],
                 ],
             ],
@@ -325,18 +328,49 @@ class GestionarPlantillas extends Component
         try {
             if ($this->plantillaId) {
                 // Actualizar plantilla existente
-                $plantilla = PlantillaFormulario::findOrFail($this->plantillaId);
-                $plantilla->update([
-                    'nombre' => $this->nombreFormulario,
-                    'descripcion' => $this->descripcionFormulario,
-                    'tipo_analisis_id' => $this->tipo_analisis_id,
-                    'componentes' => $this->componentes,
-                ]);
+                $plantillaOriginal = PlantillaFormulario::findOrFail($this->plantillaId);
                 
-                // Sincronizar insumos
-                $this->sincronizarInsumos($plantilla);
-                
-                $mensaje = 'Plantilla actualizada correctamente';
+                // Verificar si la plantilla está en uso
+                if ($plantillaOriginal->estaEnUso()) {
+                    // CREAR NUEVA VERSIÓN en lugar de modificar
+                    $nuevaVersion = $plantillaOriginal->version + 1;
+                    
+                    // Desactivar la plantilla anterior
+                    $plantillaOriginal->update(['activo' => false]);
+                    
+                    // Determinar el ID base (la primera versión de la cadena)
+                    $plantillaBaseId = $plantillaOriginal->plantilla_base_id ?? $plantillaOriginal->id;
+                    
+                    // Crear nueva versión
+                    $plantilla = PlantillaFormulario::create([
+                        'nombre' => $this->nombreFormulario,
+                        'descripcion' => $this->descripcionFormulario,
+                        'tipo_analisis_id' => $this->tipo_analisis_id,
+                        'componentes' => $this->componentes,
+                        'activo' => true,
+                        'creado_por' => Auth::id(),
+                        'version' => $nuevaVersion,
+                        'plantilla_base_id' => $plantillaBaseId,
+                    ]);
+                    
+                    // Sincronizar insumos en la nueva versión
+                    $this->sincronizarInsumos($plantilla);
+                    
+                    $mensaje = "Se ha creado la versión {$nuevaVersion} de la plantilla. Los análisis anteriores mantienen la versión anterior.";
+                } else {
+                    // Plantilla sin uso - actualizar normalmente
+                    $plantillaOriginal->update([
+                        'nombre' => $this->nombreFormulario,
+                        'descripcion' => $this->descripcionFormulario,
+                        'tipo_analisis_id' => $this->tipo_analisis_id,
+                        'componentes' => $this->componentes,
+                    ]);
+                    
+                    // Sincronizar insumos
+                    $this->sincronizarInsumos($plantillaOriginal);
+                    
+                    $mensaje = 'Plantilla actualizada correctamente';
+                }
             } else {
                 // Crear nueva plantilla
                 $plantilla = PlantillaFormulario::create([
@@ -346,6 +380,8 @@ class GestionarPlantillas extends Component
                     'componentes' => $this->componentes,
                     'activo' => true,
                     'creado_por' => Auth::id(),
+                    'version' => 1,
+                    'plantilla_base_id' => null,
                 ]);
                 
                 // Sincronizar insumos

@@ -31,7 +31,18 @@
                         (a completar)
                     </td>
                     <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-600 dark:text-zinc-400 text-xs">
-                        {{ is_array($analisis) ? ($analisis['rango_ref'] ?? '(a completar)') : '(a completar)' }}
+                        @php
+                            $rango = is_array($analisis) ? ($analisis['rango_ref'] ?? '') : '';
+                            $unidad = is_array($analisis) ? ($analisis['unidad'] ?? '') : '';
+                        @endphp
+                        @if($rango)
+                            {{ $rango }}
+                            @if($unidad)
+                                <span class="text-gray-500 dark:text-zinc-500 ml-2">{{ $unidad }}</span>
+                            @endif
+                        @else
+                            (a completar)
+                        @endif
                     </td>
                 </tr>
                 @endforeach

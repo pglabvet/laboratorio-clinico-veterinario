@@ -116,6 +116,7 @@ class FormularioMuestra extends Component
                 'plantilla_id' => $analisis->plantilla_formulario_id,
                 'tipo_nombre' => $analisis->tipoAnalisis->nombre ?? '',
                 'plantilla_nombre' => $analisis->plantillaFormulario->nombre ?? '',
+                'plantilla_version' => $analisis->plantillaFormulario->version ?? 1,
             ];
         }
     }
@@ -186,6 +187,7 @@ class FormularioMuestra extends Component
             'plantilla_id' => $plantilla->id,
             'tipo_nombre' => $tipoAnalisis->nombre,
             'plantilla_nombre' => $plantilla->nombre,
+            'plantilla_version' => $plantilla->version ?? 1,
         ];
 
         // Limpiar los campos después de agregar

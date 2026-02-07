@@ -68,6 +68,12 @@
                         <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50" wire:key="plantilla-{{ $plantilla->id }}">
                             <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-neutral-900 dark:text-neutral-100">
                                 {{ $plantilla->nombre }}
+                                @if($plantilla->version > 1)
+                                    <flux:badge size="sm" color="blue" class="ml-2">v{{ $plantilla->version }}</flux:badge>
+                                @endif
+                                @if($plantilla->contarAnalisis() > 0)
+                                    <span class="ml-2 text-xs text-gray-500 dark:text-zinc-500">({{ $plantilla->contarAnalisis() }} análisis)</span>
+                                @endif
                             </td>
                             <td class="px-6 py-4 text-sm text-neutral-700 dark:text-neutral-300">
                                 {{ Str::limit($plantilla->descripcion ?? 'Sin descripción', 60) }}

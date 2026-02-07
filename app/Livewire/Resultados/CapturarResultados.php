@@ -42,11 +42,18 @@ class CapturarResultados extends Component
             'resultados'
         ])->findOrFail($analisisId);
         
-        // Obtener la plantilla activa del tipo de análisis
-        $this->plantilla = $this->analisis->tipoAnalisis
-            ->plantillas()
-            ->where('activo', true)
-            ->first();
+        // Primero intentar usar la plantilla específica asignada al análisis
+        if ($this->analisis->plantilla_formulario_id) {
+            $this->plantilla = PlantillaFormulario::find($this->analisis->plantilla_formulario_id);
+        }
+        
+        // Si no hay plantilla asignada, buscar una plantilla activa del tipo de análisis (fallback)
+        if (!$this->plantilla) {
+            $this->plantilla = $this->analisis->tipoAnalisis
+                ->plantillas()
+                ->where('activo', true)
+                ->first();
+        }
         
         // Verificar que existe una plantilla
         if (!$this->plantilla) {
@@ -617,6 +624,27 @@ class CapturarResultados extends Component
                     ]);
                 }
             }
+        }
+    }
+    
+    /**
+     * Actualizar datos en modo revisión sin cambiar estado
+     */
+    public function actualizarDatosRevision()
+    {
+        try {
+            DB::beginTransaction();
+            
+            // Guardar los cambios de resultados
+            $this->guardarResultadosInterno();
+            
+            DB::commit();
+            
+            session()->flash('success', 'Datos actualizados correctamente.');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            session()->flash('error', 'Error al actualizar los datos: ' . $e->getMessage());
         }
     }
     

@@ -10,32 +10,11 @@
             class="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
     </div>
 
-    <!-- Items -->
-    <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">Items predefinidos</label>
-        <div class="space-y-2 max-h-64 overflow-y-auto">
-            @foreach($props['items'] ?? [] as $index => $item)
-            <div class="flex gap-2">
-                <input 
-                    type="text"
-                    wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.items.{{ $index }}"
-                    placeholder="Item {{ $index + 1 }}"
-                    class="flex-1 px-2 py-1 border border-gray-300 dark:border-zinc-700 rounded text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
-                <button 
-                    wire:click="$set('componentes.{{ $indiceComponente }}.propiedades.items', {{ json_encode(array_values(array_filter($props['items'], fn($f, $i) => $i !== $index, ARRAY_FILTER_USE_BOTH))) }})"
-                    class="px-2 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            @endforeach
-        </div>
-        
-        <flux:button 
-            wire:click="$set('componentes.{{ $indiceComponente }}.propiedades.items', {{ json_encode(array_merge($props['items'] ?? [], [''])) }})"
-            variant="primary" 
-            icon="plus" 
-            class="w-full mt-2">
-            Agregar Item
-        </flux:button>
+    <!-- Nota informativa -->
+    <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+        <p class="text-xs text-blue-700 dark:text-blue-300">
+            <i class="fas fa-info-circle mr-1"></i>
+            Los items serán agregados por el bioquímico en la captura de resultados.
+        </p>
     </div>
 </div>

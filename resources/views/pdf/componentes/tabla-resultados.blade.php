@@ -48,8 +48,16 @@
                                 }
                             }
                         }
+                        
+                        // Si es la columna de rango (col_1), agregar la unidad
+                        $mostrarUnidad = ($i === 1 && isset($fila['unidad']) && $fila['unidad']);
                     @endphp
-                    <td style="text-align: center; {{ $estiloExtra }}">{{ $valor }}</td>
+                    <td style="text-align: center; {{ $estiloExtra }}">
+                        {{ $valor }}
+                        @if($mostrarUnidad)
+                            <span style="margin-left: 8px; color: #718096;">{{ $fila['unidad'] }}</span>
+                        @endif
+                    </td>
                 @endfor
             </tr>
             @endif
