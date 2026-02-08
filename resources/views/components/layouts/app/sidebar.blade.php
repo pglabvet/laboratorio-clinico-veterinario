@@ -7,9 +7,11 @@
 
     <flux:sidebar.nav>
         <flux:sidebar.group :heading="__('Platform')" class="grid">
+            @can('ver-dashboard')
             <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                 {{ __('Dashboard') }}
             </flux:sidebar.item>
+            @endcan
             <flux:sidebar.item icon="building-office-2" :href="route('sucursales.index')" :current="request()->routeIs('sucursales.*')" wire:navigate>
                 {{ __('Sucursales') }}
             </flux:sidebar.item>
