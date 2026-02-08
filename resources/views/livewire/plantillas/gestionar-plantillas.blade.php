@@ -1,48 +1,57 @@
 <div x-data="formularioConstructor()" x-init="init()" class="min-h-screen bg-gray-50 dark:bg-zinc-800">
-    <div class="container mx-auto px-4 py-6">
-        <!-- Breadcrumb -->
-        <div class="mb-4">
-            <a href="{{ route('plantillas.index') }}" class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm flex items-center gap-2">
-                <i class="fas fa-arrow-left"></i>
-                Volver a Plantillas
-            </a>
+    <div class="container mx-auto px-4 pt-2 pb-6">
+        <!-- Título y Botón Volver -->
+        <div class="mb-6">
+            <div class="flex items-center gap-4 mb-2">
+                <a href="{{ route('plantillas.index') }}" class="text-gray-700 hover:text-gray-900 dark:text-white dark:hover:text-gray-200 flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                    </svg>
+                    Volver
+                </a>
+                <h1 class="text-2xl font-bold text-gray-800 dark:text-zinc-100">
+                    @if($plantillaId)
+                        Editar Plantilla
+                    @else
+                        Nueva Plantilla
+                    @endif
+                </h1>
+            </div>
+            <p class="text-gray-600 dark:text-zinc-400">
+                @if($plantillaId)
+                    Modifica los campos y estructura de la plantilla de formulario
+                @else
+                    Crea una plantilla personalizada para análisis clínicos veterinarios
+                @endif
+            </p>
         </div>
 
-        <!-- Header -->
+        <!-- Mensajes de éxito/error -->
+        @if (session()->has('success'))
+            <div class="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-center gap-2 text-green-800 dark:text-green-300">
+                <i class="fas fa-check-circle"></i>
+                <span>{{ session('success') }}</span>
+            </div>
+        @endif
+        
+        @if (session()->has('error'))
+            <div class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2 text-red-800 dark:text-red-300">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{ session('error') }}</span>
+            </div>
+        @endif
+
+        @error('nombreFormulario')
+            <div class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2 text-red-800 dark:text-red-300">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{ $message }}</span>
+            </div>
+        @enderror
+
+        <!-- Formulario -->
         <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-md p-6 mb-6">
-            <!-- TÃ­tulo -->
-            <h1 class="text-2xl font-bold text-gray-800 dark:text-zinc-100 mb-4">
-                @if($plantillaId)
-                    <i class="fas fa-edit mr-2 text-blue-600"></i>
-                    Editar Plantilla
-                @else
-                    <i class="fas fa-plus-circle mr-2 text-blue-600"></i>
-                    Nueva Plantilla
-                @endif
-            </h1>
-
-            <!-- Mensajes de Ã©xito/error -->
-            @if (session()->has('success'))
-                <div class="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-center gap-2 text-green-800 dark:text-green-300">
-                    <i class="fas fa-check-circle"></i>
-                    <span>{{ session('success') }}</span>
-                </div>
-            @endif
+            <h2 class="text-lg font-semibold text-gray-800 dark:text-zinc-100 mb-4">Datos de la Plantilla</h2>
             
-            @if (session()->has('error'))
-                <div class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2 text-red-800 dark:text-red-300">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <span>{{ session('error') }}</span>
-                </div>
-            @endif
-
-            @error('nombreFormulario')
-                <div class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2 text-red-800 dark:text-red-300">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <span>{{ $message }}</span>
-                </div>
-            @enderror
-
             <div class="grid grid-cols-1 gap-4">
                 <flux:input 
                     wire:model.live="nombreFormulario"
@@ -71,16 +80,7 @@
 
                 {{-- Sección de Insumos Requeridos --}}
                 <div class="border-t border-zinc-200 dark:border-zinc-700 pt-4 mt-4">
-                    <div class="flex items-center justify-between mb-3">
-                        <flux:heading size="sm">Insumos Requeridos</flux:heading>
-                        <flux:button 
-                            wire:click="agregarInsumo"
-                            size="sm"
-                            variant="primary"
-                            icon="plus">
-                            Agregar Insumo
-                        </flux:button>
-                    </div>
+                    <flux:heading size="sm" class="mb-3">Insumos Requeridos</flux:heading>
 
                     @error('insumos')
                         <div class="mb-3 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
@@ -88,54 +88,145 @@
                         </div>
                     @enderror
 
+                    {{-- Formulario para agregar nuevo insumo --}}
+                    <div class="mb-4 rounded-lg border border-zinc-300 bg-zinc-50 p-4 dark:border-zinc-600 dark:bg-zinc-800">
+                        <p class="mb-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">Agregar Insumo</p>
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+                            {{-- Categoría --}}
+                            <div class="flex-1">
+                                <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                                    Categoría
+                                </label>
+                                <flux:select 
+                                    wire:model.live="nuevaCategoria"
+                                    placeholder="Todas las categorías"
+                                    class="text-sm"
+                                >
+                                    <option value="">Todas las categorías</option>
+                                    @foreach($categoriasInsumos as $cat)
+                                        <option value="{{ $cat->id }}">{{ $cat->nombre }}</option>
+                                    @endforeach
+                                </flux:select>
+                            </div>
+
+                            {{-- Insumo --}}
+                            <div class="flex-1">
+                                <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                                    Insumo *
+                                </label>
+                                <flux:select 
+                                    wire:model="nuevoInsumo"
+                                    placeholder="Seleccionar"
+                                    class="text-sm"
+                                >
+                                    <option value="">Seleccionar insumo</option>
+                                    @php
+                                        $insumosFiltrados = $nuevaCategoria 
+                                            ? $insumosDisponibles->where('categoria_id', $nuevaCategoria)
+                                            : $insumosDisponibles;
+                                    @endphp
+                                    @foreach($insumosFiltrados as $ins)
+                                        <option value="{{ $ins->id }}">
+                                            {{ $ins->nombre }} ({{ $ins->unidadMedida->abreviatura }})
+                                        </option>
+                                    @endforeach
+                                </flux:select>
+                                @error('nuevoInsumo')
+                                    <span class="text-xs text-red-500">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            {{-- Cantidad --}}
+                            <div class="w-full sm:w-32">
+                                <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
+                                    Cantidad *
+                                </label>
+                                <flux:input 
+                                    wire:model="nuevaCantidad"
+                                    type="number"
+                                    step="0.01"
+                                    min="0.01"
+                                    placeholder="1"
+                                    class="text-sm"
+                                />
+                                @error('nuevaCantidad')
+                                    <span class="text-xs text-red-500">{{ $message }}</span>
+                                @enderror
+                            </div>
+
+                            {{-- Botón agregar --}}
+                            <div>
+                                <flux:button 
+                                    wire:click="agregarInsumo"
+                                    variant="primary"
+                                    icon="plus">
+                                    Agregar
+                                </flux:button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Lista de insumos agregados --}}
                     @if(empty($insumos))
-                        <p class="text-sm text-zinc-500 dark:text-zinc-400 italic">
-                            No se han agregado insumos. Esta plantilla no consumirá inventario.
-                        </p>
+                        <div class="rounded-lg border-2 border-dashed border-zinc-300 dark:border-zinc-600 p-6 text-center">
+                            <svg class="mx-auto h-12 w-12 text-zinc-400 dark:text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                            </svg>
+                            <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+                                No se han agregado insumos
+                            </p>
+                            <p class="text-xs text-zinc-500 dark:text-zinc-500">
+                                Esta plantilla no consumirá inventario
+                            </p>
+                        </div>
                     @else
-                        <div class="space-y-3">
-                            @foreach($insumos as $index => $insumo)
-                                <div class="flex items-start gap-2 p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-700">
-                                    <div class="flex-1 grid grid-cols-2 gap-2">
-                                        <div>
-                                            <flux:select 
-                                                wire:model="insumos.{{ $index }}.insumo_id"
-                                                placeholder=""
-                                                class="text-sm"
-                                            >
-                                                <option value="">Seleccionar insumo</option>
-                                                @foreach($insumosDisponibles as $ins)
-                                                    <option value="{{ $ins->id }}">
-                                                        {{ $ins->nombre }} ({{ $ins->unidadMedida->abreviatura }})
-                                                    </option>
-                                                @endforeach
-                                            </flux:select>
-                                            @error("insumos.{$index}.insumo_id")
-                                                <span class="text-xs text-red-500">{{ $message }}</span>
-                                            @enderror
+                        <div>
+                            <p class="mb-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">Insumos agregados ({{ count($insumos) }})</p>
+                            <div class="space-y-2">
+                                @foreach($insumos as $index => $insumo)
+                                    @php
+                                        $insumoData = $insumosDisponibles->firstWhere('id', $insumo['insumo_id']);
+                                    @endphp
+                                    <div class="flex items-center gap-3 rounded-lg border border-zinc-200 bg-white p-3 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+                                        {{-- Icono --}}
+                                        <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
+                                            <svg class="h-5 w-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                            </svg>
                                         </div>
-                                        <div>
-                                            <flux:input 
-                                                wire:model="insumos.{{ $index }}.cantidad_requerida"
-                                                type="number"
-                                                step="0.01"
-                                                min="0.01"
-                                                placeholder="Cantidad"
-                                                class="text-sm"
-                                            />
-                                            @error("insumos.{$index}.cantidad_requerida")
-                                                <span class="text-xs text-red-500">{{ $message }}</span>
-                                            @enderror
+                                        
+                                        {{-- Información del insumo --}}
+                                        <div class="flex-1">
+                                            <p class="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+                                                {{ $insumoData->nombre ?? 'Insumo no encontrado' }}
+                                            </p>
+                                            <div class="flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
+                                                <span class="flex items-center gap-1">
+                                                    <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                                    </svg>
+                                                    {{ $insumoData->categoria->nombre ?? 'Sin categoría' }}
+                                                </span>
+                                                <span class="flex items-center gap-1">
+                                                    <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                                    </svg>
+                                                    Cantidad: <span class="font-medium text-zinc-700 dark:text-zinc-300">{{ $insumo['cantidad_requerida'] }} {{ $insumoData->unidadMedida->abreviatura ?? '' }}</span>
+                                                </span>
+                                            </div>
                                         </div>
+
+                                        {{-- Botón eliminar --}}
+                                        <flux:button 
+                                            wire:click="eliminarInsumo({{ $index }})"
+                                            size="sm"
+                                            variant="danger"
+                                            icon="trash"
+                                            square>
+                                        </flux:button>
                                     </div>
-                                    <flux:button 
-                                        wire:click="eliminarInsumo({{ $index }})"
-                                        size="sm"
-                                        variant="danger"
-                                        icon="trash">
-                                    </flux:button>
-                                </div>
-                            @endforeach
+                                @endforeach
+                            </div>
                         </div>
                     @endif
                 </div>

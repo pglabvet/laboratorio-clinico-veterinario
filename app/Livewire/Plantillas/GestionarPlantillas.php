@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\PlantillaFormulario;
 use App\Models\TipoAnalisis;
 use App\Models\Insumo;
+use App\Models\CategoriaInsumo;
 use Illuminate\Support\Facades\Auth;
 
 class GestionarPlantillas extends Component
@@ -18,7 +19,13 @@ class GestionarPlantillas extends Component
     public $componenteSeleccionado = null;
     
     // Insumos requeridos
-    public $insumos = []; // Array de ['insumo_id' => x, 'cantidad_requerida' => y]
+    public $insumos = []; // Array de insumos agregados
+    public $categoriaInsumoFiltro = [];
+    
+    // Campos temporales para agregar nuevo insumo
+    public $nuevaCategoria = '';
+    public $nuevoInsumo = '';
+    public $nuevaCantidad = 1;
     
     // Tipos de componentes disponibles
     // Nota: tabla-info no está aquí porque se incluye automáticamente en todos los análisis
@@ -297,13 +304,45 @@ class GestionarPlantillas extends Component
 
     public function agregarInsumo()
     {
-        $this->insumos[] = ['insumo_id' => '', 'cantidad_requerida' => 1];
+        $this->validate([
+            'nuevoInsumo' => 'required|exists:insumos,id',
+            'nuevaCantidad' => 'required|numeric|min:0.01',
+        ], [
+            'nuevoInsumo.required' => 'Debe seleccionar un insumo',
+            'nuevoInsumo.exists' => 'El insumo seleccionado no es válido',
+            'nuevaCantidad.required' => 'La cantidad es obligatoria',
+            'nuevaCantidad.numeric' => 'La cantidad debe ser un número',
+            'nuevaCantidad.min' => 'La cantidad debe ser mayor a 0',
+        ]);
+        
+        // Verificar que no esté duplicado
+        $existe = collect($this->insumos)->contains('insumo_id', $this->nuevoInsumo);
+        if ($existe) {
+            session()->flash('error', 'Este insumo ya ha sido agregado');
+            return;
+        }
+        
+        $this->insumos[] = [
+            'insumo_id' => $this->nuevoInsumo,
+            'cantidad_requerida' => $this->nuevaCantidad,
+        ];
+        
+        // Limpiar campos
+        $this->nuevaCategoria = '';
+        $this->nuevoInsumo = '';
+        $this->nuevaCantidad = 1;
     }
 
     public function eliminarInsumo($index)
     {
         unset($this->insumos[$index]);
         $this->insumos = array_values($this->insumos);
+    }
+    
+    public function updatedNuevaCategoria($value)
+    {
+        // Limpiar el insumo seleccionado cuando cambia la categoría
+        $this->nuevoInsumo = '';
     }
 
     public function guardarFormulario()
@@ -425,7 +464,11 @@ class GestionarPlantillas extends Component
             ->orderBy('nombre')
             ->get();
 
-        $insumosDisponibles = Insumo::with('unidadMedida')
+        $categoriasInsumos = CategoriaInsumo::where('estado', true)
+            ->orderBy('nombre')
+            ->get();
+
+        $insumosDisponibles = Insumo::with(['unidadMedida', 'categoria'])
             ->where('estado', true)
             ->orderBy('nombre')
             ->get();
@@ -433,6 +476,7 @@ class GestionarPlantillas extends Component
         return view('livewire.plantillas.gestionar-plantillas', [
             'tiposAnalisis' => $tiposAnalisis,
             'insumosDisponibles' => $insumosDisponibles,
+            'categoriasInsumos' => $categoriasInsumos,
         ]);
     }
 }

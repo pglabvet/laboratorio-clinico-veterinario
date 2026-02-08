@@ -59,8 +59,10 @@ class GestionarMuestras extends Component
     public $filtroEstado = '';
     public $filtroEspecie = '';
     public $filtroVeterinaria = '';
+    public $filtroSucursal = '';
     public $filtroFechaDesde = '';
     public $filtroFechaHasta = '';
+    public $filtroPeriodo = '';
 
     // Propiedades de ordenamiento
     public $sortBy = 'created_at';
@@ -724,6 +726,19 @@ class GestionarMuestras extends Component
     }
 
     /**
+     * Limpiar filtro de período cuando se cambian las fechas manualmente
+     */
+    public function updatedFiltroFechaDesde()
+    {
+        $this->filtroPeriodo = '';
+    }
+
+    public function updatedFiltroFechaHasta()
+    {
+        $this->filtroPeriodo = '';
+    }
+
+    /**
      * Cambiar ordenamiento
      */
     public function ordenarPor($field)
@@ -745,8 +760,10 @@ class GestionarMuestras extends Component
         $this->filtroEstado = '';
         $this->filtroEspecie = '';
         $this->filtroVeterinaria = '';
+        $this->filtroSucursal = '';
         $this->filtroFechaDesde = '';
         $this->filtroFechaHasta = '';
+        $this->filtroPeriodo = '';
         $this->resetPage();
     }
 
@@ -757,6 +774,7 @@ class GestionarMuestras extends Component
     {
         $this->filtroFechaDesde = now()->format('Y-m-d');
         $this->filtroFechaHasta = now()->format('Y-m-d');
+        $this->filtroPeriodo = 'Hoy';
     }
 
     /**
@@ -766,6 +784,7 @@ class GestionarMuestras extends Component
     {
         $this->filtroFechaDesde = now()->subDay()->format('Y-m-d');
         $this->filtroFechaHasta = now()->subDay()->format('Y-m-d');
+        $this->filtroPeriodo = 'Ayer';
     }
 
     /**
@@ -775,6 +794,7 @@ class GestionarMuestras extends Component
     {
         $this->filtroFechaDesde = now()->subDays(6)->format('Y-m-d');
         $this->filtroFechaHasta = now()->format('Y-m-d');
+        $this->filtroPeriodo = 'Últimos 7 días';
     }
 
     /**
@@ -784,6 +804,7 @@ class GestionarMuestras extends Component
     {
         $this->filtroFechaDesde = now()->startOfWeek()->format('Y-m-d');
         $this->filtroFechaHasta = now()->endOfWeek()->format('Y-m-d');
+        $this->filtroPeriodo = 'Esta semana';
     }
 
     /**
@@ -793,6 +814,7 @@ class GestionarMuestras extends Component
     {
         $this->filtroFechaDesde = now()->startOfMonth()->format('Y-m-d');
         $this->filtroFechaHasta = now()->endOfMonth()->format('Y-m-d');
+        $this->filtroPeriodo = 'Este mes';
     }
 
     /**
@@ -802,6 +824,7 @@ class GestionarMuestras extends Component
     {
         $this->filtroFechaDesde = now()->startOfYear()->format('Y-m-d');
         $this->filtroFechaHasta = now()->format('Y-m-d');
+        $this->filtroPeriodo = 'Año actual';
     }
 
     /**
@@ -831,6 +854,9 @@ class GestionarMuestras extends Component
             })
             ->when($this->filtroVeterinaria, function ($query) {
                 $query->where('veterinaria_id', $this->filtroVeterinaria);
+            })
+            ->when($this->filtroSucursal, function ($query) {
+                $query->where('sucursal_id', $this->filtroSucursal);
             })
             ->when($this->filtroFechaDesde, function ($query) {
                 $query->whereDate('fecha_recepcion', '>=', $this->filtroFechaDesde);
