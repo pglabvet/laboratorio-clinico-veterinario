@@ -161,6 +161,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $bioquimicoRole = Role::firstOrCreate(['name' => 'Bioquímico', 'guard_name' => 'web']);
         $bioquimicoRole->syncPermissions([
             // Dashboard
+            'ver-dashboard',
             'ver-graficos-estadisticas',
             'ver-actividad-reciente',
             'ver-ultimas-muestras',
