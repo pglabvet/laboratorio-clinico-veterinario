@@ -323,14 +323,9 @@
                         @else
                             <div class="flex h-full min-h-full items-center justify-center rounded-lg border-2 border-dashed border-neutral-300 p-6 text-center dark:border-neutral-600">
                                 <div>
-                                    <p class="font-medium text-neutral-900 dark:text-neutral-100">
-                                        {{ $analisis['tipo_nombre'] }}
-                                    </p>
-                                    <p class="text-sm text-neutral-600 dark:text-neutral-400">
-                                        Plantilla: {{ $analisis['plantilla_nombre'] }}
-                                        @if(($analisis['plantilla_version'] ?? 1) > 1)
-                                            <span class="ml-1 inline-flex items-center rounded bg-blue-100 px-1.5 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">v{{ $analisis['plantilla_version'] }}</span>
-                                        @endif
+                                    <flux:icon.clipboard-document-list class="mx-auto mb-2 size-8 text-neutral-400" />
+                                    <p class="text-neutral-600 dark:text-neutral-400">
+                                        No hay análisis agregados aún.
                                     </p>
                                 </div>
                             </div>
