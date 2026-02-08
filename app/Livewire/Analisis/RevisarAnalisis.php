@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Analisis;
 use App\Models\TipoAnalisis;
+use App\Models\Sucursal;
 use Illuminate\Support\Facades\Auth;
 
 class RevisarAnalisis extends Component
@@ -20,6 +21,7 @@ class RevisarAnalisis extends Component
     public $filtroPeriodo = '';
     public $ordenarPor = 'fecha_finalizacion';
     public $ordenDireccion = 'desc';
+    public $filtroSucursal = '';
 
     // Modales de confirmación
     public $modalAprobar = false;
@@ -33,6 +35,7 @@ class RevisarAnalisis extends Component
         'filtroEstado' => ['except' => 'En revision'],
         'filtroTipoAnalisis' => ['except' => ''],
         'ordenarPor' => ['except' => 'fecha_finalizacion'],
+        'filtroSucursal' => ['except' => ''],
     ];
 
     public function mount()
@@ -45,11 +48,17 @@ class RevisarAnalisis extends Component
         $this->resetPage();
     }
 
+    public function updatedFiltroSucursal()
+    {
+        $this->resetPage();
+    }
+
     public function limpiarFiltros()
     {
         $this->busqueda = '';
         $this->filtroEstado = 'En revision';
         $this->filtroTipoAnalisis = '';
+        $this->filtroSucursal = '';
         $this->filtroFechaDesde = '';
         $this->filtroFechaHasta = '';
         $this->filtroPeriodo = '';
@@ -184,6 +193,7 @@ class RevisarAnalisis extends Component
         $query = Analisis::with([
             'muestra.especie',
             'muestra.veterinaria',
+            'muestra.sucursal',
             'tipoAnalisis',
             'bioquimico',
             'aprobador'
@@ -207,6 +217,13 @@ class RevisarAnalisis extends Component
             $query->whereDate('fecha_finalizacion', '<=', $this->filtroFechaHasta);
         }
 
+        // Filtro por sucursal
+        if ($this->filtroSucursal) {
+            $query->whereHas('muestra.sucursal', function ($q) {
+                $q->where('id', $this->filtroSucursal);
+            });
+        }
+
         // Búsqueda
         if ($this->busqueda) {
             $query->where(function ($q) {
@@ -227,9 +244,12 @@ class RevisarAnalisis extends Component
             ->orderBy('nombre')
             ->get();
 
+        $sucursales = Sucursal::all();
+
         return view('livewire.analisis.revisar-analisis', [
             'analisis' => $analisis,
             'tiposAnalisis' => $tiposAnalisis,
+            'sucursales' => $sucursales,
         ])->layout('components.layouts.app');
     }
 }

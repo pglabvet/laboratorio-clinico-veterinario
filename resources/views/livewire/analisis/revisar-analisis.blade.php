@@ -127,6 +127,27 @@
                     </flux:dropdown>
                 </div>
 
+                {{-- Filtro por sucursales --}}
+                <div class="w-full sm:w-auto">
+                    <flux:dropdown>
+                        <flux:button variant="outline" icon="building-office" icon-trailing="chevron-down">
+                            {{ $filtroSucursal ? $sucursales->firstWhere('id', $filtroSucursal)?->nombre : 'Sucursal' }}
+                        </flux:button>
+
+                        <flux:menu>
+                            <flux:menu.item wire:click="$set('filtroSucursal', '')" icon="bars-3">
+                                Todas las sucursales
+                            </flux:menu.item>
+                            <flux:menu.separator />
+                            @foreach($sucursales as $sucursal)
+                                <flux:menu.item wire:click="$set('filtroSucursal', '{{ $sucursal->id }}')" icon="building-office-2">
+                                    {{ $sucursal->nombre }}
+                                </flux:menu.item>
+                            @endforeach
+                        </flux:menu>
+                    </flux:dropdown>
+                </div>
+
                 {{-- Botón limpiar filtros --}}
                 <div class="w-full sm:w-auto">
                     <flux:button 
@@ -171,7 +192,7 @@
                             Tipo Análisis
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-                            Bioquímico
+                            Sucursal
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
                             <button wire:click="ordenar('fecha_finalizacion')" class="flex items-center gap-1 hover:text-neutral-900 dark:hover:text-neutral-100">
@@ -218,7 +239,7 @@
                                 {{ $item->tipoAnalisis->nombre }}
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-700 dark:text-neutral-300">
-                                {{ $item->bioquimico->name }}
+                                {{ $item->muestra->sucursal->nombre ?? 'N/A' }}
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-700 dark:text-neutral-300">
                                 @if($item->fecha_finalizacion)
