@@ -137,4 +137,61 @@ class Muestra extends Model
             default => 'zinc',
         };
     }
+
+    /**
+     * Actualizar el estado de la muestra según los estados de sus análisis
+     */
+    public function actualizarEstadoSegunAnalisis(): void
+    {
+        // Refrescar la muestra para asegurar datos frescos
+        $this->refresh();
+        
+        // Obtener conteos directamente de la BD para asegurar precisión
+        $totalAnalisis = $this->analisis()->count();
+        
+        // Si no hay análisis, mantener el estado actual
+        if ($totalAnalisis === 0) {
+            return;
+        }
+
+        $enviados = $this->analisis()->where('estado', Analisis::ESTADO_ENVIADO)->count();
+        $aprobados = $this->analisis()->where('estado', Analisis::ESTADO_APROBADO)->count();
+        $enRevision = $this->analisis()->where('estado', Analisis::ESTADO_EN_REVISION)->count();
+        $pendientes = $this->analisis()->where('estado', Analisis::ESTADO_PENDIENTE)->count();
+
+        // Determinar el nuevo estado de la muestra
+        // IMPORTANTE: El orden de las condiciones importa
+        $nuevoEstado = match(true) {
+            // Todos los análisis enviados -> Muestra enviada
+            $enviados === $totalAnalisis => self::ESTADO_ENVIADO,
+            // TODOS aprobados o enviados (sin ninguno en revisión ni pendiente) -> Muestra completada
+            ($aprobados + $enviados) === $totalAnalisis && $enRevision === 0 && $pendientes === 0 => self::ESTADO_COMPLETADO,
+            // Al menos uno en proceso (en revisión, aprobado o enviado parcial) -> En proceso
+            ($enRevision > 0 || $aprobados > 0 || $enviados > 0) => self::ESTADO_EN_PROCESO,
+            // Todos pendientes -> Pendiente
+            $pendientes === $totalAnalisis => self::ESTADO_PENDIENTE,
+            // Por defecto mantener en proceso
+            default => self::ESTADO_EN_PROCESO,
+        };
+
+        // Solo actualizar si el estado cambió
+        if ($this->estado !== $nuevoEstado) {
+            $this->update(['estado' => $nuevoEstado]);
+        }
+    }
+
+    /**
+     * Verificar si todos los análisis de la muestra pueden ser enviados
+     * (todos deben estar aprobados o ya enviados)
+     */
+    public function puedeEnviarTodosAnalisis(): bool
+    {
+        $analisis = $this->analisis;
+        
+        if ($analisis->isEmpty()) {
+            return false;
+        }
+        
+        return $analisis->every(fn($a) => $a->puedeSerEnviado());
+    }
 }

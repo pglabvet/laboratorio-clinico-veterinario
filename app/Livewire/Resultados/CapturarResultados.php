@@ -152,34 +152,7 @@ class CapturarResultados extends Component
         }
     }
     
-    /**
-     * Actualizar estado de la muestra a 'En proceso' cuando se empieza a capturar datos
-     */
-    private function actualizarMuestraEnProceso()
-    {
-        // Solo actualizar si la muestra está en estado 'Pendiente'
-        if ($this->analisis->muestra->estado === 'Pendiente') {
-            $this->analisis->muestra->update([
-                'estado' => 'En proceso'
-            ]);
-        }
-    }
-    
-    /**
-     * Verificar si todos los análisis de la muestra están completados
-     */
-    private function verificarMuestraCompletada()
-    {
-        $muestra = $this->analisis->muestra->fresh();
-        $analisisRestantes = $muestra->analisis()->whereNotIn('estado', ['En revision', 'Aprobado', 'Enviado'])->count();
-        
-        // Si no quedan análisis pendientes o en proceso, marcar muestra como completada
-        if ($analisisRestantes === 0) {
-            $muestra->update([
-                'estado' => 'Completado'
-            ]);
-        }
-    }
+
 
     public function guardarBorrador()
     {
@@ -395,17 +368,12 @@ class CapturarResultados extends Component
                 }
             }
             
-            // Actualizar estado de la muestra a 'En proceso' si estaba pendiente
-            $this->actualizarMuestraEnProceso();
-            
             // Actualizar estado del análisis a 'En revision'
+            // (El modelo Analisis sincroniza automáticamente el estado de la muestra)
             $this->analisis->update([
                 'estado' => Analisis::ESTADO_EN_REVISION,
                 'fecha_finalizacion' => now(),
             ]);
-            
-            // Verificar si todos los análisis de la muestra están completados
-            $this->verificarMuestraCompletada();
             
             DB::commit();
             
@@ -529,8 +497,7 @@ class CapturarResultados extends Component
                 'fecha_aprobacion' => now(),
             ]);
             
-            // Verificar si todos los análisis de la muestra están completados
-            $this->verificarMuestraCompletada();
+            // (El modelo Analisis sincroniza automáticamente el estado de la muestra)
             
             DB::commit();
             
