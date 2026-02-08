@@ -17,6 +17,7 @@ class RevisarAnalisis extends Component
     public $filtroTipoAnalisis = '';
     public $filtroFechaDesde = '';
     public $filtroFechaHasta = '';
+    public $filtroPeriodo = '';
     public $ordenarPor = 'fecha_finalizacion';
     public $ordenDireccion = 'desc';
 
@@ -51,42 +52,59 @@ class RevisarAnalisis extends Component
         $this->filtroTipoAnalisis = '';
         $this->filtroFechaDesde = '';
         $this->filtroFechaHasta = '';
+        $this->filtroPeriodo = '';
     }
 
     public function filtrarHoy()
     {
         $this->filtroFechaDesde = now()->format('Y-m-d');
         $this->filtroFechaHasta = now()->format('Y-m-d');
+        $this->filtroPeriodo = 'Hoy';
     }
 
     public function filtrarAyer()
     {
         $this->filtroFechaDesde = now()->subDay()->format('Y-m-d');
         $this->filtroFechaHasta = now()->subDay()->format('Y-m-d');
+        $this->filtroPeriodo = 'Ayer';
     }
 
     public function filtrarUltimos7Dias()
     {
         $this->filtroFechaDesde = now()->subDays(6)->format('Y-m-d');
         $this->filtroFechaHasta = now()->format('Y-m-d');
+        $this->filtroPeriodo = 'Últimos 7 días';
     }
 
     public function filtrarEstaSemana()
     {
         $this->filtroFechaDesde = now()->startOfWeek()->format('Y-m-d');
         $this->filtroFechaHasta = now()->endOfWeek()->format('Y-m-d');
+        $this->filtroPeriodo = 'Esta semana';
     }
 
     public function filtrarEsteMes()
     {
         $this->filtroFechaDesde = now()->startOfMonth()->format('Y-m-d');
         $this->filtroFechaHasta = now()->endOfMonth()->format('Y-m-d');
+        $this->filtroPeriodo = 'Este mes';
     }
 
     public function filtrarAnioActual()
     {
         $this->filtroFechaDesde = now()->startOfYear()->format('Y-m-d');
         $this->filtroFechaHasta = now()->format('Y-m-d');
+        $this->filtroPeriodo = 'Año actual';
+    }
+
+    public function updatedFiltroFechaDesde()
+    {
+        $this->filtroPeriodo = '';
+    }
+
+    public function updatedFiltroFechaHasta()
+    {
+        $this->filtroPeriodo = '';
     }
 
     public function ordenar($campo)

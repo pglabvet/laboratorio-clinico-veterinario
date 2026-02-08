@@ -238,157 +238,105 @@
     {{-- Modal para ver detalles de tipo de análisis --}}
     <flux:modal wire:model="modalVer" class="w-full max-w-3xl">
         @if($tipoAnalisisAVer)
-            <div class="space-y-6">
-                {{-- Encabezado --}}
-                <div>
-                    <flux:heading size="lg" class="mb-1">Detalles del Tipo de Análisis</flux:heading>
-                    <flux:subheading>Información completa del tipo de análisis</flux:subheading>
-                </div>
-
-                {{-- Contenido --}}
-                <div class="space-y-6">
-                    {{-- Información básica --}}
-                    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                        {{-- Nombre --}}
-                        <div>
-                            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                                Nombre
-                            </label>
-                            <p class="text-base text-neutral-900 dark:text-neutral-100">
-                                {{ $tipoAnalisisAVer->nombre }}
-                            </p>
-                        </div>
-
-                        {{-- Estado --}}
-                        <div>
-                            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                                Estado
-                            </label>
-                            <p class="text-base text-neutral-900 dark:text-neutral-100">
+            @php
+                $estadoBadge = [
+                    true => 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
+                    false => 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
+                ];
+            @endphp
+            <div class="space-y-5">
+                {{-- Encabezado: Nombre tipo análisis + Badge estado --}}
+                <div class="pb-4 border-b border-neutral-200 dark:border-neutral-700">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <h2 class="text-xl font-semibold text-neutral-900 dark:text-neutral-100">{{ $tipoAnalisisAVer->nombre }}</h2>
+                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $estadoBadge[$tipoAnalisisAVer->estado] ?? 'bg-neutral-100 text-neutral-800 dark:bg-neutral-900/20 dark:text-neutral-400' }}">
                                 {{ $tipoAnalisisAVer->estado ? 'Activo' : 'Inactivo' }}
-                            </p>
-                        </div>
-
-                        {{-- Descripción --}}
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                                Descripción
-                            </label>
-                            <p class="text-base text-neutral-900 dark:text-neutral-100">
-                                {{ $tipoAnalisisAVer->descripcion ?? 'Sin descripción' }}
-                            </p>
-                        </div>
-
-                        {{-- Fecha de creación --}}
-                        <div>
-                            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                                Fecha de creación
-                            </label>
-                            <p class="text-base text-neutral-900 dark:text-neutral-100">
-                                {{ $tipoAnalisisAVer->created_at->format('d/m/Y H:i') }}
-                            </p>
-                        </div>
-
-                        {{-- Última actualización --}}
-                        <div>
-                            <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                                Última actualización
-                            </label>
-                            <p class="text-base text-neutral-900 dark:text-neutral-100">
-                                {{ $tipoAnalisisAVer->updated_at->format('d/m/Y H:i') }}
-                            </p>
+                            </span>
                         </div>
                     </div>
-
-                    {{-- Estadísticas --}}
-                    <div class="border-t border-neutral-200 dark:border-neutral-700 pt-6">
-                        <h3 class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-4">
-                            Estadísticas
-                        </h3>
-                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                            {{-- Plantillas --}}
-                            <div class="rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-900">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="text-sm text-neutral-600 dark:text-neutral-400">Plantillas</p>
-                                        <p class="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-                                            {{ $tipoAnalisisAVer->plantillas->count() }}
-                                        </p>
-                                    </div>
-                                    <flux:icon.document-text class="h-8 w-8 text-cyan-500" />
-                                </div>
-                            </div>
-
-                            {{-- Parámetros --}}
-                            <div class="rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-900">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="text-sm text-neutral-600 dark:text-neutral-400">Parámetros</p>
-                                        <p class="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-                                            {{ $tipoAnalisisAVer->parametros->count() }}
-                                        </p>
-                                    </div>
-                                    <flux:icon.clipboard-document-list class="h-8 w-8 text-cyan-500" />
-                                </div>
-                            </div>
-
-                            {{-- Análisis realizados --}}
-                            <div class="rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-900">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="text-sm text-neutral-600 dark:text-neutral-400">Análisis realizados</p>
-                                        <p class="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-                                            {{ $tipoAnalisisAVer->analisis->count() }}
-                                        </p>
-                                    </div>
-                                    <flux:icon.beaker class="h-8 w-8 text-cyan-500" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Lista de Plantillas --}}
-                    @if($tipoAnalisisAVer->plantillas->count() > 0)
-                        <div class="border-t border-neutral-200 dark:border-neutral-700 pt-6">
-                            <h3 class="text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-4">
-                                Plantillas Asociadas
-                            </h3>
-                            <div class="space-y-2">
-                                @foreach($tipoAnalisisAVer->plantillas as $plantilla)
-                                    <div class="flex items-center justify-between rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-700 dark:bg-neutral-900">
-                                        <div class="flex items-center gap-3">
-                                            <flux:icon.document-text class="h-5 w-5 text-cyan-500" />
-                                            <div>
-                                                <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                                                    {{ $plantilla->nombre }}
-                                                </p>
-                                                @if($plantilla->descripcion)
-                                                    <p class="text-xs text-neutral-500 dark:text-neutral-400">
-                                                        {{ Str::limit($plantilla->descripcion, 60) }}
-                                                    </p>
-                                                @endif
-                                            </div>
-                                        </div>
-                                        <flux:badge 
-                                            :color="$plantilla->activo ? 'green' : 'gray'"
-                                            size="sm"
-                                        >
-                                            {{ $plantilla->activo ? 'Activa' : 'Inactiva' }}
-                                        </flux:badge>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
+                    @if($tipoAnalisisAVer->descripcion)
+                        <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1">{{ $tipoAnalisisAVer->descripcion }}</p>
                     @endif
                 </div>
 
+                {{-- Estadísticas --}}
+                <div>
+                    <h3 class="text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-3">Estadísticas</h3>
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        {{-- Plantillas --}}
+                        <div class="flex items-center gap-3 px-4 py-3.5 rounded-lg bg-gradient-to-r from-cyan-50 to-blue-50 dark:from-cyan-900/10 dark:to-blue-900/10 border border-cyan-100 dark:border-cyan-900/30">
+                            <svg class="w-8 h-8 text-cyan-500 dark:text-cyan-400 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-medium text-neutral-600 dark:text-neutral-400">Plantillas</p>
+                                <p class="text-2xl font-bold text-neutral-900 dark:text-neutral-100">{{ $tipoAnalisisAVer->plantillas->count() }}</p>
+                            </div>
+                        </div>
+
+                        {{-- Análisis realizados --}}
+                        <div class="flex items-center gap-3 px-4 py-3.5 rounded-lg bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/10 dark:to-emerald-900/10 border border-green-100 dark:border-green-900/30">
+                            <svg class="w-8 h-8 text-green-500 dark:text-green-400 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M19 14.5l-2.47 2.47a2.25 2.25 0 0 1-1.59.659H9.06a2.25 2.25 0 0 1-1.591-.659L5 14.5m14 0-3.375-3.375M5 14.5l3.375-3.375" /></svg>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs font-medium text-neutral-600 dark:text-neutral-400">Análisis</p>
+                                <p class="text-2xl font-bold text-neutral-900 dark:text-neutral-100">{{ $tipoAnalisisAVer->analisis->count() }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Fechas --}}
+                <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 divide-y divide-neutral-200 dark:divide-neutral-700 overflow-hidden bg-white dark:bg-neutral-800/50">
+                    <div class="flex items-start gap-3 px-4 py-3.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                        <svg class="w-5 h-5 text-amber-500 dark:text-amber-400 mt-0.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-0.5">Fecha de Registro</p>
+                            <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $tipoAnalisisAVer->created_at->format('d/m/Y H:i') }}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3 px-4 py-3.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                        <svg class="w-5 h-5 text-violet-500 dark:text-violet-400 mt-0.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-0.5">Última Actualización</p>
+                            <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $tipoAnalisisAVer->updated_at->format('d/m/Y H:i') }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Plantillas Asociadas --}}
+                @if($tipoAnalisisAVer->plantillas->count() > 0)
+                    <div>
+                        <h3 class="text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-3">Plantillas Asociadas ({{ $tipoAnalisisAVer->plantillas->count() }})</h3>
+                        <div class="grid gap-2.5">
+                            @foreach($tipoAnalisisAVer->plantillas as $plantilla)
+                                <div class="flex items-center justify-between gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 border border-blue-100 dark:border-blue-900/30">
+                                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                                        <svg class="w-5 h-5 text-blue-500 dark:text-blue-400 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" /></svg>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-neutral-900 dark:text-neutral-100 truncate">{{ $plantilla->nombre }}</p>
+                                            @if($plantilla->descripcion)
+                                                <p class="text-xs text-neutral-600 dark:text-neutral-400 truncate">{{ Str::limit($plantilla->descripcion, 60) }}</p>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <flux:badge 
+                                        :color="$plantilla->activo ? 'green' : 'gray'"
+                                        size="sm"
+                                        class="shrink-0"
+                                    >
+                                        {{ $plantilla->activo ? 'Activa' : 'Inactiva' }}
+                                    </flux:badge>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 {{-- Botón cerrar --}}
-                <div class="flex justify-end">
+                <div class="flex justify-end pt-2">
                     <flux:button 
                         type="button"
                         wire:click="cerrarModalVer"
                         variant="primary"
-                        color="cyan"
                     >
                         Cerrar
                     </flux:button>

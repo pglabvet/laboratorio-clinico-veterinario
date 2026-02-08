@@ -229,84 +229,59 @@
     {{-- Modal para ver detalles de especie --}}
     <flux:modal wire:model="modalVer" class="w-full max-w-2xl">
         @if($especieAVer)
-            <div class="space-y-6">
-                {{-- Encabezado --}}
-                <div>
-                    <flux:heading size="lg" class="mb-1">Detalles de la Especie</flux:heading>
-                    <flux:subheading>Información completa de la especie</flux:subheading>
+            @php
+                $estadoBadge = [
+                    true => 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
+                    false => 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
+                ];
+            @endphp
+            <div class="space-y-5">
+                {{-- Encabezado: Nombre especie + Badge estado --}}
+                <div class="pb-4 border-b border-neutral-200 dark:border-neutral-700">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <h2 class="text-xl font-semibold text-neutral-900 dark:text-neutral-100">{{ $especieAVer->nombre }}</h2>
+                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $estadoBadge[$especieAVer->estado] ?? 'bg-neutral-100 text-neutral-800 dark:bg-neutral-900/20 dark:text-neutral-400' }}">
+                                {{ $especieAVer->estado ? 'Activa' : 'Inactiva' }}
+                            </span>
+                        </div>
+                    </div>
+                    @if($especieAVer->descripcion)
+                        <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1">{{ $especieAVer->descripcion }}</p>
+                    @endif
                 </div>
 
-                {{-- Contenido --}}
-                <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    {{-- Nombre --}}
-                    <div>
-                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                            Nombre
-                        </label>
-                        <p class="text-base text-neutral-900 dark:text-neutral-100">
-                            {{ $especieAVer->nombre }}
-                        </p>
+                {{-- Información General --}}
+                <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 divide-y divide-neutral-200 dark:divide-neutral-700 overflow-hidden bg-white dark:bg-neutral-800/50">
+                    <div class="flex items-start gap-3 px-4 py-3.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                        <svg class="w-5 h-5 text-blue-500 dark:text-blue-400 mt-0.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M19 14.5l-2.47 2.47a2.25 2.25 0 0 1-1.59.659H9.06a2.25 2.25 0 0 1-1.591-.659L5 14.5m14 0-3.375-3.375M5 14.5l3.375-3.375" /></svg>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-0.5">Muestras Asociadas</p>
+                            <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $especieAVer->muestras_count }} {{ $especieAVer->muestras_count == 1 ? 'muestra' : 'muestras' }}</p>
+                        </div>
                     </div>
-
-                    {{-- Estado --}}
-                    <div>
-                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                            Estado
-                        </label>
-                        <span class="inline-flex items-center rounded-full px-3 py-1 text-sm font-medium {{ $especieAVer->estado ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' }}">
-                            {{ $especieAVer->estado ? 'Activa' : 'Inactiva' }}
-                        </span>
+                    <div class="flex items-start gap-3 px-4 py-3.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                        <svg class="w-5 h-5 text-amber-500 dark:text-amber-400 mt-0.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-0.5">Fecha de Registro</p>
+                            <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $especieAVer->created_at->format('d/m/Y H:i') }}</p>
+                        </div>
                     </div>
-
-                    {{-- Descripción --}}
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                            Descripción
-                        </label>
-                        <p class="text-base text-neutral-900 dark:text-neutral-100">
-                            {{ $especieAVer->descripcion ?? '-' }}
-                        </p>
+                    <div class="flex items-start gap-3 px-4 py-3.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                        <svg class="w-5 h-5 text-violet-500 dark:text-violet-400 mt-0.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" /></svg>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-0.5">Última Actualización</p>
+                            <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $especieAVer->updated_at->format('d/m/Y H:i') }}</p>
+                        </div>
                     </div>
-
-                    {{-- Fecha de creación --}}
-                    <div>
-                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                            Fecha de creación
-                        </label>
-                        <p class="text-base text-neutral-900 dark:text-neutral-100">
-                            {{ $especieAVer->created_at->format('d/m/Y H:i') }}
-                        </p>
-                    </div>
-
-                    {{-- Última actualización --}}
-                    <div>
-                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                            Última actualización
-                        </label>
-                        <p class="text-base text-neutral-900 dark:text-neutral-100">
-                            {{ $especieAVer->updated_at->format('d/m/Y H:i') }}
-                        </p>
-                    </div>
-
-                    {{-- Muestras asociadas --}}
-                    <div>
-                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                            Muestras asociadas
-                        </label>
-                        <p class="text-base text-neutral-900 dark:text-neutral-100">
-                            {{ $especieAVer->muestras_count }} muestras
-                        </p>
-                    </div>
-
                 </div>
 
                 {{-- Botón cerrar --}}
-                <div class="flex justify-end">
+                <div class="flex justify-end pt-2">
                     <flux:button 
                         type="button"
                         wire:click="cerrarModalVer"
                         variant="primary"
-                        color="cyan"
                     >
                         Cerrar
                     </flux:button>
