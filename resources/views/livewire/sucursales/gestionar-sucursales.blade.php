@@ -294,83 +294,84 @@
     {{-- Modal para ver detalles de sucursal --}}
     <flux:modal wire:model="modalVer" class="w-full max-w-2xl">
         @if($sucursalAVer)
-            <div class="space-y-6">
-                {{-- Encabezado con código y estado --}}
-                <div>
-                    <div class="flex items-center gap-3 mb-1">
-                        <flux:heading size="lg">{{ $sucursalAVer->nombre }}</flux:heading>
-                        <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $sucursalAVer->estado ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' }}">
-                            {{ $sucursalAVer->estado ? 'Activa' : 'Inactiva' }}
-                        </span>
+            @php
+                $estadoBadge = [
+                    true => 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
+                    false => 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
+                ];
+            @endphp
+            <div class="space-y-5">
+                {{-- Encabezado: Nombre sucursal + Badge estado --}}
+                <div class="pb-4 border-b border-neutral-200 dark:border-neutral-700">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <h2 class="text-xl font-semibold text-neutral-900 dark:text-neutral-100">{{ $sucursalAVer->nombre }}</h2>
+                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $estadoBadge[$sucursalAVer->estado] ?? 'bg-neutral-100 text-neutral-800 dark:bg-neutral-900/20 dark:text-neutral-400' }}">
+                                {{ $sucursalAVer->estado ? 'Activa' : 'Inactiva' }}
+                            </span>
+                        </div>
                     </div>
-                    <flux:subheading>Código: {{ $sucursalAVer->codigo }}</flux:subheading>
+                    <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1">Código: <span class="font-mono font-medium">{{ $sucursalAVer->codigo }}</span></p>
                 </div>
 
-                {{-- Información principal --}}
-                <div class="rounded-lg border border-neutral-200 dark:border-neutral-700 divide-y divide-neutral-200 dark:divide-neutral-700">
-                    {{-- Dirección --}}
-                    <div class="flex items-start gap-3 px-4 py-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-neutral-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        <div>
-                            <p class="text-xs font-medium text-neutral-500 dark:text-neutral-400">DIRECCIÓN</p>
-                            <p class="text-sm text-neutral-900 dark:text-neutral-100">{{ $sucursalAVer->direccion }}</p>
+                {{-- Información de la Sucursal --}}
+                <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 divide-y divide-neutral-200 dark:divide-neutral-700 overflow-hidden bg-white dark:bg-neutral-800/50">
+                    <div class="flex items-start gap-3 px-4 py-3.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                        <svg class="w-5 h-5 text-violet-500 dark:text-violet-400 mt-0.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" /></svg>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-0.5">Dirección</p>
+                            <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $sucursalAVer->direccion }}</p>
                         </div>
                     </div>
-
-                    {{-- Teléfono --}}
-                    <div class="flex items-start gap-3 px-4 py-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-neutral-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                        </svg>
-                        <div>
-                            <p class="text-xs font-medium text-neutral-500 dark:text-neutral-400">TELÉFONO</p>
-                            <p class="text-sm text-neutral-900 dark:text-neutral-100">{{ $sucursalAVer->telefono }}</p>
+                    <div class="flex items-start gap-3 px-4 py-3.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                        <svg class="w-5 h-5 text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" /></svg>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-0.5">Teléfono</p>
+                            <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $sucursalAVer->telefono }}</p>
                         </div>
                     </div>
-
-                    {{-- Fecha de creación --}}
-                    <div class="flex items-start gap-3 px-4 py-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-neutral-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <div>
-                            <p class="text-xs font-medium text-neutral-500 dark:text-neutral-400">FECHA DE CREACIÓN</p>
-                            <p class="text-sm text-neutral-900 dark:text-neutral-100">{{ $sucursalAVer->created_at->format('d/m/Y H:i') }}</p>
+                    <div class="flex items-start gap-3 px-4 py-3.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                        <svg class="w-5 h-5 text-amber-500 dark:text-amber-400 mt-0.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-0.5">Fecha de Registro</p>
+                            <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $sucursalAVer->created_at->format('d/m/Y H:i') }}</p>
                         </div>
                     </div>
                 </div>
 
-                {{-- Usuarios asignados --}}
+                {{-- Usuarios Asignados --}}
                 <div>
-                    <p class="text-xs font-medium text-neutral-500 dark:text-neutral-400 mb-2">USUARIOS ASIGNADOS ({{ $sucursalAVer->users->count() }})</p>
+                    <h3 class="text-sm font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-3">Usuarios Asignados ({{ $sucursalAVer->users->count() }})</h3>
                     @if($sucursalAVer->users->count() > 0)
-                        <div class="rounded-lg border border-neutral-200 dark:border-neutral-700 divide-y divide-neutral-200 dark:divide-neutral-700">
+                        <div class="grid gap-2.5">
                             @foreach($sucursalAVer->users as $user)
-                                <div class="flex items-center gap-3 px-4 py-2.5">
-                                    <div class="h-8 w-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-xs font-semibold shrink-0">
+                                <div class="flex items-center gap-3 px-4 py-3 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/10 dark:to-pink-900/10 border border-purple-100 dark:border-purple-900/30">
+                                    <div class="h-10 w-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-sm font-semibold shrink-0 shadow-md">
                                         {{ strtoupper(substr($user->name, 0, 1)) }}
                                     </div>
-                                    <div class="min-w-0 flex-1">
-                                        <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100 truncate">{{ $user->name }}</p>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-sm font-semibold text-neutral-900 dark:text-neutral-100 truncate">{{ $user->name }}</p>
                                         <p class="text-xs text-neutral-500 dark:text-neutral-400 truncate">{{ $user->email }}</p>
                                     </div>
                                 </div>
                             @endforeach
                         </div>
                     @else
-                        <p class="text-sm text-neutral-500 dark:text-neutral-400 italic">No hay usuarios asignados a esta sucursal</p>
+                        <div class="flex items-center justify-center px-4 py-8 rounded-lg bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-700">
+                            <div class="text-center">
+                                <svg class="w-12 h-12 mx-auto mb-3 text-neutral-400 dark:text-neutral-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" /></svg>
+                                <p class="text-sm text-neutral-500 dark:text-neutral-400">No hay usuarios asignados a esta sucursal</p>
+                            </div>
+                        </div>
                     @endif
                 </div>
 
                 {{-- Botón cerrar --}}
-                <div class="flex justify-end">
+                <div class="flex justify-end pt-2">
                     <flux:button 
                         type="button"
                         wire:click="cerrarModalVer"
-                        variant="ghost"
+                        variant="primary"
                     >
                         Cerrar
                     </flux:button>

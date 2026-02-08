@@ -237,9 +237,11 @@ class GestionarVeterinarias extends Component
             }
 
             $veterinaria = Veterinaria::findOrFail($this->veterinariaACambiar);
-            $veterinaria->update(['estado' => !$veterinaria->estado]);
+            $nuevoEstado = !$veterinaria->estado;
+            $veterinaria->estado = $nuevoEstado;
+            $veterinaria->save();
             
-            $mensaje = $veterinaria->estado ? 'Veterinaria activada exitosamente.' : 'Veterinaria desactivada exitosamente.';
+            $mensaje = $nuevoEstado ? 'Veterinaria activada exitosamente.' : 'Veterinaria desactivada exitosamente.';
             session()->flash('mensaje', $mensaje);
 
             $this->modalCambiarEstado = false;
@@ -296,6 +298,15 @@ class GestionarVeterinarias extends Component
             $this->sortBy = $field;
             $this->sortDirection = 'asc';
         }
+    }
+
+    /**
+     * Limpiar búsqueda
+     */
+    public function limpiarBuscar()
+    {
+        $this->buscar = '';
+        $this->resetPage();
     }
 
     /**
