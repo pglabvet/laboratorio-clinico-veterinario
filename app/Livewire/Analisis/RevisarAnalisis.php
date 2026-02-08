@@ -250,6 +250,6 @@ class RevisarAnalisis extends Component
             'analisis' => $analisis,
             'tiposAnalisis' => $tiposAnalisis,
             'sucursales' => $sucursales,
-        ])->layout('components.layouts.app');
+        ]);
     }
 }
