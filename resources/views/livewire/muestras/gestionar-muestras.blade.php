@@ -784,8 +784,14 @@
             <div class="space-y-6">
                 {{-- Encabezado --}}
                 <div>
-                    <flux:heading size="lg" class="mb-1">Análisis de la Muestra</flux:heading>
-                    <flux:subheading>{{ $muestraAnalisis->codigo_muestra }} - {{ $muestraAnalisis->paciente_nombre }}</flux:subheading>
+                    <flux:heading size="lg" class="mb-2">Análisis de la Muestra</flux:heading>
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <flux:badge size="lg" color="indigo" icon="qr-code" class="font-mono font-bold">
+                            {{ $muestraAnalisis->codigo_muestra }}
+                        </flux:badge>
+                        <span class="text-neutral-500 dark:text-neutral-400">—</span>
+                        <span class="text-base font-medium text-neutral-700 dark:text-neutral-300">{{ $muestraAnalisis->paciente_nombre }}</span>
+                    </div>
                 </div>
 
                 {{-- Información general --}}
@@ -842,7 +848,8 @@
                                             wire:click="enviarWhatsApp({{ $analisis->id }})"
                                             variant="ghost"           
                                             icon="paper-airplane"
-                                            title="Enviar por WhatsApp"
+                                            title="{{ $analisis->puedeSerEnviado() ? 'Enviar por WhatsApp' : 'Solo se pueden enviar análisis aprobados' }}"
+                                            :disabled="!$analisis->puedeSerEnviado()"
                                         >
                                             Enviar
                                         </flux:button>
@@ -881,6 +888,8 @@
                         wire:click="enviarTodoWhatsApp"
                         variant="primary"
                         icon="paper-airplane"
+                        :disabled="!$muestraAnalisis->puedeEnviarTodosAnalisis()"
+                        title="{{ $muestraAnalisis->puedeEnviarTodosAnalisis() ? 'Enviar todos los análisis' : 'Todos los análisis deben estar aprobados' }}"
                     >
                         Enviar todo
                     </flux:button>

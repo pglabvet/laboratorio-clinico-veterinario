@@ -41,6 +41,22 @@ class Analisis extends Model
     ];
 
     /**
+     * Boot del modelo - registrar eventos
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Cuando se actualiza un análisis, verificar si debe cambiar el estado de la muestra
+        static::updated(function (Analisis $analisis) {
+            // Solo actuar si cambió el estado
+            if ($analisis->wasChanged('estado')) {
+                $analisis->muestra?->actualizarEstadoSegunAnalisis();
+            }
+        });
+    }
+
+    /**
      * Relación con muestra
      */
     public function muestra(): BelongsTo
@@ -147,5 +163,29 @@ class Analisis extends Model
             self::ESTADO_ENVIADO => 'purple',
             default => 'zinc',
         };
+    }
+
+    /**
+     * Verificar si el análisis puede ser enviado (está aprobado o ya enviado)
+     */
+    public function puedeSerEnviado(): bool
+    {
+        return in_array($this->estado, [self::ESTADO_APROBADO, self::ESTADO_ENVIADO]);
+    }
+
+    /**
+     * Verificar si el análisis ya fue enviado
+     */
+    public function estaEnviado(): bool
+    {
+        return $this->estado === self::ESTADO_ENVIADO;
+    }
+
+    /**
+     * Verificar si el análisis está aprobado
+     */
+    public function estaAprobado(): bool
+    {
+        return $this->estado === self::ESTADO_APROBADO;
     }
 }

@@ -147,14 +147,12 @@ class RevisarAnalisis extends Component
     {
         $analisis = Analisis::findOrFail($this->analisisAAprobar);
         
+        // El modelo Analisis sincroniza automáticamente el estado de la muestra
         $analisis->update([
             'estado' => Analisis::ESTADO_APROBADO,
             'aprobador_id' => Auth::id(),
             'fecha_aprobacion' => now(),
         ]);
-
-        // Verificar si todos los análisis de la muestra están completados
-        $this->verificarMuestraCompletada($analisis);
 
         $this->modalAprobar = false;
         $this->analisisAAprobar = null;
@@ -166,14 +164,12 @@ class RevisarAnalisis extends Component
     {
         $analisis = Analisis::findOrFail($this->analisisARechazar);
         
+        // El modelo Analisis sincroniza automáticamente el estado de la muestra
         $analisis->update([
             'estado' => Analisis::ESTADO_PENDIENTE, // Volver a pendiente para que lo corrijan
             'aprobador_id' => Auth::id(),
             'observaciones_aprobador' => $this->observacionesRechazo,
         ]);
-
-        // Si la muestra estaba en Completado, volver a En proceso
-        $this->revertirMuestraEnProceso($analisis);
 
         $this->modalRechazar = false;
         $this->analisisARechazar = null;
@@ -182,37 +178,6 @@ class RevisarAnalisis extends Component
         session()->flash('warning', 'Análisis rechazado. El bioquímico debe realizar correcciones.');
     }
 
-    /**
-     * Verificar si todos los análisis de la muestra están completados
-     */
-    private function verificarMuestraCompletada($analisis)
-    {
-        $muestra = $analisis->muestra->fresh();
-        $analisisRestantes = $muestra->analisis()
-            ->whereNotIn('estado', ['En revision', 'Aprobado', 'Enviado'])
-            ->count();
-        
-        // Si no quedan análisis pendientes, marcar muestra como completada
-        if ($analisisRestantes === 0) {
-            $muestra->update([
-                'estado' => 'Completado'
-            ]);
-        }
-    }
-
-    /**
-     * Si se rechaza un análisis y la muestra estaba Completada, volver a En proceso
-     */
-    private function revertirMuestraEnProceso($analisis)
-    {
-        $muestra = $analisis->muestra->fresh();
-        
-        if ($muestra->estado === 'Completado') {
-            $muestra->update([
-                'estado' => 'En proceso'
-            ]);
-        }
-    }
 
     public function render()
     {
