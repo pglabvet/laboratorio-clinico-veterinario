@@ -844,15 +844,26 @@
                                         </flux:badge>
                                     </td>
                                     <td class="whitespace-nowrap px-4 py-3 text-sm">
-                                        <flux:button
-                                            wire:click="enviarWhatsApp({{ $analisis->id }})"
-                                            variant="ghost"           
-                                            icon="paper-airplane"
-                                            title="{{ $analisis->puedeSerEnviado() ? 'Enviar por WhatsApp' : 'Solo se pueden enviar análisis aprobados' }}"
-                                            :disabled="!$analisis->puedeSerEnviado()"
-                                        >
-                                            Enviar
-                                        </flux:button>
+                                        <div class="flex items-center gap-1">
+                                            <flux:button
+                                                wire:click="enviarWhatsApp({{ $analisis->id }})"
+                                                variant="ghost"           
+                                                icon="device-phone-mobile"
+                                                title="{{ $analisis->puedeSerEnviado() ? 'Enviar por WhatsApp' : 'Solo se pueden enviar análisis aprobados' }}"
+                                                :disabled="!$analisis->puedeSerEnviado()"
+                                            >
+                                                WhatsApp
+                                            </flux:button>
+                                            <flux:button
+                                                wire:click="enviarEmail({{ $analisis->id }})"
+                                                variant="ghost"
+                                                icon="envelope"
+                                                title="{{ $analisis->puedeSerEnviado() ? 'Enviar por Email' : 'Solo se pueden enviar análisis aprobados' }}"
+                                                :disabled="!$analisis->puedeSerEnviado()"
+                                            >
+                                                Email
+                                            </flux:button>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
@@ -889,9 +900,19 @@
                         variant="primary"
                         icon="paper-airplane"
                         :disabled="!$muestraAnalisis->puedeEnviarTodosAnalisis()"
-                        title="{{ $muestraAnalisis->puedeEnviarTodosAnalisis() ? 'Enviar todos los análisis' : 'Todos los análisis deben estar aprobados' }}"
+                        title="{{ $muestraAnalisis->puedeEnviarTodosAnalisis() ? 'Enviar todos por WhatsApp' : 'Todos los análisis deben estar aprobados' }}"
                     >
                         Enviar todo
+                    </flux:button>
+                    <flux:button 
+                        type="button"
+                        wire:click="enviarTodoEmail"
+                        variant="primary"
+                        icon="envelope"
+                        :disabled="!$muestraAnalisis->puedeEnviarTodosAnalisis()"
+                        title="{{ $muestraAnalisis->puedeEnviarTodosAnalisis() ? 'Enviar todos por Email' : 'Todos los análisis deben estar aprobados' }}"
+                    >
+                        Enviar todo por Email
                     </flux:button>
                     <flux:button 
                         type="button"
