@@ -218,7 +218,6 @@ class CapturarResultados extends Component
                     if (!empty($imagenesGuardadas)) {
                         Resultado::create([
                             'analisis_id' => $this->analisis->id,
-                            'parametro_id' => null,
                             'tipo' => 'campo-imagenes',
                             'valor' => $imagenesGuardadas,
                             'fuera_rango' => false,
@@ -238,7 +237,6 @@ class CapturarResultados extends Component
                     if (!empty($datosParaGuardar)) {
                         Resultado::create([
                             'analisis_id' => $this->analisis->id,
-                            'parametro_id' => null,
                             'tipo' => $componenteData['tipo'],
                             'valor' => $datosParaGuardar,
                             'fuera_rango' => false,
@@ -337,7 +335,6 @@ class CapturarResultados extends Component
                     if (!empty($imagenesGuardadas)) {
                         Resultado::create([
                             'analisis_id' => $this->analisis->id,
-                            'parametro_id' => null,
                             'tipo' => 'campo-imagenes',
                             'valor' => $imagenesGuardadas,
                             'fuera_rango' => false,
@@ -357,7 +354,6 @@ class CapturarResultados extends Component
                     if (!empty($datosParaGuardar)) {
                         Resultado::create([
                             'analisis_id' => $this->analisis->id,
-                            'parametro_id' => null,
                             'tipo' => $componenteData['tipo'],
                             'valor' => $datosParaGuardar,
                             'fuera_rango' => false,
@@ -567,7 +563,6 @@ class CapturarResultados extends Component
                 if (!empty($imagenesGuardadas)) {
                     Resultado::create([
                         'analisis_id' => $this->analisis->id,
-                        'parametro_id' => null,
                         'tipo' => 'campo-imagenes',
                         'valor' => $imagenesGuardadas,
                         'fuera_rango' => false,
@@ -584,7 +579,6 @@ class CapturarResultados extends Component
                 if (!empty($datosParaGuardar)) {
                     Resultado::create([
                         'analisis_id' => $this->analisis->id,
-                        'parametro_id' => null,
                         'tipo' => $componenteData['tipo'],
                         'valor' => $datosParaGuardar,
                         'fuera_rango' => false,

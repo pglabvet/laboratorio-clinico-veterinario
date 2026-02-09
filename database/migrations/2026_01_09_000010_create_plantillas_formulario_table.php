@@ -18,6 +18,8 @@ return new class extends Migration
             $table->text('descripcion')->nullable();
             $table->json('componentes');
             $table->boolean('activo')->default(true);
+            $table->integer('version')->default(1);
+            $table->foreignId('plantilla_base_id')->nullable()->constrained('plantillas_formulario')->onDelete('set null');
             $table->foreignId('creado_por')->constrained('users')->onDelete('cascade');
             $table->timestamps();
         });

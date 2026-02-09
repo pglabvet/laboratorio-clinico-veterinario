@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('muestra_id')->constrained('muestras')->onDelete('cascade');
             $table->foreignId('tipo_analisis_id')->constrained('tipos_analisis')->onDelete('cascade');
+            $table->foreignId('plantilla_formulario_id')->nullable()->constrained('plantillas_formulario')->onDelete('set null');
             $table->foreignId('bioquimico_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('aprobador_id')->nullable()->constrained('users')->onDelete('set null');
             $table->enum('estado', ['Pendiente', 'En revision', 'Aprobado', 'Enviado'])->default('Pendiente');

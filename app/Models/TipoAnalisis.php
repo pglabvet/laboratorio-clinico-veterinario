@@ -24,14 +24,6 @@ class TipoAnalisis extends Model
     ];
 
     /**
-     * Relación con parámetros de análisis
-     */
-    public function parametros(): HasMany
-    {
-        return $this->hasMany(ParametroAnalisis::class);
-    }
-
-    /**
      * Relación con análisis
      */
     public function analisis(): HasMany

@@ -12,6 +12,30 @@ class MovimientoInventario extends Model
 
     protected $table = 'movimientos_inventario';
 
+    /**
+     * Tipos de movimiento permitidos
+     */
+    const TIPOS_MOVIMIENTO = [
+        'ENTRADA',
+        'SALIDA_MANUAL',
+        'CONSUMO_ANALISIS',
+        'AJUSTE',
+    ];
+
+    /**
+     * Motivos de movimiento permitidos
+     */
+    const MOTIVOS = [
+        'MERMA',
+        'VENCIMIENTO',
+        'USO_EXTRAORDINARIO',
+        'CONSUMO_ANALISIS',
+        'AJUSTE_INVENTARIO',
+        'COMPRA',
+        'DEVOLUCION',
+        'OTRO',
+    ];
+
     protected $fillable = [
         'insumo_id',
         'sucursal_id',

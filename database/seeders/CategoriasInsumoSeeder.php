@@ -24,11 +24,6 @@ class CategoriasInsumoSeeder extends Seeder
                 'descripcion' => 'Colorantes para tinción de muestras microscópicas',
                 'estado' => true,
             ],
-            [
-                'nombre' => 'Medios de Cultivo',
-                'descripcion' => 'Medios para cultivo microbiológico',
-                'estado' => true,
-            ],
             
             // Material de laboratorio
             [
@@ -63,11 +58,6 @@ class CategoriasInsumoSeeder extends Seeder
             [
                 'nombre' => 'Anticoagulantes',
                 'descripcion' => 'Sustancias para prevenir coagulación de muestras',
-                'estado' => true,
-            ],
-            [
-                'nombre' => 'Soluciones Buffer',
-                'descripcion' => 'Soluciones tamponadas para estabilizar pH',
                 'estado' => true,
             ],
         ];
