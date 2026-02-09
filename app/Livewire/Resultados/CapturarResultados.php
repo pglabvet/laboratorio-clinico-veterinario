@@ -70,8 +70,8 @@ class CapturarResultados extends Component
             $this->cargarResultadosExistentes();
         }
         
-        // Detectar si es modo revisión (análisis en revisión o aprobado)
-        if (in_array($this->analisis->estado, ['En revision', 'Aprobado'])) {
+        // Detectar si es modo revisión (análisis en revisión, aprobado o enviado)
+        if (in_array($this->analisis->estado, ['En revision', 'Aprobado', 'Enviado'])) {
             $this->modoRevision = true;
         }
     }

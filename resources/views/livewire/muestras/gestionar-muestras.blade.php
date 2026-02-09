@@ -109,6 +109,9 @@
                             <flux:menu.item wire:click="$set('filtroEstado', 'Completado')" icon="check-circle">
                                 Completado
                             </flux:menu.item>
+                            <flux:menu.item wire:click="$set('filtroEstado', 'Enviado')" icon="paper-airplane">
+                                Enviado
+                            </flux:menu.item>
                         </flux:menu>
                     </flux:dropdown>
                 </div>

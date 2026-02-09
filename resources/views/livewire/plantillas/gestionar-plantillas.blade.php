@@ -272,13 +272,6 @@
                         Vista Previa
                     </h3>
                     
-                    <!-- Debug: Estado del array de componentes -->
-                    <div class="text-xs bg-yellow-100 dark:bg-yellow-900/20 text-yellow-900 dark:text-yellow-300 p-2 rounded mb-2 max-h-32 overflow-auto">
-                        @foreach($componentes as $i => $c)
-                            <div>{{ $i }}: {{ $c['tipo'] }} = "{{ $c['propiedades']['titulo'] ?? $c['propiedades']['texto'] ?? 'N/A' }}"</div>
-                        @endforeach
-                    </div>
-                    
                     <div class="space-y-4" x-ref="contenedorComponentes">
                         @if(count($componentes) > 0)
                             @foreach($componentes as $index => $componente)
