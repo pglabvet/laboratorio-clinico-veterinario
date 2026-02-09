@@ -51,6 +51,9 @@
             </flux:menu>
         </flux:dropdown>
 
+        {{-- Centro de Notificaciones --}}
+        <x-notification-center />
+
         {{-- User Info --}}
         <div class="flex items-center gap-2 rounded-lg border border-zinc-200 px-2 py-1.5 dark:border-zinc-700 sm:px-3">
             <flux:avatar size="xs" :name="auth()->user()->name" :initials="auth()->user()->initials()" />
