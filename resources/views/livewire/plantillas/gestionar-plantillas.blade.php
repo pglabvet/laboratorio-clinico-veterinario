@@ -91,9 +91,9 @@
                     {{-- Formulario para agregar nuevo insumo --}}
                     <div class="mb-4 rounded-lg border border-zinc-300 bg-zinc-50 p-4 dark:border-zinc-600 dark:bg-zinc-800">
                         <p class="mb-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">Agregar Insumo</p>
-                        <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-start">
                             {{-- Categoría --}}
-                            <div class="flex-1">
+                            <div class="sm:flex-[0.8] min-w-0">
                                 <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
                                     Categoría
                                 </label>
@@ -107,10 +107,11 @@
                                         <option value="{{ $cat->id }}">{{ $cat->nombre }}</option>
                                     @endforeach
                                 </flux:select>
+                                <div class="mt-1 h-4"></div>
                             </div>
 
                             {{-- Insumo --}}
-                            <div class="flex-1">
+                            <div class="sm:flex-[0.8] min-w-0">
                                 <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
                                     Insumo *
                                 </label>
@@ -131,13 +132,15 @@
                                         </option>
                                     @endforeach
                                 </flux:select>
-                                @error('nuevoInsumo')
-                                    <span class="text-xs text-red-500">{{ $message }}</span>
-                                @enderror
+                                <div class="mt-1 h-4">
+                                    @error('nuevoInsumo')
+                                        <span class="text-xs text-red-500">{{ $message }}</span>
+                                    @enderror
+                                </div>
                             </div>
 
                             {{-- Cantidad --}}
-                            <div class="w-full sm:w-32">
+                            <div class="w-full sm:w-48">
                                 <label class="mb-1 block text-xs font-medium text-zinc-700 dark:text-zinc-300">
                                     Cantidad *
                                 </label>
@@ -149,19 +152,22 @@
                                     placeholder="1"
                                     class="text-sm"
                                 />
-                                @error('nuevaCantidad')
-                                    <span class="text-xs text-red-500">{{ $message }}</span>
-                                @enderror
+                                <div class="mt-1 min-h-4">
+                                    @error('nuevaCantidad')
+                                        <span class="text-xs text-red-500 break-words">{{ $message }}</span>
+                                    @enderror
+                                </div>
                             </div>
 
                             {{-- Botón agregar --}}
-                            <div>
+                            <div class="sm:pt-5">
                                 <flux:button 
                                     wire:click="agregarInsumo"
                                     variant="primary"
                                     icon="plus">
                                     Agregar
                                 </flux:button>
+                                <div class="mt-1 h-4"></div>
                             </div>
                         </div>
                     </div>

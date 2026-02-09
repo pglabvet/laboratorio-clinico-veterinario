@@ -335,6 +335,17 @@ class GestionarInsumos extends Component
     }
 
     /**
+     * Limpiar todos los filtros
+     */
+    public function limpiarFiltros()
+    {
+        $this->buscar = '';
+        $this->filtroSucursal = '';
+        $this->mostrarSoloStockBajo = false;
+        $this->resetPage();
+    }
+
+    /**
      * Renderizar componente
      */
     public function render()

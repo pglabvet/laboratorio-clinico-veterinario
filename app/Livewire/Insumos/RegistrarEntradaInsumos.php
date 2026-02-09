@@ -6,6 +6,7 @@ use App\Models\Insumo;
 use App\Models\Sucursal;
 use App\Models\InventarioSucursal;
 use App\Models\MovimientoInventario;
+use App\Models\CategoriaInsumo;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +18,7 @@ class RegistrarEntradaInsumos extends Component
 
     // Propiedades del formulario
     public $sucursal_id = '';
+    public $filtro_categoria = '';
     public $insumo_id = '';
     public $cantidad = '';
     public $motivo = '';
@@ -32,8 +34,9 @@ class RegistrarEntradaInsumos extends Component
     // Opciones de motivo
     public const MOTIVOS = [
         'COMPRA' => 'Compra',
-        'DEVOLUCIÓN' => 'Devolución',
-        'AJUSTE' => 'Ajuste',
+        'DEVOLUCION' => 'Devolución',
+        'AJUSTE_INVENTARIO' => 'Ajuste de Inventario',
+        'OTRO' => 'Otro',
     ];
 
     // Reglas de validación
@@ -43,7 +46,7 @@ class RegistrarEntradaInsumos extends Component
             'sucursal_id' => 'required|exists:sucursales,id',
             'insumo_id' => 'required|exists:insumos,id',
             'cantidad' => 'required|numeric|min:0.01',
-            'motivo' => 'required|in:COMPRA,DEVOLUCIÓN,AJUSTE',
+            'motivo' => 'required|in:COMPRA,DEVOLUCION,AJUSTE_INVENTARIO,OTRO',
             'observacion' => 'nullable|string|max:1000',
         ];
     }
@@ -61,6 +64,14 @@ class RegistrarEntradaInsumos extends Component
         'motivo.in' => 'El motivo seleccionado no es válido.',
         'observacion.max' => 'La observación no puede exceder 1000 caracteres.',
     ];
+
+    /**
+     * Resetear insumo cuando cambia la categoría
+     */
+    public function updatedFiltroCategoria()
+    {
+        $this->reset(['insumo_id', 'insumoSeleccionado']);
+    }
 
     /**
      * Actualizar información del insumo seleccionado
@@ -123,7 +134,7 @@ class RegistrarEntradaInsumos extends Component
             session()->flash('mensaje', "Entrada registrada exitosamente: {$this->cantidad} {$insumo->unidadMedida->abreviatura} de {$insumo->nombre} en {$sucursal->nombre}.");
 
             // Limpiar formulario
-            $this->reset(['sucursal_id', 'insumo_id', 'cantidad', 'motivo', 'observacion', 'insumoSeleccionado']);
+            $this->reset(['sucursal_id', 'filtro_categoria', 'insumo_id', 'cantidad', 'motivo', 'observacion', 'insumoSeleccionado']);
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -132,12 +143,11 @@ class RegistrarEntradaInsumos extends Component
     }
 
     /**
-     * Cancelar y limpiar formulario
+     * Cancelar y volver al historial
      */
     public function cancelar()
     {
-        $this->reset(['sucursal_id', 'insumo_id', 'cantidad', 'motivo', 'observacion', 'insumoSeleccionado']);
-        $this->resetValidation();
+        return $this->redirect(route('inventario.historial'), navigate: true);
     }
 
     /**
@@ -163,11 +173,20 @@ class RegistrarEntradaInsumos extends Component
             ->orderBy('nombre')
             ->get();
 
-        // Obtener insumos activos
-        $insumos = Insumo::with('unidadMedida', 'categoria')
-            ->where('estado', true)
+        // Obtener categorías activas
+        $categorias = CategoriaInsumo::where('estado', true)
             ->orderBy('nombre')
             ->get();
+
+        // Obtener insumos activos (filtrados por categoría si está seleccionada)
+        $insumosQuery = Insumo::with('unidadMedida', 'categoria')
+            ->where('estado', true);
+        
+        if ($this->filtro_categoria) {
+            $insumosQuery->where('categoria_insumo_id', $this->filtro_categoria);
+        }
+        
+        $insumos = $insumosQuery->orderBy('nombre')->get();
 
         // Obtener entradas recientes
         $entradasQuery = MovimientoInventario::with(['insumo.unidadMedida', 'sucursal', 'usuario'])
@@ -213,6 +232,7 @@ class RegistrarEntradaInsumos extends Component
 
         return view('livewire.insumos.registrar-entrada-insumos', [
             'sucursales' => $sucursales,
+            'categorias' => $categorias,
             'insumos' => $insumos,
             'entradasRecientes' => $entradasRecientes,
             'motivosDisponibles' => self::MOTIVOS,
