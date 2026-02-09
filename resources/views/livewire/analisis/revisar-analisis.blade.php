@@ -111,11 +111,10 @@
                         </flux:dropdown>
                     </div>
 
-<<<<<<< HEAD
                     {{-- Filtro por estado --}}
-                    <div>
+                    <div class="w-full sm:w-auto">
                         <flux:dropdown>
-                            <flux:button variant="outline" icon="funnel" icon-trailing="chevron-down" class="w-full justify-between">
+                            <flux:button variant="outline" icon="funnel" icon-trailing="chevron-down">
                                 {{ $filtroEstado ? $filtroEstado : 'Estado' }}
                             </flux:button>
 
@@ -141,9 +140,9 @@
                     </div>
 
                     {{-- Filtro por tipo de análisis --}}
-                    <div>
+                    <div class="w-full sm:w-auto">
                         <flux:dropdown>
-                            <flux:button variant="outline" icon="beaker" icon-trailing="chevron-down" class="w-full justify-between">
+                            <flux:button variant="outline" icon="beaker" icon-trailing="chevron-down">
                                 {{ $filtroTipoAnalisis ? Str::limit($tiposAnalisis->firstWhere('id', $filtroTipoAnalisis)?->nombre, 12) : 'Tipo análisis' }}
                             </flux:button>
 

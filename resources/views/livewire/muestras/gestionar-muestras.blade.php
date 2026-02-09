@@ -99,77 +99,9 @@
                                 {{ $filtroPeriodo ?: 'Período' }}
                             </flux:button>
 
-                        <flux:menu>
-                            <flux:menu.item wire:click="filtrarHoy" icon="sun">
-                                Hoy
-                            </flux:menu.item>
-                            <flux:menu.item wire:click="filtrarAyer" icon="arrow-uturn-left">
-                                Ayer
-                            </flux:menu.item>
-                            <flux:menu.item wire:click="filtrarUltimos7Dias" icon="calendar">
-                                Últimos 7 días
-                            </flux:menu.item>
-                            <flux:menu.separator />
-                            <flux:menu.item wire:click="filtrarEstaSemana" icon="calendar-days">
-                                Esta semana
-                            </flux:menu.item>
-                            <flux:menu.item wire:click="filtrarEsteMes" icon="calendar-days">
-                                Este mes
-                            </flux:menu.item>
-                            <flux:menu.item wire:click="filtrarAnioActual" icon="calendar-days">
-                                Año actual
-                            </flux:menu.item>
-                        </flux:menu>
-                    </flux:dropdown>
-                </div>
-            </div>
-
-            {{-- Fila 2: Filtros por categorías --}}
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-end">
-                {{-- Filtro por estado --}}
-                <div class="w-full sm:w-auto">
-                    <flux:dropdown>
-                        <flux:button variant="outline" icon="funnel" icon-trailing="chevron-down">
-                            {{ $filtroEstado ?: 'Estado' }}
-                        </flux:button>
-
-                        <flux:menu>
-                            <flux:menu.item wire:click="$set('filtroEstado', '')" icon="bars-3">
-                                Todos los estados
-                            </flux:menu.item>
-                            <flux:menu.separator />
-                            <flux:menu.item wire:click="$set('filtroEstado', 'Pendiente')" icon="clock">
-                                Pendiente
-                            </flux:menu.item>
-                            <flux:menu.item wire:click="$set('filtroEstado', 'En proceso')" icon="arrow-path">
-                                En proceso
-                            </flux:menu.item>
-                            <flux:menu.item wire:click="$set('filtroEstado', 'Completado')" icon="check-circle">
-                                Completado
-                            </flux:menu.item>
-                            <flux:menu.item wire:click="$set('filtroEstado', 'Enviado')" icon="paper-airplane">
-                                Enviado
-                            </flux:menu.item>
-                        </flux:menu>
-                    </flux:dropdown>
-                </div>
-
-                {{-- Filtro por especie --}}
-                <div class="w-full sm:w-auto">
-                    <flux:dropdown>
-                        <flux:button variant="outline" icon="heart" icon-trailing="chevron-down">
-                            {{ $filtroEspecie ? $especies->firstWhere('id', $filtroEspecie)?->nombre : 'Especie' }}
-                        </flux:button>
-
-                        <flux:menu>
-                            <flux:menu.item wire:click="$set('filtroEspecie', '')" icon="bars-3">
-                                Todas las especies
-                            </flux:menu.item>
-                            <flux:menu.separator />
-                            @foreach($especies as $especie)
-                                <flux:menu.item wire:click="$set('filtroEspecie', '{{ $especie->id }}')" icon="heart">
-                                    {{ $especie->nombre }}
->>>>>>> origin/develop
+                            <flux:menu>
+                                <flux:menu.item wire:click="filtrarHoy" icon="sun">
+                                    Hoy
                                 </flux:menu.item>
                                 <flux:menu.item wire:click="filtrarAyer" icon="arrow-uturn-left">
                                     Ayer
@@ -192,9 +124,9 @@
                     </div>
 
                     {{-- Filtro por estado --}}
-                    <div>
+                    <div class="w-full sm:w-auto">
                         <flux:dropdown>
-                            <flux:button variant="outline" icon="funnel" icon-trailing="chevron-down" class="w-full justify-between">
+                            <flux:button variant="outline" icon="funnel" icon-trailing="chevron-down">
                                 {{ $filtroEstado ?: 'Estado' }}
                             </flux:button>
 
@@ -212,14 +144,17 @@
                                 <flux:menu.item wire:click="$set('filtroEstado', 'Completado')" icon="check-circle">
                                     Completado
                                 </flux:menu.item>
+                                <flux:menu.item wire:click="$set('filtroEstado', 'Enviado')" icon="paper-airplane">
+                                    Enviado
+                                </flux:menu.item>
                             </flux:menu>
                         </flux:dropdown>
                     </div>
 
                     {{-- Filtro por especie --}}
-                    <div>
+                    <div class="w-full sm:w-auto">
                         <flux:dropdown>
-                            <flux:button variant="outline" icon="heart" icon-trailing="chevron-down" class="w-full justify-between">
+                            <flux:button variant="outline" icon="heart" icon-trailing="chevron-down">
                                 {{ $filtroEspecie ? $especies->firstWhere('id', $filtroEspecie)?->nombre : 'Especie' }}
                             </flux:button>
 
@@ -238,9 +173,9 @@
                     </div>
 
                     {{-- Filtro por veterinaria --}}
-                    <div>
+                    <div class="w-full sm:w-auto">
                         <flux:dropdown>
-                            <flux:button variant="outline" icon="building-office" icon-trailing="chevron-down" class="w-full justify-between">
+                            <flux:button variant="outline" icon="building-office" icon-trailing="chevron-down">
                                 {{ $filtroVeterinaria ? Str::limit($veterinarias->firstWhere('id', $filtroVeterinaria)?->nombre, 12) : 'Veterinaria' }}
                             </flux:button>
 
@@ -259,10 +194,10 @@
                     </div>
 
                     {{-- Filtro por sucursal --}}
-                    <div>
+                    <div class="w-full sm:w-auto">
                         <flux:dropdown>
-                            <flux:button variant="outline" icon="building-storefront" icon-trailing="chevron-down" class="w-full justify-between">
-                                {{ $filtroSucursal ? Str::limit($sucursales->firstWhere('id', $filtroSucursal)?->nombre, 12) : 'Sucursales' }}
+                            <flux:button variant="outline" icon="building-storefront" icon-trailing="chevron-down">
+                                {{ $filtroSucursal ? Str::limit($sucursales->firstWhere('id', $filtroSucursal)?->nombre, 12) : 'Sucursal' }}
                             </flux:button>
 
                             <flux:menu>
@@ -272,7 +207,7 @@
                                 <flux:menu.separator />
                                 @foreach($sucursales as $sucursal)
                                     <flux:menu.item wire:click="$set('filtroSucursal', '{{ $sucursal->id }}')" icon="building-storefront">
-                                        Sucursal {{ $sucursal->nombre }}
+                                        {{ $sucursal->nombre }}
                                     </flux:menu.item>
                                 @endforeach
                             </flux:menu>
@@ -280,12 +215,11 @@
                     </div>
 
                     {{-- Botón limpiar filtros --}}
-                    <div class="col-span-2 sm:col-span-1">
+                    <div class="w-full sm:w-auto">
                         <flux:button 
                             wire:click="limpiarFiltros" 
                             variant="outline" 
                             icon="x-mark"
-                            class="w-full"
                         >
                             Limpiar
                         </flux:button>
