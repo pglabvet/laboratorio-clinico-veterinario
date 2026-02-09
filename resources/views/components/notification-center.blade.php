@@ -1,5 +1,5 @@
 {{-- Centro de Notificaciones --}}
-<div x-data="{ open: false }" class="relative">
+<div x-data="{ open: false, showClearModal: false }" class="relative">
     {{-- Botón campana --}}
     <flux:button size="sm" variant="ghost" square @click="open = !open" class="relative">
         {{-- Ícono campana --}}
@@ -47,7 +47,7 @@
                     </svg>
                 </button>
                 <button
-                    @click="if(confirm('¿Limpiar todas las notificaciones?')) $store.notifications.clearAll()"
+                    @click="showClearModal = true"
                     class="rounded-md p-1 text-xs text-zinc-500 hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-200"
                     title="Limpiar todo"
                 >
@@ -125,4 +125,34 @@
             </template>
         </div>
     </div>
+
+    {{-- Modal de confirmación para limpiar todo --}}
+    <flux:modal name="clear-notifications" x-model="showClearModal" class="max-w-md">
+        <div class="space-y-4">
+            <div class="flex items-start gap-3">
+                <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
+                    <svg class="h-6 w-6 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <flux:heading size="lg">Limpiar notificaciones</flux:heading>
+                    <flux:subheading class="mt-1">
+                        ¿Estás seguro de que deseas eliminar todas las notificaciones? Esta acción no se puede deshacer.
+                    </flux:subheading>
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <flux:spacer />
+                <flux:button variant="ghost" @click="showClearModal = false">Cancelar</flux:button>
+                <flux:button 
+                    variant="danger" 
+                    @click="$store.notifications.clearAll(); showClearModal = false; open = false"
+                >
+                    Eliminar todo
+                </flux:button>
+            </div>
+        </div>
+    </flux:modal>
 </div>
