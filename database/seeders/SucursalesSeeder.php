@@ -41,24 +41,6 @@ class SucursalesSeeder extends Seeder
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
             ],
-            [
-                'nombre' => 'Sucursal Este',
-                'codigo' => 'SUC-ESTE',
-                'direccion' => 'Calle Comercio 321, Zona Este',
-                'telefono' => '+591 3-4567890',
-                'estado' => true,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
-            [
-                'nombre' => 'Sucursal Equipetrol',
-                'codigo' => 'SUC-EQUIP',
-                'direccion' => 'Av. San Martín 555, Equipetrol',
-                'telefono' => '+591 3-5678901',
-                'estado' => true,
-                'created_at' => Carbon::now(),
-                'updated_at' => Carbon::now(),
-            ],
         ];
 
         DB::table('sucursales')->insert($sucursales);

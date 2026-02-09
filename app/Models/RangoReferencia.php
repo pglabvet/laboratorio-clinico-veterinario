@@ -13,7 +13,6 @@ class RangoReferencia extends Model
     protected $table = 'rangos_referencia';
 
     protected $fillable = [
-        'parametro_id',
         'especie_id',
         'valor_minimo',
         'valor_maximo',
@@ -24,14 +23,6 @@ class RangoReferencia extends Model
         'valor_minimo' => 'decimal:2',
         'valor_maximo' => 'decimal:2',
     ];
-
-    /**
-     * Relación con parámetro de análisis
-     */
-    public function parametro(): BelongsTo
-    {
-        return $this->belongsTo(ParametroAnalisis::class, 'parametro_id');
-    }
 
     /**
      * Relación con especie

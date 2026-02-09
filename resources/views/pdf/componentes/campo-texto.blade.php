@@ -8,8 +8,8 @@
 @endphp
 
 @if(!empty($valor))
-<div style="padding: 8px; background-color: transparent; border: none;">
-    {{ $valor }}
+<div style="padding: 8px; background-color: transparent; border: none; word-wrap: break-word; white-space: pre-wrap;">
+    {!! nl2br(e($valor)) !!}
 </div>
 @else
 <p style="color: #718096; font-style: italic;">Sin valor</p>

@@ -138,14 +138,7 @@
                         :error="$errors->first('tipo_muestra')"
                     />
 
-                    <flux:input 
-                        wire:model="fecha_recepcion"
-                        type="date"
-                        label="Fecha de Recepción "
-                        :error="$errors->first('fecha_recepcion')"
-                    />
-
-                    <div class="md:col-span-2">
+                    <div class="md:col-span-2 lg:col-span-3">
                         <flux:textarea 
                             wire:model="observaciones"
                             label="Observaciones"

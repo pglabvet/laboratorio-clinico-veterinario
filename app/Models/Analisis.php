@@ -109,22 +109,6 @@ class Analisis extends Model
     }
 
     /**
-     * Relación con imágenes
-     */
-    public function imagenes(): HasMany
-    {
-        return $this->hasMany(ImagenAnalisis::class);
-    }
-
-    /**
-     * Relación con revisiones
-     */
-    public function revisiones(): HasMany
-    {
-        return $this->hasMany(Revision::class);
-    }
-
-    /**
      * Relación con PDFs
      */
     public function pdfs(): HasMany

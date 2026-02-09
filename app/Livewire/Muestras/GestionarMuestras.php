@@ -599,7 +599,6 @@ class GestionarMuestras extends Component
                     'veterinaria_id' => $this->veterinaria_id,
                     'sucursal_id' => $this->sucursal_id,
                     'tipo_muestra' => $this->tipo_muestra,
-                    'fecha_recepcion' => $this->fecha_recepcion,
                     'observaciones' => $this->observaciones,
                 ]);
 
@@ -620,7 +619,7 @@ class GestionarMuestras extends Component
                     'veterinaria_id' => $this->veterinaria_id,
                     'sucursal_id' => $this->sucursal_id,
                     'tipo_muestra' => $this->tipo_muestra,
-                    'fecha_recepcion' => $this->fecha_recepcion,
+                    'fecha_recepcion' => now(),
                     'estado' => 'Pendiente',
                     'observaciones' => $this->observaciones,
                 ]);
