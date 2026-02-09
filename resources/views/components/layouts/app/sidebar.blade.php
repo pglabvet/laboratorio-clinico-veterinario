@@ -72,6 +72,10 @@
                 {{ __('Roles') }}
             </flux:sidebar.item>
             @endcan
+
+            <flux:sidebar.item icon="eye" :href="route('auditorias.index')" :current="request()->routeIs('auditorias.*')" wire:navigate>
+                {{ __('Auditorías') }}
+            </flux:sidebar.item>
         </flux:sidebar.group>
         @endcanany
     </flux:sidebar.nav>
