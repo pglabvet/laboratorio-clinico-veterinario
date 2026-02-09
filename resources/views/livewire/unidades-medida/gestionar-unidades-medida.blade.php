@@ -180,7 +180,7 @@
 
             <div class="flex gap-2">
                 <flux:spacer />
-                <flux:button type="button" wire:click="cerrarModal" variant="ghost">Cancelar</flux:button>
+                <flux:button type="button" wire:click="cerrarModal" variant="outline" class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950">Cancelar</flux:button>
                 <flux:button type="submit" variant="primary">
                     {{ $modoEdicion ? 'Actualizar' : 'Guardar' }}
                 </flux:button>
@@ -207,7 +207,7 @@
 
         <div class="flex gap-2">
             <flux:spacer />
-            <flux:button type="button" wire:click="cerrarModalCambiarEstado" variant="ghost">Cancelar</flux:button>
+            <flux:button type="button" wire:click="cerrarModalCambiarEstado" variant="outline" class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950">Cancelar</flux:button>
             <flux:button type="button" wire:click="cambiarEstado" variant="primary">
                 Confirmar
             </flux:button>
@@ -231,7 +231,7 @@
 
         <div class="flex gap-2">
             <flux:spacer />
-            <flux:button type="button" wire:click="cerrarModalEliminar" variant="ghost">Cancelar</flux:button>
+            <flux:button type="button" wire:click="cerrarModalEliminar" variant="outline" class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950">Cancelar</flux:button>
             <flux:button type="button" wire:click="eliminar" variant="danger">
                 Eliminar
             </flux:button>
@@ -255,7 +255,7 @@
 
         <div class="flex gap-2">
             <flux:spacer />
-            <flux:button type="button" wire:click="cerrarModalEliminar" variant="ghost">Cancelar</flux:button>
+            <flux:button type="button" wire:click="cerrarModalEliminar" variant="outline" class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950">Cancelar</flux:button>
             <flux:button type="button" wire:click="eliminar" variant="danger">
                 Eliminar
             </flux:button>

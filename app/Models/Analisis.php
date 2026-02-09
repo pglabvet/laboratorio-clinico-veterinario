@@ -2,22 +2,26 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Analisis extends Model
 {
-    use HasFactory;
+    use Auditable, HasFactory;
 
     protected $table = 'analisis';
 
     // Estados disponibles
     public const ESTADO_PENDIENTE = 'Pendiente';
+
     public const ESTADO_EN_REVISION = 'En revision';
+
     public const ESTADO_APROBADO = 'Aprobado';
+
     public const ESTADO_ENVIADO = 'Enviado';
 
     protected $fillable = [
@@ -140,7 +144,7 @@ class Analisis extends Model
      */
     public function getColorEstado(): string
     {
-        return match($this->estado) {
+        return match ($this->estado) {
             self::ESTADO_PENDIENTE => 'amber',
             self::ESTADO_EN_REVISION => 'blue',
             self::ESTADO_APROBADO => 'green',
