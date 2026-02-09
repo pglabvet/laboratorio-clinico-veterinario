@@ -158,8 +158,8 @@
                 @if($modoRevision)
                     {{-- Botones de revisión (Aprobar/Rechazar) --}}
                     <div class="flex gap-3">
-                        @if($analisis->estado === 'Aprobado')
-                            {{-- Botón PDF solo para análisis aprobados --}}
+                        @if($analisis->estado === 'Aprobado' || $analisis->estado === 'Enviado')
+                            {{-- Botón PDF solo para análisis aprobados o enviados --}}
                             <flux:button 
                                 wire:click="descargarPdf"
                                 variant="primary" 

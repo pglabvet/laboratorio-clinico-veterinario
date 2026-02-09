@@ -1,6 +1,5 @@
 ﻿<!-- Propiedades de Tabla de Dos Columnas -->
 <div class="space-y-4">
-    <div class="text-xs text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded mb-2">Índice: {{ $indiceComponente }} | ID: {{ $componenteId ?? "N/A" }}</div>
     <!-- Título principal -->
     <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">Título Principal</label>

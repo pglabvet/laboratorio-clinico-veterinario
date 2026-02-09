@@ -31,11 +31,19 @@ class AnalisisPdfService
             'resultados'
         ]);
 
-        // Obtener la plantilla activa
-        $plantilla = $analisis->tipoAnalisis
-            ->plantillas()
-            ->where('activo', true)
-            ->first();
+        // Primero intentar usar la plantilla específica asignada al análisis
+        $plantilla = null;
+        if ($analisis->plantilla_formulario_id) {
+            $plantilla = PlantillaFormulario::find($analisis->plantilla_formulario_id);
+        }
+        
+        // Si no hay plantilla asignada, buscar una plantilla activa del tipo de análisis (fallback)
+        if (!$plantilla) {
+            $plantilla = $analisis->tipoAnalisis
+                ->plantillas()
+                ->where('activo', true)
+                ->first();
+        }
 
         if (!$plantilla) {
             throw new \Exception('No se encontró una plantilla activa para este tipo de análisis.');
@@ -104,7 +112,7 @@ class AnalisisPdfService
                 'componente' => $componente,
                 'resultado' => $resultado?->valor ?? [],
                 'tipo' => $tipo,
-                'chartImage' => $chartBase64, // Pasar la imagen
+                'chartImage' => $chartBase64,
             ];
         }
 
