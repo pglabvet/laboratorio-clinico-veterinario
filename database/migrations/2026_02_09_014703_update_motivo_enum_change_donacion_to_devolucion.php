@@ -17,24 +17,32 @@ return new class extends Migration
     {
         // Solo ejecutar en PostgreSQL
         if (DB::connection()->getDriverName() === 'pgsql') {
-            // Paso 1: Agregar el nuevo valor DEVOLUCION al enum existente
-            DB::statement("ALTER TYPE motivo_enum ADD VALUE IF NOT EXISTS 'DEVOLUCION'");
+            // Verificar si el valor 'DONACION' existe en el enum
+            $enumValues = DB::select("SELECT enumlabel FROM pg_enum WHERE enumtypid = (SELECT oid FROM pg_type WHERE typname = 'motivo_enum')");
+            $hasdonacion = collect($enumValues)->pluck('enumlabel')->contains('DONACION');
             
-            // Paso 2: Actualizar todos los registros que tienen DONACION a DEVOLUCION
-            DB::statement("UPDATE movimientos_inventario SET motivo = 'DEVOLUCION' WHERE motivo = 'DONACION'");
-            
-            // Paso 3: Recrear el enum sin DONACION
-            // Convertir temporalmente a VARCHAR
-            DB::statement("ALTER TABLE movimientos_inventario ALTER COLUMN motivo TYPE VARCHAR(255)");
-            
-            // Eliminar el enum viejo
-            DB::statement("DROP TYPE IF EXISTS motivo_enum");
-            
-            // Crear el enum nuevo sin DONACION
-            DB::statement("CREATE TYPE motivo_enum AS ENUM ('MERMA', 'VENCIMIENTO', 'USO_EXTRAORDINARIO', 'CONSUMO_ANALISIS', 'AJUSTE_INVENTARIO', 'COMPRA', 'DEVOLUCION', 'OTRO')");
-            
-            // Convertir de vuelta a enum
-            DB::statement("ALTER TABLE movimientos_inventario ALTER COLUMN motivo TYPE motivo_enum USING motivo::motivo_enum");
+            // Solo proceder si el valor DONACION existe (significa que es una BD antigua)
+            if ($hasdonacion) {
+                // Paso 1: Agregar el nuevo valor DEVOLUCION al enum existente
+                DB::statement("ALTER TYPE motivo_enum ADD VALUE IF NOT EXISTS 'DEVOLUCION'");
+                
+                // Paso 2: Actualizar todos los registros que tienen DONACION a DEVOLUCION
+                DB::statement("UPDATE movimientos_inventario SET motivo = 'DEVOLUCION' WHERE motivo = 'DONACION'");
+                
+                // Paso 3: Recrear el enum sin DONACION
+                // Convertir temporalmente a VARCHAR
+                DB::statement("ALTER TABLE movimientos_inventario ALTER COLUMN motivo TYPE VARCHAR(255)");
+                
+                // Eliminar el enum viejo
+                DB::statement("DROP TYPE IF EXISTS motivo_enum");
+                
+                // Crear el enum nuevo sin DONACION
+                DB::statement("CREATE TYPE motivo_enum AS ENUM ('MERMA', 'VENCIMIENTO', 'USO_EXTRAORDINARIO', 'CONSUMO_ANALISIS', 'AJUSTE_INVENTARIO', 'COMPRA', 'DEVOLUCION', 'OTRO')");
+                
+                // Convertir de vuelta a enum
+                DB::statement("ALTER TABLE movimientos_inventario ALTER COLUMN motivo TYPE motivo_enum USING motivo::motivo_enum");
+            }
+            // Si no tiene DONACION, significa que es una BD fresca y no necesita hacer nada
         }
     }
 

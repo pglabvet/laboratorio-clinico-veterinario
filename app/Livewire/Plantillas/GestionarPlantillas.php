@@ -52,9 +52,18 @@ class GestionarPlantillas extends Component
         }
         // Si existe el parÃƒÂ¡metro 'duplicar', cargar datos de esa plantilla
         elseif (request()->has('duplicar')) {
-            $plantillaOriginal = PlantillaFormulario::findOrFail(request('duplicar'));
+            $plantillaOriginal = PlantillaFormulario::with('insumos')->findOrFail(request('duplicar'));
             $this->nombreFormulario = $plantillaOriginal->nombre . ' (Copia)';
             $this->descripcionFormulario = $plantillaOriginal->descripcion;
+            $this->tipo_analisis_id = $plantillaOriginal->tipo_analisis_id;
+            
+            // Cargar insumos asociados
+            $this->insumos = $plantillaOriginal->insumos->map(function($insumo) {
+                return [
+                    'insumo_id' => $insumo->id,
+                    'cantidad_requerida' => $insumo->pivot->cantidad_requerida,
+                ];
+            })->toArray();
             
             // Asegurar que todos los componentes tengan ID
             $componentes = $plantillaOriginal->componentes ?? [];

@@ -7,7 +7,7 @@
                 <flux:subheading>{{ $analisis->tipoAnalisis->nombre }}</flux:subheading>
             </div>
             <div class="flex gap-2">
-                <flux:button href="{{ route('analisis.revisar') }}" variant="ghost" icon="arrow-left">
+                <flux:button href="{{ route('analisis.revisar') }}" variant="outline" icon="arrow-left" class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950">
                     Volver
                 </flux:button>
                 
