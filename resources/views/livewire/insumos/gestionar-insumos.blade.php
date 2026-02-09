@@ -4,48 +4,11 @@
     <x-toast type="error" :message="session('error')" />
 
     {{-- Header de la página --}}
-    <div class="mb-6">
-        <flux:heading size="xl" class="mb-2">Gestión de Insumos</flux:heading>
-        <flux:subheading>Administra los insumos utilizados en los análisis del laboratorio</flux:subheading>
-    </div>
-
-    {{-- Barra de acciones y filtros --}}
-    <div class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        {{-- Búsqueda y Filtros --}}
-        <div class="flex flex-col gap-4 sm:flex-row sm:items-center flex-1">
-            <div class="w-full sm:w-96">
-                <flux:input 
-                    wire:model.live.debounce.300ms="buscar"
-                    icon="magnifying-glass"
-                    placeholder="Buscar insumos..."
-                    class="w-full"
-                />
-            </div>
-
-            {{-- Filtro de Sucursal (Dropdown estilo botón) --}}
-            <flux:dropdown>
-                <flux:button variant="outline" icon="building-office-2" icon-trailing="chevron-down">
-                    {{ $filtroSucursal ? $sucursales->firstWhere('id', $filtroSucursal)?->nombre : 'Sucursales' }}
-                </flux:button>
-
-                <flux:menu>
-                    <flux:menu.item wire:click="$set('filtroSucursal', '')" icon="bars-3">
-                        Todas las sucursales
-                    </flux:menu.item>
-                    <flux:menu.separator />
-                    @foreach($sucursales as $sucursal)
-                        <flux:menu.item wire:click="$set('filtroSucursal', '{{ $sucursal->id }}')" icon="building-storefront">
-                            {{ $sucursal->nombre }}
-                        </flux:menu.item>
-                    @endforeach
-                </flux:menu>
-            </flux:dropdown>
-
-            @if($filtroSucursal)
-                <flux:checkbox wire:model.live="mostrarSoloStockBajo" label="Solo stock bajo" />
-            @endif
+    <div class="mb-6 flex items-center justify-between">
+        <div>
+            <flux:heading size="xl" class="mb-2">Gestión de Insumos</flux:heading>
+            <flux:subheading>Administra los insumos utilizados en los análisis del laboratorio</flux:subheading>
         </div>
-
         {{-- Botón crear --}}
         <flux:button 
             wire:click="crear"
@@ -56,49 +19,103 @@
         </flux:button>
     </div>
 
+    {{-- Barra de búsqueda y filtros --}}
+    <div class="mb-6 rounded-lg border border-neutral-200 bg-neutral-50 p-3 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
+        <div class="space-y-3">
+            {{-- Búsqueda (ocupa todo el ancho) --}}
+            <div>
+                <flux:input 
+                    wire:model.live.debounce.300ms="buscar"
+                    icon="magnifying-glass"
+                    placeholder="Buscar insumos..."
+                    class="w-full"
+                />
+            </div>
+
+            {{-- Grid de filtros: 2 columnas en móvil, flex en desktop --}}
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div class="grid grid-cols-2 gap-3 sm:flex sm:flex-row sm:gap-3">
+                    {{-- Filtro de Sucursal --}}
+                    <flux:dropdown>
+                        <flux:button variant="outline" icon="building-office-2" icon-trailing="chevron-down" class="w-full sm:w-auto justify-between">
+                            {{ $filtroSucursal ? $sucursales->firstWhere('id', $filtroSucursal)?->nombre : 'Sucursales' }}
+                        </flux:button>
+
+                        <flux:menu>
+                            <flux:menu.item wire:click="$set('filtroSucursal', '')" icon="bars-3">
+                                Todas las sucursales
+                            </flux:menu.item>
+                            <flux:menu.separator />
+                            @foreach($sucursales as $sucursal)
+                                <flux:menu.item wire:click="$set('filtroSucursal', '{{ $sucursal->id }}')" icon="building-storefront">
+                                    {{ $sucursal->nombre }}
+                                </flux:menu.item>
+                            @endforeach
+                        </flux:menu>
+                    </flux:dropdown>
+
+                    {{-- Botón limpiar filtros --}}
+                    <flux:button 
+                        wire:click="limpiarFiltros" 
+                        variant="outline" 
+                        icon="x-mark"
+                        class="w-full sm:w-auto"
+                    >
+                        Limpiar
+                    </flux:button>
+                </div>
+
+                @if($filtroSucursal)
+                    <flux:checkbox wire:model.live="mostrarSoloStockBajo" label="Solo stock bajo" />
+                @endif
+            </div>
+        </div>
+    </div>
+
     {{-- Tabla de insumos --}}
     <div class="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-md ring-1 ring-neutral-200/50 dark:border-neutral-700 dark:bg-neutral-800 dark:ring-neutral-700/50">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
-                <thead class="bg-neutral-50 dark:bg-neutral-900">
-                    <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-                            <button wire:click="ordenarPor('nombre')" class="flex items-center gap-1 hover:text-neutral-900 dark:hover:text-neutral-100">
-                                <span>NOMBRE</span>
-                                @if($sortBy === 'nombre')
-                                    <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                                        @if($sortDirection === 'asc')
-                                            <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd"/>
-                                        @else
-                                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                                        @endif
-                                    </svg>
-                                @endif
-                            </button>
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-                            Unidad de Medida
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-                            Categoría
-                        </th>
-                        @if($filtroSucursal)
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-                                Stock Actual
+        <div class="overflow-x-auto -mx-px">
+            <div class="inline-block min-w-full align-middle">
+                <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
+                    <thead class="bg-neutral-50 dark:bg-neutral-900">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300 whitespace-nowrap">
+                                <button wire:click="ordenarPor('nombre')" class="flex items-center gap-1 hover:text-neutral-900 dark:hover:text-neutral-100">
+                                    <span>NOMBRE</span>
+                                    @if($sortBy === 'nombre')
+                                        <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                            @if($sortDirection === 'asc')
+                                                <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd"/>
+                                            @else
+                                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                            @endif
+                                        </svg>
+                                    @endif
+                                </button>
                             </th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-                                Stock Mínimo
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300 whitespace-nowrap">
+                                Unidad de Medida
                             </th>
-                        @endif
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-                            Estado
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-                            Acciones
-                        </th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-neutral-200 bg-white dark:divide-neutral-700 dark:bg-neutral-800">
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300 whitespace-nowrap">
+                                Categoría
+                            </th>
+                            @if($filtroSucursal)
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300 whitespace-nowrap">
+                                    Stock Actual
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300 whitespace-nowrap">
+                                    Stock Mínimo
+                                </th>
+                            @endif
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300 whitespace-nowrap">
+                                Estado
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300 whitespace-nowrap">
+                                Acciones
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-neutral-200 bg-white dark:divide-neutral-700 dark:bg-neutral-800">
                     @forelse ($insumos as $insumo)
                         @php
                             $inventario = $filtroSucursal 
@@ -202,6 +219,7 @@
                     @endforelse
                 </tbody>
             </table>
+            </div>
         </div>
 
         {{-- Paginación --}}

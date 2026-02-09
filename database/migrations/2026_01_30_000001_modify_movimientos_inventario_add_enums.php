@@ -22,7 +22,7 @@ return new class extends Migration
             END $$;");
             
             DB::statement("DO $$ BEGIN
-                CREATE TYPE motivo_enum AS ENUM ('MERMA', 'VENCIMIENTO', 'USO_EXTRAORDINARIO', 'CONSUMO_ANALISIS', 'AJUSTE_INVENTARIO', 'COMPRA', 'DONACION', 'OTRO');
+                CREATE TYPE motivo_enum AS ENUM ('MERMA', 'VENCIMIENTO', 'USO_EXTRAORDINARIO', 'CONSUMO_ANALISIS', 'AJUSTE_INVENTARIO', 'COMPRA', 'DEVOLUCION', 'OTRO');
             EXCEPTION
                 WHEN duplicate_object THEN null;
             END $$;");

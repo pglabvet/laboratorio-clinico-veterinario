@@ -6,6 +6,7 @@ use App\Models\Insumo;
 use App\Models\Sucursal;
 use App\Models\InventarioSucursal;
 use App\Models\MovimientoInventario;
+use App\Models\CategoriaInsumo;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,7 @@ class RegistrarSalida extends Component
 
     // Propiedades del formulario
     public $sucursal_id = '';
+    public $filtro_categoria = '';
     public $insumo_id = '';
     public $cantidad = '';
     public $motivo = '';
@@ -75,6 +77,14 @@ class RegistrarSalida extends Component
         'observacion.min' => 'La observación debe tener al menos 10 caracteres.',
         'observacion.max' => 'La observación no puede exceder 1000 caracteres.',
     ];
+
+    /**
+     * Resetear insumo cuando cambia la categoría
+     */
+    public function updatedFiltroCategoria()
+    {
+        $this->reset(['insumo_id', 'stockActual', 'unidadMedida', 'insumoNombre']);
+    }
 
     /**
      * Actualizar stock actual cuando cambia el insumo o sucursal
@@ -222,6 +232,14 @@ class RegistrarSalida extends Component
     }
 
     /**
+     * Cancelar y volver al historial
+     */
+    public function cancelar()
+    {
+        return $this->redirect(route('inventario.historial'), navigate: true);
+    }
+
+    /**
      * Render del componente
      */
     public function render()
@@ -231,12 +249,21 @@ class RegistrarSalida extends Component
             ->orderBy('nombre')
             ->get();
 
-        // Obtener insumos activos con su inventario
+        // Obtener categorías activas
+        $categorias = CategoriaInsumo::where('estado', true)
+            ->orderBy('nombre')
+            ->get();
+
+        // Obtener insumos activos con su inventario (filtrados por categoría si está seleccionada)
         $insumosQuery = Insumo::with(['unidadMedida', 'inventarios.sucursal'])
             ->where('estado', true);
 
         if ($this->buscar) {
             $insumosQuery->where('nombre', 'like', '%' . $this->buscar . '%');
+        }
+        
+        if ($this->filtro_categoria) {
+            $insumosQuery->where('categoria_insumo_id', $this->filtro_categoria);
         }
 
         $insumos = $insumosQuery->orderBy('nombre')->get();
@@ -284,6 +311,7 @@ class RegistrarSalida extends Component
 
         return view('livewire.inventario.registrar-salida', [
             'sucursales' => $sucursales,
+            'categorias' => $categorias,
             'insumos' => $insumos,
             'movimientos' => $movimientos,
         ]);

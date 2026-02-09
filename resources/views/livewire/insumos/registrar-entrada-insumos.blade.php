@@ -1,7 +1,17 @@
 <div class="space-y-6">
     {{-- Encabezado --}}
     <div>
-        <flux:heading size="xl" class="mb-1">Registrar Entrada de Insumos</flux:heading>
+        <div class="flex items-center gap-4 mb-2">
+            <flux:button 
+                wire:click="cancelar"
+                variant="ghost"
+                icon="arrow-left"
+                size="sm"
+            >
+                Volver
+            </flux:button>
+            <flux:heading size="xl">Registrar Entrada de Insumos</flux:heading>
+        </div>
         <flux:subheading>Registra el ingreso de insumos al inventario de una sucursal</flux:subheading>
     </div>
 
@@ -28,6 +38,18 @@
                     @endforeach
                 </flux:select>
 
+                {{-- Categoría de Insumo (Filtro) --}}
+                <flux:select 
+                    wire:model.live="filtro_categoria"
+                    label="Categoría de Insumo"
+                    placeholder="Todas las categorías"
+                >
+                    <option value="">Todas las categorías</option>
+                    @foreach($categorias as $categoria)
+                        <option value="{{ $categoria->id }}">{{ $categoria->nombre }}</option>
+                    @endforeach
+                </flux:select>
+
                 {{-- Insumo --}}
                 <flux:select 
                     wire:model.live="insumo_id"
@@ -36,14 +58,15 @@
                     :error="$errors->first('insumo_id')"
                 >
                     <option value="">Seleccione...</option>
-                    @foreach($insumos as $insumo)
-                        <option value="{{ $insumo->id }}">
-                            {{ $insumo->nombre }}
-                            @if($insumo->categoria)
-                                ({{ $insumo->categoria->nombre }})
-                            @endif
+                    @if($insumos->isEmpty())
+                        <option disabled>
+                            {{ $filtro_categoria ? 'No hay insumos en esta categoría' : 'No hay insumos disponibles' }}
                         </option>
-                    @endforeach
+                    @else
+                        @foreach($insumos as $insumo)
+                            <option value="{{ $insumo->id }}">{{ $insumo->nombre }}</option>
+                        @endforeach
+                    @endif
                 </flux:select>
 
                 {{-- Cantidad --}}
@@ -110,13 +133,14 @@
     {{-- Historial reciente --}}
     <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700">
         <div class="p-6 border-b border-neutral-200 dark:border-neutral-700">
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex flex-col gap-4">
                 <flux:heading size="lg">Entradas Recientes</flux:heading>
                 
-                <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+                {{-- Grid de filtros: 2 columnas en móvil, flex en desktop --}}
+                <div class="grid grid-cols-2 gap-3 sm:flex sm:flex-row">
                     {{-- Filtro de Sucursal --}}
                     <flux:dropdown>
-                        <flux:button variant="outline" icon="building-office-2" icon-trailing="chevron-down">
+                        <flux:button variant="outline" icon="building-office-2" icon-trailing="chevron-down" class="w-full sm:w-auto justify-between">
                             {{ $filtroSucursalEntradas ? $sucursales->firstWhere('id', $filtroSucursalEntradas)?->nombre : 'Sucursales' }}
                         </flux:button>
 
@@ -135,7 +159,7 @@
 
                     {{-- Filtro de Período --}}
                     <flux:dropdown>
-                        <flux:button variant="outline" icon="calendar" icon-trailing="chevron-down">
+                        <flux:button variant="outline" icon="calendar" icon-trailing="chevron-down" class="w-full sm:w-auto justify-between">
                             {{ match($filtroFechaEntradas) {
                                 'hoy' => 'Hoy',
                                 'ayer' => 'Ayer',
@@ -223,8 +247,9 @@
                                 <flux:badge 
                                     :color="match($entrada->motivo) {
                                         'COMPRA' => 'green',
-                                        'DEVOLUCIÓN' => 'blue',
-                                        'AJUSTE' => 'amber',
+                                        'DEVOLUCION' => 'blue',
+                                        'AJUSTE_INVENTARIO' => 'amber',
+                                        'OTRO' => 'zinc',
                                         default => 'zinc'
                                     }"
                                     size="sm"

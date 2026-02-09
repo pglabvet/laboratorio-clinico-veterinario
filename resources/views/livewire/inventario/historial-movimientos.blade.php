@@ -206,7 +206,20 @@
                                 </span>
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
-                                <flux:badge color="zinc" size="sm">
+                                <flux:badge 
+                                    :color="match($movimiento->motivo) {
+                                        'COMPRA' => 'green',
+                                        'DEVOLUCION' => 'blue',
+                                        'AJUSTE_INVENTARIO' => 'amber',
+                                        'MERMA' => 'red',
+                                        'VENCIMIENTO' => 'red',
+                                        'USO_EXTRAORDINARIO' => 'orange',
+                                        'CONSUMO_ANALISIS' => 'sky',
+                                        'OTRO' => 'zinc',
+                                        default => 'zinc'
+                                    }"
+                                    size="sm"
+                                >
                                     {{ $motivos[$movimiento->motivo] ?? $movimiento->motivo }}
                                 </flux:badge>
                             </td>
