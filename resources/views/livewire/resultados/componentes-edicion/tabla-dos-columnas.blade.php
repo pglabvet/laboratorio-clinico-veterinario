@@ -16,7 +16,9 @@
     }
 @endphp
 
-<div x-data="{
+<div 
+    wire:ignore
+    x-data="{
     datosExistentes: @js($componentesData[$index]['data'] ?? []),
     datos: @js($todosCampos),
     init() {
@@ -37,10 +39,17 @@
         
         // Escuchar evento de guardado para forzar sincronización
         window.addEventListener('antes-de-guardar', () => {
-            this.enviarDatos();
+            this.sincronizarConLivewire();
+        });
+        
+        // Sincronizar antes de cualquier acción de Livewire (como hace campos-etiquetados)
+        window.addEventListener('livewire:initialized', () => {
+            Livewire.hook('morph.updating', () => {
+                this.sincronizarConLivewire();
+            });
         });
     },
-    enviarDatos() {
+    sincronizarConLivewire() {
         $wire.set('componentesData.{{ $index }}.data', Object.values(this.datos));
     }
 }"
@@ -77,7 +86,8 @@ class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:
                             <input 
                                 type="text"
                                 x-model="datos['{{ $loop->parent->index }}_{{ $campoIndex }}'].valor"
-                                @blur="enviarDatos()"
+                                @change="sincronizarConLivewire()"
+                                @blur="sincronizarConLivewire()"
                                 placeholder="Completar..."
                                 class="w-full px-2 py-1 border-0 focus:ring-2 focus:ring-blue-500 rounded bg-transparent text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500"
                             />

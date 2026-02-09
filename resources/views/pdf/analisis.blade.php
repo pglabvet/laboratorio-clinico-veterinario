@@ -236,10 +236,29 @@
     }
 
     .text-content {
-      padding: 10px;
+      padding: 5px;
+      margin: 0;
       background-color: transparent;
       border: none;
-      white-space: pre-wrap;
+      white-space: normal;
+    }
+
+
+
+    .text-content strong, .text-content b {
+      font-weight: bold;
+    }
+
+    .text-content em, .text-content i {
+      font-style: italic;
+    }
+
+    .text-content u {
+      text-decoration: underline;
+    }
+
+    .text-content s {
+      text-decoration: line-through;
     }
 
     /* Imágenes lado a lado */

@@ -12,9 +12,11 @@ use App\Models\InventarioSucursal;
 use App\Models\TokenDescarga;
 use App\Models\Pdf;
 use App\Services\AnalisisPdfService;
+use App\Mail\ResultadosAnalisisMail;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class GestionarMuestras extends Component
 {
@@ -231,7 +233,7 @@ class GestionarMuestras extends Component
 
             // Obtener o generar el PDF
             $pdf = $analisis->pdfs()->latest()->first();
-            
+
             if (!$pdf) {
                 // Generar PDF automáticamente
                 $pdfService = app(AnalisisPdfService::class);
@@ -262,17 +264,16 @@ class GestionarMuestras extends Component
             }
 
             session()->flash('mensaje', 'Enlace de WhatsApp generado. El análisis ha sido marcado como enviado.');
-
         } catch (\Exception $e) {
             // Registrar el error para poder investigarlo
-            \Log::error('Error al generar enlace de WhatsApp para análisis '.$analisisId.': '.$e->getMessage(), [
+            \Log::error('Error al generar enlace de WhatsApp para análisis ' . $analisisId . ': ' . $e->getMessage(), [
                 'exception' => $e,
             ]);
 
             // Informar claramente al usuario que el análisis no fue marcado como enviado
             session()->flash(
                 'error',
-                'No se pudo generar el enlace de WhatsApp. El análisis no ha sido marcado como enviado. Detalle técnico: '.$e->getMessage()
+                'No se pudo generar el enlace de WhatsApp. El análisis no ha sido marcado como enviado. Detalle técnico: ' . $e->getMessage()
             );
         }
     }
@@ -327,7 +328,7 @@ class GestionarMuestras extends Component
             foreach ($analisisCollection as $analisis) {
                 // Obtener o generar el PDF
                 $pdf = $analisis->pdfs()->latest()->first();
-                
+
                 if (!$pdf) {
                     $resultado = $pdfService->generar($analisis);
                     $pdf = $resultado['modelo'];
@@ -335,7 +336,7 @@ class GestionarMuestras extends Component
 
                 // Crear token de descarga (3 días)
                 $tokenDescarga = TokenDescarga::crearParaPdf($pdf->id, 3);
-                
+
                 $linksDescarga[] = [
                     'nombre' => $analisis->tipoAnalisis->nombre ?? 'Análisis',
                     'url' => $tokenDescarga->getUrlDescarga(),
@@ -359,9 +360,161 @@ class GestionarMuestras extends Component
             $this->dispatch('abrir-whatsapp', url: $urlWhatsApp);
 
             session()->flash('mensaje', 'Enlace de WhatsApp generado. Todos los análisis han sido marcados como enviados.');
-
         } catch (\Exception $e) {
             session()->flash('error', 'Error al generar enlaces: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Enviar resultado de un análisis individual por Email
+     */
+    public function enviarEmail($analisisId)
+    {
+        try {
+            $analisis = Analisis::with([
+                'tipoAnalisis',
+                'muestra.veterinaria',
+                'muestra.sucursal',
+                'muestra.especie',
+                'pdfs'
+            ])->find($analisisId);
+
+            if (!$analisis) {
+                session()->flash('error', 'Análisis no encontrado.');
+                return;
+            }
+
+            // Validar que esté aprobado o enviado
+            $estadosValidos = [Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO];
+            if (!in_array($analisis->estado, $estadosValidos)) {
+                session()->flash('error', 'Solo se pueden enviar análisis aprobados o ya enviados. Estado actual: ' . $analisis->estado);
+                return;
+            }
+
+            // Verificar email de la veterinaria
+            $email = $analisis->muestra->veterinaria->email ?? null;
+            if (!$email) {
+                session()->flash('error', 'La veterinaria no tiene un correo electrónico registrado.');
+                return;
+            }
+
+            // Obtener o generar el PDF
+            $pdf = $analisis->pdfs()->latest()->first();
+            if (!$pdf) {
+                $pdfService = app(AnalisisPdfService::class);
+                $resultado = $pdfService->generar($analisis);
+                $pdf = $resultado['modelo'];
+            }
+
+            // Cargar muestra con relaciones necesarias
+            $muestra = $analisis->muestra->load(['veterinaria', 'sucursal', 'especie']);
+
+            // Enviar email con PDF adjunto
+            Mail::to($email)->send(
+                new ResultadosAnalisisMail($muestra, [$analisis->id], true)
+            );
+
+            // Cambiar estado a Enviado
+            $analisis->update(['estado' => Analisis::ESTADO_ENVIADO]);
+
+            // Actualizar el modal si está abierto
+            if ($this->muestraAnalisis) {
+                $this->muestraAnalisis->load('analisis.tipoAnalisis');
+            }
+
+            session()->flash('mensaje', 'Resultados enviados por correo electrónico a ' . $email);
+        } catch (\Exception $e) {
+            \Log::error('Error al enviar email para análisis ' . $analisisId . ': ' . $e->getMessage(), [
+                'exception' => $e,
+            ]);
+
+            session()->flash(
+                'error',
+                'No se pudo enviar el correo electrónico. Detalle: ' . $e->getMessage()
+            );
+        }
+    }
+
+    /**
+     * Enviar todos los análisis de la muestra por Email
+     */
+    public function enviarTodoEmail()
+    {
+        if (!$this->muestraAnalisis) {
+            session()->flash('error', 'No hay muestra seleccionada.');
+            return;
+        }
+
+        try {
+            $this->muestraAnalisis->load([
+                'veterinaria',
+                'especie',
+                'sucursal',
+                'analisis.tipoAnalisis',
+                'analisis.pdfs'
+            ]);
+
+            $analisisCollection = $this->muestraAnalisis->analisis;
+
+            // Validar que todos estén aprobados o enviados
+            $estadosValidos = [Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO];
+            $noValidos = $analisisCollection->filter(function ($analisis) use ($estadosValidos) {
+                return !in_array($analisis->estado, $estadosValidos);
+            });
+
+            if ($noValidos->count() > 0) {
+                $nombresNoValidos = $noValidos->map(fn($a) => ($a->tipoAnalisis->nombre ?? 'Sin nombre') . ' (' . $a->estado . ')')->implode(', ');
+                session()->flash('error', 'Todos los análisis deben estar aprobados o enviados. Pendientes: ' . $nombresNoValidos);
+                return;
+            }
+
+            if ($analisisCollection->isEmpty()) {
+                session()->flash('error', 'No hay análisis para enviar.');
+                return;
+            }
+
+            // Verificar email de la veterinaria
+            $email = $this->muestraAnalisis->veterinaria->email ?? null;
+            if (!$email) {
+                session()->flash('error', 'La veterinaria no tiene un correo electrónico registrado.');
+                return;
+            }
+
+            $pdfService = app(AnalisisPdfService::class);
+            $analisisIds = [];
+
+            foreach ($analisisCollection as $analisis) {
+                // Obtener o generar el PDF
+                $pdf = $analisis->pdfs()->latest()->first();
+                if (!$pdf) {
+                    $resultado = $pdfService->generar($analisis);
+                    $pdf = $resultado['modelo'];
+                }
+
+                $analisisIds[] = $analisis->id;
+
+                // Cambiar estado a Enviado
+                $analisis->update(['estado' => Analisis::ESTADO_ENVIADO]);
+            }
+
+            // Enviar email con todos los PDFs adjuntos
+            Mail::to($email)->send(
+                new ResultadosAnalisisMail($this->muestraAnalisis, $analisisIds, true)
+            );
+
+            // Actualizar el modal
+            $this->muestraAnalisis->load('analisis.tipoAnalisis');
+
+            // Cerrar modal después de envío exitoso
+            $this->cerrarModalAnalisis();
+
+            session()->flash('mensaje', 'Todos los resultados fueron enviados por correo electrónico a ' . $email);
+        } catch (\Exception $e) {
+            \Log::error('Error al enviar todos los análisis por email: ' . $e->getMessage(), [
+                'exception' => $e,
+            ]);
+
+            session()->flash('error', 'Error al enviar los resultados por correo: ' . $e->getMessage());
         }
     }
 
@@ -382,16 +535,16 @@ class GestionarMuestras extends Component
     {
         $muestra = $analisis->muestra;
         $sucursal = $muestra->sucursal->nombre ?? 'N/A';
-        
+
         return "*LABORATORIO CLINICO VETERINARIO*\n" .
-               "*Sucursal:* {$sucursal}\n\n" .
-               "*Codigo:* {$muestra->codigo_muestra}\n" .
-               "*Paciente:* {$muestra->paciente_nombre}\n" .
-               "*Propietario:* {$muestra->propietario_nombre}\n" .
-               "*Analisis:* " . ($analisis->tipoAnalisis->nombre ?? 'N/A') . "\n\n" .
-               "Descarga tu resultado aqui (valido por 3 dias):\n" .
-               "{$urlDescarga}\n\n" .
-               "_Gracias por confiar en nosotros._";
+            "*Sucursal:* {$sucursal}\n\n" .
+            "*Codigo:* {$muestra->codigo_muestra}\n" .
+            "*Paciente:* {$muestra->paciente_nombre}\n" .
+            "*Propietario:* {$muestra->propietario_nombre}\n" .
+            "*Analisis:* " . ($analisis->tipoAnalisis->nombre ?? 'N/A') . "\n\n" .
+            "Descarga tu resultado aqui _(valido por 3 dias)_:\n" .
+            $urlDescarga . "\n\n" .
+            "_Gracias por confiar en nosotros._";
     }
 
     /**
@@ -400,13 +553,13 @@ class GestionarMuestras extends Component
     private function construirMensajeWhatsAppMultiple(Muestra $muestra, array $linksDescarga): string
     {
         $sucursal = $muestra->sucursal->nombre ?? 'N/A';
-        
+
         $mensaje = "*LABORATORIO CLINICO VETERINARIO*\n" .
-                   "*Sucursal:* {$sucursal}\n\n" .
-                   "*Codigo:* {$muestra->codigo_muestra}\n" .
-                   "*Paciente:* {$muestra->paciente_nombre}\n" .
-                   "*Propietario:* {$muestra->propietario_nombre}\n\n" .
-                   "*Resultados disponibles (validos por 3 dias):*\n\n";
+            "*Sucursal:* {$sucursal}\n\n" .
+            "*Codigo:* {$muestra->codigo_muestra}\n" .
+            "*Paciente:* {$muestra->paciente_nombre}\n" .
+            "*Propietario:* {$muestra->propietario_nombre}\n\n" .
+            "*Resultados disponibles (validos por 3 dias):*\n\n";
 
         foreach ($linksDescarga as $index => $link) {
             $numero = $index + 1;
@@ -427,12 +580,12 @@ class GestionarMuestras extends Component
 
         try {
             DB::beginTransaction();
-            
+
             // UC-B05: Validar stock antes de crear análisis
             if (!$this->modoEdicion) {
                 $this->validarStockDisponible();
             }
-            
+
             if ($this->modoEdicion) {
                 $muestra = Muestra::findOrFail($this->muestra_id);
                 $muestra->update([
@@ -454,7 +607,7 @@ class GestionarMuestras extends Component
             } else {
                 // Generar código único de muestra
                 $this->codigo_muestra = $this->generarCodigoMuestra();
-                
+
                 $muestra = Muestra::create([
                     'codigo_muestra' => $this->codigo_muestra,
                     'paciente_nombre' => $this->paciente_nombre,
@@ -514,7 +667,7 @@ class GestionarMuestras extends Component
 
         foreach ($tiposAnalisis as $tipoAnalisis) {
             $plantilla = $tipoAnalisis->plantillas()->where('activo', true)->first();
-            
+
             if (!$plantilla || $plantilla->insumos->isEmpty()) {
                 continue; // Sin insumos configurados, no validar
             }
@@ -542,18 +695,19 @@ class GestionarMuestras extends Component
         // Bloquear si hay stock en cero o insuficiente
         if (!empty($insumosConStockCero)) {
             throw new \Exception(
-                "❌ No se puede crear el análisis. Los siguientes insumos tienen stock insuficiente: " . 
-                implode(', ', $insumosConStockCero) . 
-                ". Por favor, registre una entrada de inventario antes de continuar."
+                "❌ No se puede crear el análisis. Los siguientes insumos tienen stock insuficiente: " .
+                    implode(', ', $insumosConStockCero) .
+                    ". Por favor, registre una entrada de inventario antes de continuar."
             );
         }
 
         // Advertir si hay stock bajo (pero permitir continuar)
         if (!empty($insumosConStockBajo)) {
-            session()->flash('warning', 
-                '⚠️ ADVERTENCIA: Los siguientes insumos tienen stock bajo: ' . 
-                implode(', ', $insumosConStockBajo) . 
-                '. Se recomienda reabastecer pronto.'
+            session()->flash(
+                'warning',
+                '⚠️ ADVERTENCIA: Los siguientes insumos tienen stock bajo: ' .
+                    implode(', ', $insumosConStockBajo) .
+                    '. Se recomienda reabastecer pronto.'
             );
         }
     }
@@ -572,40 +726,40 @@ class GestionarMuestras extends Component
             throw new \Exception('Sucursal no encontrada');
         }
         $prefijo = $sucursal->getPrefijo();
-        
+
         // Obtener el último código de muestra de esta sucursal
         $ultimaMuestra = Muestra::where('sucursal_id', $this->sucursal_id)
             ->orderBy('id', 'desc')
             ->first();
-        
+
         if (!$ultimaMuestra) {
             // Primera muestra de esta sucursal
             return $prefijo . '-AA0001';
         }
-        
+
         // Extraer las partes del último código
         $ultimoCodigo = $ultimaMuestra->codigo_muestra;
-        
+
         // Si no sigue el formato PREFIJO-AA0000, empezar desde AA0001
         if (!preg_match('/^[A-Z]{1,2}-([A-Z]{2})(\d{4})$/', $ultimoCodigo, $matches)) {
             return $prefijo . '-AA0001';
         }
-        
+
         $letras = $matches[1];
         $numero = (int)$matches[2];
-        
+
         // Incrementar el número
         $numero++;
-        
+
         // Si el número excede 9999, incrementar las letras
         if ($numero > 9999) {
             $numero = 1;
             $letras = $this->incrementarLetras($letras);
         }
-        
+
         return $prefijo . '-' . $letras . str_pad($numero, 4, '0', STR_PAD_LEFT);
     }
-    
+
     /**
      * Incrementar las letras del código (AA -> AB -> AC ... -> AZ -> BA -> BB ... -> ZZ)
      */
@@ -613,7 +767,7 @@ class GestionarMuestras extends Component
     {
         $letra1 = $letras[0];
         $letra2 = $letras[1];
-        
+
         // Incrementar segunda letra
         if ($letra2 === 'Z') {
             $letra2 = 'A';
@@ -627,7 +781,7 @@ class GestionarMuestras extends Component
         } else {
             $letra2 = chr(ord($letra2) + 1);
         }
-        
+
         return $letra1 . $letra2;
     }
 
@@ -660,7 +814,7 @@ class GestionarMuestras extends Component
             }
 
             $muestra = Muestra::findOrFail($this->muestraAEliminar);
-            
+
             // Verificar si tiene análisis en proceso o completados
             if ($muestra->analisis()->whereIn('estado', ['En revision', 'Aprobado', 'Enviado'])->count() > 0) {
                 session()->flash('error', 'No se puede eliminar la muestra porque tiene análisis en revisión, aprobados o enviados.');
@@ -671,10 +825,10 @@ class GestionarMuestras extends Component
 
             // Eliminar análisis pendientes
             $muestra->analisis()->where('estado', 'Pendiente')->delete();
-            
+
             $muestra->delete();
             session()->flash('mensaje', 'Muestra eliminada exitosamente.');
-            
+
             $this->modalEliminar = false;
             $this->muestraAEliminar = null;
         } catch (\Exception $e) {

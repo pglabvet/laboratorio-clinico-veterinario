@@ -99,9 +99,77 @@
                                 {{ $filtroPeriodo ?: 'Período' }}
                             </flux:button>
 
-                            <flux:menu>
-                                <flux:menu.item wire:click="filtrarHoy" icon="sun">
-                                    Hoy
+                        <flux:menu>
+                            <flux:menu.item wire:click="filtrarHoy" icon="sun">
+                                Hoy
+                            </flux:menu.item>
+                            <flux:menu.item wire:click="filtrarAyer" icon="arrow-uturn-left">
+                                Ayer
+                            </flux:menu.item>
+                            <flux:menu.item wire:click="filtrarUltimos7Dias" icon="calendar">
+                                Últimos 7 días
+                            </flux:menu.item>
+                            <flux:menu.separator />
+                            <flux:menu.item wire:click="filtrarEstaSemana" icon="calendar-days">
+                                Esta semana
+                            </flux:menu.item>
+                            <flux:menu.item wire:click="filtrarEsteMes" icon="calendar-days">
+                                Este mes
+                            </flux:menu.item>
+                            <flux:menu.item wire:click="filtrarAnioActual" icon="calendar-days">
+                                Año actual
+                            </flux:menu.item>
+                        </flux:menu>
+                    </flux:dropdown>
+                </div>
+            </div>
+
+            {{-- Fila 2: Filtros por categorías --}}
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-end">
+                {{-- Filtro por estado --}}
+                <div class="w-full sm:w-auto">
+                    <flux:dropdown>
+                        <flux:button variant="outline" icon="funnel" icon-trailing="chevron-down">
+                            {{ $filtroEstado ?: 'Estado' }}
+                        </flux:button>
+
+                        <flux:menu>
+                            <flux:menu.item wire:click="$set('filtroEstado', '')" icon="bars-3">
+                                Todos los estados
+                            </flux:menu.item>
+                            <flux:menu.separator />
+                            <flux:menu.item wire:click="$set('filtroEstado', 'Pendiente')" icon="clock">
+                                Pendiente
+                            </flux:menu.item>
+                            <flux:menu.item wire:click="$set('filtroEstado', 'En proceso')" icon="arrow-path">
+                                En proceso
+                            </flux:menu.item>
+                            <flux:menu.item wire:click="$set('filtroEstado', 'Completado')" icon="check-circle">
+                                Completado
+                            </flux:menu.item>
+                            <flux:menu.item wire:click="$set('filtroEstado', 'Enviado')" icon="paper-airplane">
+                                Enviado
+                            </flux:menu.item>
+                        </flux:menu>
+                    </flux:dropdown>
+                </div>
+
+                {{-- Filtro por especie --}}
+                <div class="w-full sm:w-auto">
+                    <flux:dropdown>
+                        <flux:button variant="outline" icon="heart" icon-trailing="chevron-down">
+                            {{ $filtroEspecie ? $especies->firstWhere('id', $filtroEspecie)?->nombre : 'Especie' }}
+                        </flux:button>
+
+                        <flux:menu>
+                            <flux:menu.item wire:click="$set('filtroEspecie', '')" icon="bars-3">
+                                Todas las especies
+                            </flux:menu.item>
+                            <flux:menu.separator />
+                            @foreach($especies as $especie)
+                                <flux:menu.item wire:click="$set('filtroEspecie', '{{ $especie->id }}')" icon="heart">
+                                    {{ $especie->nombre }}
+>>>>>>> origin/develop
                                 </flux:menu.item>
                                 <flux:menu.item wire:click="filtrarAyer" icon="arrow-uturn-left">
                                     Ayer
@@ -881,15 +949,26 @@
                                         </flux:badge>
                                     </td>
                                     <td class="whitespace-nowrap px-4 py-3 text-sm">
-                                        <flux:button
-                                            wire:click="enviarWhatsApp({{ $analisis->id }})"
-                                            variant="ghost"           
-                                            icon="paper-airplane"
-                                            title="{{ $analisis->puedeSerEnviado() ? 'Enviar por WhatsApp' : 'Solo se pueden enviar análisis aprobados' }}"
-                                            :disabled="!$analisis->puedeSerEnviado()"
-                                        >
-                                            Enviar
-                                        </flux:button>
+                                        <div class="flex items-center gap-1">
+                                            <flux:button
+                                                wire:click="enviarWhatsApp({{ $analisis->id }})"
+                                                variant="ghost"           
+                                                icon="device-phone-mobile"
+                                                title="{{ $analisis->puedeSerEnviado() ? 'Enviar por WhatsApp' : 'Solo se pueden enviar análisis aprobados' }}"
+                                                :disabled="!$analisis->puedeSerEnviado()"
+                                            >
+                                                WhatsApp
+                                            </flux:button>
+                                            <flux:button
+                                                wire:click="enviarEmail({{ $analisis->id }})"
+                                                variant="ghost"
+                                                icon="envelope"
+                                                title="{{ $analisis->puedeSerEnviado() ? 'Enviar por Email' : 'Solo se pueden enviar análisis aprobados' }}"
+                                                :disabled="!$analisis->puedeSerEnviado()"
+                                            >
+                                                Email
+                                            </flux:button>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
@@ -926,9 +1005,19 @@
                         variant="primary"
                         icon="paper-airplane"
                         :disabled="!$muestraAnalisis->puedeEnviarTodosAnalisis()"
-                        title="{{ $muestraAnalisis->puedeEnviarTodosAnalisis() ? 'Enviar todos los análisis' : 'Todos los análisis deben estar aprobados' }}"
+                        title="{{ $muestraAnalisis->puedeEnviarTodosAnalisis() ? 'Enviar todos por WhatsApp' : 'Todos los análisis deben estar aprobados' }}"
                     >
                         Enviar todo
+                    </flux:button>
+                    <flux:button 
+                        type="button"
+                        wire:click="enviarTodoEmail"
+                        variant="primary"
+                        icon="envelope"
+                        :disabled="!$muestraAnalisis->puedeEnviarTodosAnalisis()"
+                        title="{{ $muestraAnalisis->puedeEnviarTodosAnalisis() ? 'Enviar todos por Email' : 'Todos los análisis deben estar aprobados' }}"
+                    >
+                        Enviar todo por Email
                     </flux:button>
                     <flux:button 
                         type="button"
