@@ -9,9 +9,10 @@
         <div class="flex items-center gap-4 mb-2">
             <flux:button 
                 wire:click="cancelar"
-                variant="ghost"
+                variant="outline"
                 icon="arrow-left"
                 size="sm"
+                class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950"
             >
                 Volver
             </flux:button>
@@ -303,6 +304,9 @@
                                                         <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd" />
                                                     </svg>
                                                     {{ $analisis['plantilla_nombre'] }}
+                                                    @if(isset($analisis['plantilla_version']) && $analisis['plantilla_version'] > 1)
+                                                        <span class="ml-1 text-xs font-semibold text-blue-600 dark:text-blue-400">v{{ $analisis['plantilla_version'] }}</span>
+                                                    @endif
                                                 </span>
                                             </div>
                                         </div>
@@ -339,7 +343,8 @@
                 <flux:button 
                     wire:click="cancelar"
                     type="button"
-                    variant="ghost"
+                    variant="outline"
+                    class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950"
                 >
                     Cancelar
                 </flux:button>

@@ -150,8 +150,9 @@
             <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-zinc-700">
                 <flux:button 
                     wire:click="cancelar" 
-                    variant="ghost" 
-                    icon="arrow-left">
+                    variant="outline" 
+                    icon="arrow-left"
+                    class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950">
                     {{ $modoRevision ? 'Volver' : 'Cancelar' }}
                 </flux:button>
                 
@@ -248,7 +249,8 @@
                 <div class="flex gap-3 justify-end">
                     <flux:button 
                         wire:click="$set('mostrarModalRechazo', false)" 
-                        variant="ghost">
+                        variant="outline"
+                        class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950">
                         Cancelar
                     </flux:button>
                     <flux:button 

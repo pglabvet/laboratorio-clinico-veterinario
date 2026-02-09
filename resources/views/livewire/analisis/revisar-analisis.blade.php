@@ -388,7 +388,8 @@
                 <flux:button 
                     type="button"
                     wire:click="cancelarAprobar"
-                    variant="ghost"
+                    variant="outline"
+                    class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950"
                 >
                     Cancelar
                 </flux:button>
@@ -439,7 +440,8 @@
                 <flux:button 
                     type="button"
                     wire:click="cancelarRechazar"
-                    variant="ghost"
+                    variant="outline"
+                    class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950"
                 >
                     Cancelar
                 </flux:button>

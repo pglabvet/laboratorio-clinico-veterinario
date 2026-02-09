@@ -162,14 +162,20 @@ class FormularioMuestra extends Component
     public function agregarAnalisis()
     {
         if (!$this->tipoAnalisisTemp || !$this->plantillaSeleccionadaTemp) {
-            $this->dispatch('error', message: 'Debe seleccionar un tipo de análisis y una plantilla.');
+            session()->flash('error', 'Debe seleccionar un tipo de análisis y una plantilla.');
             return;
         }
 
         // Verificar que no esté duplicado
         foreach ($this->analisisSeleccionados as $analisis) {
             if ($analisis['plantilla_id'] == $this->plantillaSeleccionadaTemp) {
-                $this->dispatch('error', message: 'Esta plantilla ya fue agregada.');
+                $plantilla = PlantillaFormulario::find($this->plantillaSeleccionadaTemp);
+                $mensajeError = 'La plantilla "' . ($plantilla->nombre ?? 'seleccionada') . '"';
+                if ($plantilla && $plantilla->version > 1) {
+                    $mensajeError .= ' (v' . $plantilla->version . ')';
+                }
+                $mensajeError .= ' ya fue agregada a este análisis.';
+                session()->flash('error', $mensajeError);
                 return;
             }
         }
@@ -178,7 +184,7 @@ class FormularioMuestra extends Component
         $plantilla = PlantillaFormulario::find($this->plantillaSeleccionadaTemp);
 
         if (!$tipoAnalisis || !$plantilla) {
-            $this->dispatch('error', message: 'Error al cargar los datos seleccionados.');
+            session()->flash('error', 'Error al cargar los datos seleccionados.');
             return;
         }
 

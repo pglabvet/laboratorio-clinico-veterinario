@@ -4,9 +4,10 @@
         <div class="flex items-center gap-4 mb-2">
             <flux:button 
                 wire:click="cancelar"
-                variant="ghost"
+                variant="outline"
                 icon="arrow-left"
                 size="sm"
+                class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950"
             >
                 Volver
             </flux:button>
@@ -370,7 +371,8 @@
                 </flux:button>
                 <flux:button 
                     wire:click="cerrarConfirmacion"
-                    variant="ghost"
+                    variant="outline"
+                    class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950"
                 >
                     Cancelar
                 </flux:button>
