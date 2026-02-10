@@ -41,7 +41,8 @@ class RolesAndPermissionsSeeder extends Seeder
             // Acciones rápidas (botones del dashboard)
             'ver-acciones-rapidas',               // Mostrar la sección completa de "Acciones Rápidas"
             'registrar-muestras',                 // Botón "Registrar Nueva Muestra"
-            'escanear-muestras',                  // Botón "Escanear Código"
+            'escanear-muestras',                  // Acceso a página "Escanear Muestra" (sidebar + ruta)
+            'ver-escanear-dashboard',             // Card "Escanear Código" en el dashboard (acciones rápidas)
             
             // ========================================
             // MÓDULOS - PERMISOS DE GESTIÓN
@@ -166,9 +167,11 @@ class RolesAndPermissionsSeeder extends Seeder
             Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
         }
 
-        // Crear rol de Administrador con todos los permisos
+        // Crear rol de Administrador con todos los permisos EXCEPTO ver-escanear-dashboard
         $adminRole = Role::firstOrCreate(['name' => 'Administrador', 'guard_name' => 'web']);
-        $adminRole->syncPermissions(Permission::all());
+        $adminRole->syncPermissions(
+            Permission::where('name', '!=', 'ver-escanear-dashboard')->get()
+        );
 
         // Crear rol de Veterinario con permisos limitados
         // Dashboard: Ve estadísticas, puede registrar y escanear muestras
@@ -180,6 +183,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'ver-acciones-rapidas',
             'registrar-muestras',
             'escanear-muestras',
+            'ver-escanear-dashboard',
             // Módulos
             'ver-veterinarias',
             'ver-especies',
@@ -228,6 +232,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'ver-alertas-inventario',
             'ver-acciones-rapidas',
             'escanear-muestras',
+            'ver-escanear-dashboard',
             // Módulos
             'ver-especies',
             'ver-tipos-analisis',
@@ -271,6 +276,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'ver-acciones-rapidas',
             'registrar-muestras',
             'escanear-muestras',
+            'ver-escanear-dashboard',
             // Módulos
             'ver-especies',
             'ver-tipos-analisis',

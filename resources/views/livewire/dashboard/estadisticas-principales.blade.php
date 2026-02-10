@@ -1,6 +1,6 @@
 <div class="grid gap-4 {{ auth()->user()->can('ver-estadisticas-completas') ? 'lg:grid-cols-4 md:grid-cols-2' : 'lg:grid-cols-2 md:grid-cols-1' }}">
     {{-- Muestras Pendientes --}}
-    <a href="{{ route('muestras.index') }}" class="group block rounded-xl border border-zinc-200 bg-white p-6 transition-all hover:border-yellow-300 hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-yellow-700">
+    <a href="{{ route('muestras.index') }}" wire:navigate class="group block rounded-xl border border-zinc-200 bg-white p-6 transition-all hover:border-yellow-300 hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-yellow-700">
         <div class="flex items-start justify-between">
             <div class="flex-1">
                 <flux:heading size="sm" class="text-zinc-600 dark:text-zinc-400 font-medium">
@@ -24,7 +24,7 @@
     </a>
 
     {{-- Análisis Pendientes --}}
-    <div class="group block rounded-xl border border-zinc-200 bg-white p-6 transition-all hover:border-blue-300 hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-blue-700">
+    <a href="{{ route('analisis.revisar') }}" wire:navigate class="group block rounded-xl border border-zinc-200 bg-white p-6 transition-all hover:border-blue-300 hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-blue-700">
         <div class="flex items-start justify-between">
             <div class="flex-1">
                 <flux:heading size="sm" class="text-zinc-600 dark:text-zinc-400 font-medium">
@@ -45,11 +45,41 @@
                 </svg>
             </div>
         </div>
-    </div>
+    </a>
 
     @can('ver-estadisticas-completas')
+    {{-- Análisis por Revisar --}}
+    @can('ver-analisis')
+    <a href="{{ route('analisis.revisar') }}" wire:navigate class="group block rounded-xl border border-zinc-200 bg-white p-6 transition-all hover:border-pink-300 hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-pink-700">
+        <div class="flex items-start justify-between">
+            <div class="flex-1">
+                <flux:heading size="sm" class="text-zinc-600 dark:text-zinc-400 font-medium">
+                    Análisis por Revisar
+                </flux:heading>
+                <div class="mt-2 flex items-baseline gap-2">
+                    <flux:heading size="xl" class="text-3xl font-bold text-zinc-900 dark:text-white">
+                        {{ $analisisEnRevision }}
+                    </flux:heading>
+                </div>
+                <flux:subheading class="mt-1 text-xs">
+                    @if($analisisEnRevision > 0)
+                        <span class="text-pink-600 dark:text-pink-400">Esperando revisión</span>
+                    @else
+                        <span class="text-pink-600 dark:text-pink-400">Todo revisado</span>
+                    @endif
+                </flux:subheading>
+            </div>
+            <div class="rounded-lg bg-pink-100 p-3 transition-transform group-hover:scale-110 dark:bg-pink-900/20">
+                <svg class="size-6 text-pink-600 dark:text-pink-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0 1 18 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3 1.5 1.5 3-3.75" />
+                </svg>
+            </div>
+        </div>
+    </a>
+    @endcan
+
     {{-- Muestras del Día --}}
-    <a href="{{ route('muestras.index') }}" class="group block rounded-xl border border-zinc-200 bg-white p-6 transition-all hover:border-teal-300 hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-teal-700">
+    <a href="{{ route('muestras.index') }}" wire:navigate class="group block rounded-xl border border-zinc-200 bg-white p-6 transition-all hover:border-teal-300 hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-teal-700">
         <div class="flex items-start justify-between">
             <div class="flex-1">
                 <flux:heading size="sm" class="text-zinc-600 dark:text-zinc-400 font-medium">
@@ -73,7 +103,7 @@
     </a>
 
     {{-- Usuarios --}}
-    <a href="{{ route('usuarios.index') }}" class="group block rounded-xl border border-zinc-200 bg-white p-6 transition-all hover:border-cyan-300 hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-cyan-700">
+    <a href="{{ route('usuarios.index') }}" wire:navigate class="group block rounded-xl border border-zinc-200 bg-white p-6 transition-all hover:border-cyan-300 hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-cyan-700">
         <div class="flex items-start justify-between">
             <div class="flex-1">
                 <flux:heading size="sm" class="text-zinc-600 dark:text-zinc-400 font-medium">
@@ -97,7 +127,7 @@
     </a>
 
     {{-- Sucursales --}}
-    <a href="{{ route('sucursales.index') }}" class="group block rounded-xl border border-zinc-200 bg-white p-6 transition-all hover:border-purple-300 hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-purple-700">
+    <a href="{{ route('sucursales.index') }}" wire:navigate class="group block rounded-xl border border-zinc-200 bg-white p-6 transition-all hover:border-purple-300 hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-purple-700">
         <div class="flex items-start justify-between">
             <div class="flex-1">
                 <flux:heading size="sm" class="text-zinc-600 dark:text-zinc-400 font-medium">
@@ -121,7 +151,7 @@
     </a>
 
     {{-- Veterinarias --}}
-    <a href="{{ route('veterinarias.index') }}" class="group block rounded-xl border border-zinc-200 bg-white p-6 transition-all hover:border-indigo-300 hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-indigo-700">
+    <a href="{{ route('veterinarias.index') }}" wire:navigate class="group block rounded-xl border border-zinc-200 bg-white p-6 transition-all hover:border-indigo-300 hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-indigo-700">
         <div class="flex items-start justify-between">
             <div class="flex-1">
                 <flux:heading size="sm" class="text-zinc-600 dark:text-zinc-400 font-medium">
@@ -147,7 +177,7 @@
 
     @can('ver-alertas-inventario')
     {{-- Alertas de Inventario --}}
-    <a href="{{ route('insumos.index') }}" class="group block rounded-xl border border-zinc-200 bg-white p-6 transition-all {{ $insumosStockBajo > 0 ? 'hover:border-amber-300 dark:hover:border-amber-700' : 'hover:border-green-300 dark:hover:border-green-700' }} hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+    <a href="{{ route('insumos.index') }}" wire:navigate class="group block rounded-xl border border-zinc-200 bg-white p-6 transition-all {{ $insumosStockBajo > 0 ? 'hover:border-amber-300 dark:hover:border-amber-700' : 'hover:border-green-300 dark:hover:border-green-700' }} hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
         <div class="flex items-start justify-between">
             <div class="flex-1">
                 <flux:heading size="sm" class="text-zinc-600 dark:text-zinc-400 font-medium">
