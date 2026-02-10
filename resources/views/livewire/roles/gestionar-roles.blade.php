@@ -268,6 +268,7 @@
                             'rechazar-analisis' => 'analisis',
                             'actualizar-datos-analisis' => 'analisis',
                             'descargar-pdf-analisis' => 'analisis',
+                            'guardar-borrador-resultados' => 'resultados',
                         ];
 
                         // Agrupar permisos por módulo/sección
