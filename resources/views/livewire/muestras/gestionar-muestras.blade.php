@@ -11,6 +11,7 @@
             <flux:subheading>Registra y administra las muestras del laboratorio</flux:subheading>
         </div>
         {{-- Botón crear --}}
+        @can('crear-muestras')
         <flux:button 
             wire:click="crear"
             icon="plus"
@@ -18,6 +19,7 @@
         >
             Registrar Muestra
         </flux:button>
+        @endcan
     </div>
 
     {{-- Bloque de filtros --}}
@@ -194,6 +196,7 @@
                     </div>
 
                     {{-- Filtro por sucursal --}}
+                    @can('filtro-de-sucursal-muestra')
                     <div class="w-full sm:w-auto">
                         <flux:dropdown>
                             <flux:button variant="outline" icon="building-storefront" icon-trailing="chevron-down">
@@ -213,6 +216,7 @@
                             </flux:menu>
                         </flux:dropdown>
                     </div>
+                    @endcan
 
                     {{-- Botón limpiar filtros --}}
                     <div class="w-full sm:w-auto">
@@ -309,6 +313,7 @@
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
                                 <div class="flex items-center gap-2">
                                     {{-- Botón ver análisis --}}
+                                    @can('enviar-resultados-muestra')
                                     <flux:button
                                         wire:click="verAnalisis({{ $muestra->id }})"
                                         variant="ghost"
@@ -316,8 +321,10 @@
                                         icon="envelope-open"
                                         title="Enviar resultados"
                                     />
+                                    @endcan
 
                                     {{-- Botón código de barras --}}
+                                    @can('ver-codigo-barras-muestra')
                                     <flux:button
                                         wire:click="verCodigoBarras({{ $muestra->id }})"
                                         variant="ghost"
@@ -325,8 +332,10 @@
                                         icon="qr-code"
                                         title="Ver código de barras"
                                     />
+                                    @endcan
 
                                     {{-- Botón ver --}}
+                                    @can('mostrar-detalle-muestra')
                                     <flux:button
                                         wire:click="ver({{ $muestra->id }})"
                                         variant="ghost"
@@ -334,8 +343,10 @@
                                         icon="eye"
                                         title="Ver detalles"
                                     />
+                                    @endcan
 
                                     {{-- Botón eliminar --}}
+                                    @can('eliminar-muestras')
                                     <flux:button
                                         wire:click="confirmarEliminar({{ $muestra->id }})"
                                         variant="ghost"
@@ -343,6 +354,7 @@
                                         icon="trash"
                                         title="Eliminar"
                                     />
+                                    @endcan
                                 </div>
                             </td>
                         </tr>

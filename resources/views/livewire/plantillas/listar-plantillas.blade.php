@@ -22,6 +22,7 @@
         </div>
 
         {{-- Botón crear --}}
+        @can('crear-plantillas')
         <flux:button 
             href="{{ route('plantillas.crear') }}"
             icon="plus"
@@ -29,6 +30,7 @@
         >
             Nueva Plantilla
         </flux:button>
+        @endcan
     </div>
 
     {{-- Tabla de plantillas --}}
@@ -102,6 +104,7 @@
                                 @endif
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
+                                @can('editar-plantillas')
                                 <button type="button" wire:click="toggleActivo({{ $plantilla->id }})" class="cursor-pointer group outline-none focus:outline-none">
                                     <div class="pointer-events-none">
                                         <flux:switch 
@@ -110,10 +113,14 @@
                                         />
                                     </div>
                                 </button>
+                                @else
+                                <flux:badge :color="$plantilla->activo ? 'green' : 'red'" size="sm">{{ $plantilla->activo ? 'Activa' : 'Inactiva' }}</flux:badge>
+                                @endcan
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
                                 <div class="flex items-center gap-2">
                                     {{-- Botón editar --}}
+                                    @can('editar-plantillas')
                                     <flux:button
                                         href="{{ route('plantillas.editar', $plantilla->id) }}"
                                         variant="ghost"
@@ -122,8 +129,10 @@
                                         color="neutral"
                                         title="Editar plantilla"
                                     />
+                                    @endcan
 
                                     {{-- Botón duplicar --}}
+                                    @can('duplicar-plantilla')
                                     <flux:button
                                         wire:click="duplicar({{ $plantilla->id }})"
                                         variant="ghost"
@@ -132,8 +141,10 @@
                                         color="neutral"
                                         title="Duplicar para crear nueva versión"
                                     />
+                                    @endcan
 
                                     {{-- Botón eliminar --}}
+                                    @can('eliminar-plantillas')
                                     <flux:button
                                         wire:click="confirmarEliminar({{ $plantilla->id }})"
                                         variant="ghost"
@@ -142,6 +153,7 @@
                                         color="neutral"
                                         title="Eliminar"
                                     />
+                                    @endcan
                                 </div>
                             </td>
                         </tr>

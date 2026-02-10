@@ -73,7 +73,7 @@ class GestionarTiposAnalisis extends Component
      */
     public function ver($id)
     {
-        $this->tipoAnalisisAVer = TipoAnalisis::with(['parametros', 'analisis', 'plantillas'])->findOrFail($id);
+        $this->tipoAnalisisAVer = TipoAnalisis::with(['analisis', 'plantillas'])->findOrFail($id);
         $this->modalVer = true;
     }
 

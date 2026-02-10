@@ -37,6 +37,7 @@
         </div>
 
         {{-- Botón crear --}}
+        @can('crear-veterinarias')
         <flux:button 
             wire:click="crear"
             icon="plus"
@@ -44,6 +45,7 @@
         >
             Nueva Veterinaria
         </flux:button>
+        @endcan
     </div>
 
     {{-- Tabla de veterinarias --}}
@@ -154,6 +156,7 @@
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
                                 <div class="flex items-center gap-2">
                                     {{-- Botón ver --}}
+                                    @can('mostrar-detalle-veterinaria')
                                     <flux:button
                                         wire:click="ver({{ $veterinaria->id }})"
                                         variant="ghost"
@@ -162,8 +165,10 @@
                                         color="neutral"
                                         title="Ver detalles"
                                     />
+                                    @endcan
 
                                     {{-- Botón editar --}}
+                                    @can('editar-veterinarias')
                                     <flux:button
                                         wire:click="editar({{ $veterinaria->id }})"
                                         variant="ghost"
@@ -172,8 +177,10 @@
                                         color="cyan"
                                         title="Editar"
                                     />
+                                    @endcan
 
                                     {{-- Botón eliminar --}}
+                                    @can('eliminar-veterinarias')
                                     <flux:button
                                         wire:click="confirmarEliminar({{ $veterinaria->id }})"
                                         variant="ghost"
@@ -182,6 +189,7 @@
                                         color="red"
                                         title="Eliminar"
                                     />
+                                    @endcan
                                 </div>
                             </td>
                         </tr>
@@ -299,12 +307,14 @@
                 >
                     Cancelar
                 </flux:button>
+                @can('guardar-veterinaria')
                 <flux:button 
                     type="submit"
                     variant="primary"
                 >
                     {{ $modoEdicion ? 'Actualizar' : 'Guardar' }}
                 </flux:button>
+                @endcan
             </div>
         </form>
     </flux:modal>

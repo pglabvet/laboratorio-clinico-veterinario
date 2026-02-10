@@ -22,6 +22,7 @@
         </div>
 
         {{-- Botón crear --}}
+        @can('crear-unidades-medida')
         <flux:button 
             wire:click="crear"
             icon="plus"
@@ -29,6 +30,7 @@
         >
             Nueva Unidad de Medida
         </flux:button>
+        @endcan
     </div>
 
     {{-- Tabla de unidades de medida --}}
@@ -94,6 +96,7 @@
                                 {{ $unidad->abreviatura }}
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
+                                @can('editar-unidades-medida')
                                 <button type="button" wire:click="confirmarCambiarEstado({{ $unidad->id }})" class="cursor-pointer group outline-none focus:outline-none">
                                     <div class="pointer-events-none">
                                         <flux:switch 
@@ -102,10 +105,14 @@
                                         />
                                     </div>
                                 </button>
+                                @else
+                                <flux:badge :color="$unidad->estado ? 'green' : 'red'" size="sm">{{ $unidad->estado ? 'Activa' : 'Inactiva' }}</flux:badge>
+                                @endcan
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
                                 <div class="flex items-center gap-2">
                                     {{-- Botón editar --}}
+                                    @can('editar-unidades-medida')
                                     <flux:button
                                         wire:click="editar({{ $unidad->id }})"
                                         variant="ghost"
@@ -114,8 +121,10 @@
                                         color="cyan"
                                         title="Editar"
                                     />
+                                    @endcan
                                     
                                     {{-- Botón eliminar --}}
+                                    @can('eliminar-unidades-medida')
                                     <flux:button
                                         wire:click="confirmarEliminar({{ $unidad->id }})"
                                         variant="ghost"
@@ -124,6 +133,7 @@
                                         color="red"
                                         title="Eliminar"
                                     />
+                                    @endcan
                                 </div>
                             </td>
                         </tr>
@@ -181,9 +191,11 @@
             <div class="flex gap-2">
                 <flux:spacer />
                 <flux:button type="button" wire:click="cerrarModal" variant="outline" class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950">Cancelar</flux:button>
+                @can('guardar-unidad-medida')
                 <flux:button type="submit" variant="primary">
                     {{ $modoEdicion ? 'Actualizar' : 'Guardar' }}
                 </flux:button>
+                @endcan
             </div>
         </form>
     </flux:modal>

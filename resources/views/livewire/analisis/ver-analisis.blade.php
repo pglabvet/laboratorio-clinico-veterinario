@@ -14,19 +14,25 @@
             
                 @if($analisis->estado === 'Aprobado')
                     {{-- Botón PDF para análisis aprobados --}}
+                    @can('descargar-pdf-analisis')
                     <flux:button href="{{ route('analisis.pdf', $analisis->id) }}" variant="primary" icon="document-arrow-down">
                         Descargar PDF
                     </flux:button>
+                    @endcan
                 @elseif($analisis->estado === 'En revision')
                     <flux:button href="{{ route('resultados.editar', $analisis->id) }}" variant="outline" icon="pencil">
                         Editar
                     </flux:button>
+                    @can('rechazar-analisis')
                     <flux:button wire:click="rechazar" wire:confirm="¿Rechazar este análisis?" variant="danger" icon="x-mark">
                         Rechazar
                     </flux:button>
+                    @endcan
+                    @can('aprobar-analisis')
                     <flux:button wire:click="aprobar" wire:confirm="¿Aprobar este análisis?" variant="primary" icon="check">
                         Aprobar
                     </flux:button>
+                    @endcan
                 @endif
             </div>
         </div>

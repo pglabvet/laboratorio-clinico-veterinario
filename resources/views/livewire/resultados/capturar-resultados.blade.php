@@ -161,14 +161,17 @@
                     <div class="flex gap-3">
                         @if($analisis->estado === 'Aprobado' || $analisis->estado === 'Enviado')
                             {{-- Botón PDF solo para análisis aprobados o enviados --}}
+                            @can('descargar-pdf-analisis')
                             <flux:button 
                                 wire:click="descargarPdf"
                                 variant="primary" 
                                 icon="document-arrow-down">
                                 Descargar PDF
                             </flux:button>
+                            @endcan
                         @else
                             {{-- Botón Actualizar Datos para guardar cambios --}}
+                            @can('actualizar-datos-analisis')
                             <div x-data="{ loading: false }">
                                 <flux:button 
                                     @click="loading = true; window.dispatchEvent(new Event('antes-de-guardar')); setTimeout(() => { $wire.actualizarDatosRevision().then(() => loading = false).catch(() => loading = false) }, 100)"
@@ -182,18 +185,23 @@
                                     <span x-show="!loading">Actualizar Datos</span>
                                 </flux:button>
                             </div>
+                            @endcan
+                            @can('rechazar-analisis')
                             <flux:button 
                                 wire:click="abrirModalRechazo"
                                 variant="danger" 
                                 icon="x-circle">
                                 Rechazar
                             </flux:button>
+                            @endcan
+                            @can('aprobar-analisis')
                             <flux:button 
                                 wire:click="aprobarAnalisis"
                                 variant="primary" 
                                 icon="check-circle">
                                 Aprobar
                             </flux:button>
+                            @endcan
                         @endif
                     </div>
                 @else

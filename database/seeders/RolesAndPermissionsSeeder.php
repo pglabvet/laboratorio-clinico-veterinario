@@ -59,24 +59,33 @@ class RolesAndPermissionsSeeder extends Seeder
             'crear-sucursales',
             'editar-sucursales',
             'eliminar-sucursales',
+            'guardar-sucursal',
             
             // Veterinarias
             'ver-veterinarias',
             'crear-veterinarias',
             'editar-veterinarias',
             'eliminar-veterinarias',
+            'guardar-veterinaria',
             
             // Muestras
             'ver-muestras',
             'crear-muestras',
             'editar-muestras',
             'eliminar-muestras',
+            'enviar-resultados-muestra',
+            'ver-codigo-barras-muestra',
+            'filtro-de-sucursal-muestra',
             
             // Análisis
             'ver-analisis',
             'crear-analisis',
             'editar-analisis',
             'eliminar-analisis',
+            'aprobar-analisis',
+            'rechazar-analisis',
+            'actualizar-datos-analisis',
+            'descargar-pdf-analisis',
             
             // Resultados
             'ver-resultados',
@@ -90,15 +99,72 @@ class RolesAndPermissionsSeeder extends Seeder
             'editar-inventario',
             'eliminar-inventario',
             
+            // Especies
+            'ver-especies',
+            'crear-especies',
+            'editar-especies',
+            'eliminar-especies',
+            'guardar-especie',
+
+            // Tipos de Análisis
+            'ver-tipos-analisis',
+            'crear-tipos-analisis',
+            'editar-tipos-analisis',
+            'eliminar-tipos-analisis',
+            'guardar-tipo-analisis',
+
+            // Unidades de Medida
+            'ver-unidades-medida',
+            'crear-unidades-medida',
+            'editar-unidades-medida',
+            'eliminar-unidades-medida',
+            'guardar-unidad-medida',
+
+            // Insumos
+            'ver-insumos',
+            'crear-insumos',
+            'editar-insumos',
+            'eliminar-insumos',
+            'guardar-insumo',
+
+            // Categorías de Insumo
+            'ver-categorias-insumo',
+            'crear-categorias-insumo',
+            'editar-categorias-insumo',
+            'eliminar-categorias-insumo',
+            'guardar-categoria-insumo',
+
+            // Plantillas de Formularios
+            'ver-plantillas',
+            'crear-plantillas',
+            'editar-plantillas',
+            'eliminar-plantillas',
+            'duplicar-plantilla',
+            'rellenar-plantillas',          // Bioquímico: seleccionar y rellenar formularios
+
+            // Mostrar detalle (botón ver/ojo)
+            'mostrar-detalle-muestra',
+            'mostrar-detalle-sucursal',
+            'mostrar-detalle-veterinaria',
+            'mostrar-detalle-especie',
+            'mostrar-detalle-tipo-analisis',
+            'mostrar-detalle-permiso',
+            'mostrar-detalle-rol',
+
+            // Auditorías
+            'ver-auditorias',
+
             // Roles y Permisos
             'ver-roles',
             'crear-roles',
             'editar-roles',
             'eliminar-roles',
+            'guardar-rol',
             'ver-permisos',
             'crear-permisos',
             'editar-permisos',
             'eliminar-permisos',
+            'guardar-permiso',
         ];
 
         foreach ($permissions as $permission) {
@@ -121,6 +187,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'escanear-muestras',
             // Módulos
             'ver-veterinarias',
+            'ver-especies',
+            'ver-tipos-analisis',
             'ver-muestras',
             'crear-muestras',
             'editar-muestras',
@@ -130,6 +198,29 @@ class RolesAndPermissionsSeeder extends Seeder
             'ver-resultados',
             'crear-resultados',
             'editar-resultados',
+            // Análisis extra
+            'aprobar-analisis',
+            'rechazar-analisis',
+            'actualizar-datos-analisis',
+            'descargar-pdf-analisis',
+            // Mostrar detalle
+            'mostrar-detalle-muestra',
+            'mostrar-detalle-veterinaria',
+            'mostrar-detalle-especie',
+            'mostrar-detalle-tipo-analisis',
+            // Guardar
+            'guardar-sucursal',
+            'guardar-veterinaria',
+            'guardar-especie',
+            'guardar-tipo-analisis',
+            'guardar-unidad-medida',
+            'guardar-insumo',
+            'guardar-categoria-insumo',
+            'guardar-rol',
+            'guardar-permiso',
+            // Muestras extra
+            'enviar-resultados-muestra',
+            'ver-codigo-barras-muestra',
         ]);
 
         // Crear rol de Laboratorista
@@ -143,6 +234,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'ver-acciones-rapidas',
             'escanear-muestras',
             // Módulos
+            'ver-especies',
+            'ver-tipos-analisis',
+            'ver-unidades-medida',
             'ver-muestras',
             'editar-muestras',
             'ver-analisis',
@@ -151,8 +245,22 @@ class RolesAndPermissionsSeeder extends Seeder
             'ver-resultados',
             'crear-resultados',
             'editar-resultados',
+            'ver-insumos',
+            'ver-categorias-insumo',
             'ver-inventario',
             'editar-inventario',
+            // Análisis extra
+            'aprobar-analisis',
+            'rechazar-analisis',
+            'actualizar-datos-analisis',
+            'descargar-pdf-analisis',
+            // Mostrar detalle
+            'mostrar-detalle-muestra',
+            'mostrar-detalle-especie',
+            'mostrar-detalle-tipo-analisis',
+            // Muestras extra
+            'enviar-resultados-muestra',
+            'ver-codigo-barras-muestra',
         ]);
 
         // Crear rol de Bioquímico
@@ -169,6 +277,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'registrar-muestras',
             'escanear-muestras',
             // Módulos
+            'ver-especies',
+            'ver-tipos-analisis',
+            'ver-unidades-medida',
             'ver-muestras',
             'crear-muestras',
             'editar-muestras',
@@ -180,9 +291,25 @@ class RolesAndPermissionsSeeder extends Seeder
             'crear-resultados',
             'editar-resultados',
             'eliminar-resultados',
+            'ver-plantillas',
+            'rellenar-plantillas',
+            'ver-insumos',
+            'ver-categorias-insumo',
             'ver-inventario',
             'crear-inventario',
             'editar-inventario',
+            // Análisis extra
+            'aprobar-analisis',
+            'rechazar-analisis',
+            'actualizar-datos-analisis',
+            'descargar-pdf-analisis',
+            // Mostrar detalle
+            'mostrar-detalle-muestra',
+            'mostrar-detalle-especie',
+            'mostrar-detalle-tipo-analisis',
+            // Muestras extra
+            'enviar-resultados-muestra',
+            'ver-codigo-barras-muestra',
         ]);
 
         // Crear rol de Recepcionista
@@ -196,10 +323,19 @@ class RolesAndPermissionsSeeder extends Seeder
             'registrar-muestras',
             // Módulos
             'ver-veterinarias',
+            'ver-especies',
+            'ver-tipos-analisis',
             'ver-muestras',
             'crear-muestras',
             'ver-analisis',
             'ver-resultados',
+            // Mostrar detalle
+            'mostrar-detalle-muestra',
+            'mostrar-detalle-veterinaria',
+            'mostrar-detalle-especie',
+            'mostrar-detalle-tipo-analisis',
+            // Muestras extra
+            'ver-codigo-barras-muestra',
         ]);
 
         // Crear rol de Usuario básico (solo lectura)
@@ -210,9 +346,15 @@ class RolesAndPermissionsSeeder extends Seeder
             'ver-dashboard',
             'ver-actividad-reciente',
             // Módulos
+            'ver-especies',
+            'ver-tipos-analisis',
             'ver-muestras',
             'ver-analisis',
             'ver-resultados',
+            // Mostrar detalle
+            'mostrar-detalle-muestra',
+            'mostrar-detalle-especie',
+            'mostrar-detalle-tipo-analisis',
         ]);
 
         $this->command->info('Roles y permisos creados exitosamente.');
