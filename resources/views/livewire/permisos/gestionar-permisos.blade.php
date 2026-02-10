@@ -87,6 +87,7 @@
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
                                 <div class="flex items-center gap-2">
                                     {{-- Botón ver --}}
+                                    @can('mostrar-detalle-permiso')
                                     <flux:button
                                         wire:click="ver({{ $permiso->id }})"
                                         variant="ghost"
@@ -95,6 +96,7 @@
                                         color="neutral"
                                         title="Ver detalles"
                                     />
+                                    @endcan
 
                                     {{-- Botón editar --}}
                                     <flux:button
@@ -191,12 +193,14 @@
                 >
                     Cancelar
                 </flux:button>
+                @can('guardar-permiso')
                 <flux:button 
                     type="submit"
                     variant="primary"
                 >
                     {{ $modoEdicion ? 'Actualizar' : 'Guardar' }}
                 </flux:button>
+                @endcan
             </div>
         </form>
     </flux:modal>

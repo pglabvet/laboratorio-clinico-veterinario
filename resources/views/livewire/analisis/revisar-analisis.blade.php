@@ -312,6 +312,7 @@
 
                                     @if($item->estado === 'En revision')
                                         {{-- Botón aprobar --}}
+                                        @can('aprobar-analisis')
                                         <flux:button
                                             wire:click="confirmarAprobar({{ $item->id }})"
                                             variant="ghost"
@@ -320,8 +321,10 @@
                                             color="green"
                                             title="Aprobar"
                                         />
+                                        @endcan
 
                                         {{-- Botón rechazar --}}
+                                        @can('rechazar-analisis')
                                         <flux:button
                                             wire:click="confirmarRechazar({{ $item->id }})"
                                             variant="ghost"
@@ -330,6 +333,7 @@
                                             color="red"
                                             title="Rechazar"
                                         />
+                                        @endcan
                                     @endif
                                 </div>
                             </td>

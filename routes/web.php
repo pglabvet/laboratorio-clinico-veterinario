@@ -18,24 +18,30 @@ Route::view('dashboard', 'dashboard')
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('/sucursales', 'sucursales.index')
+        ->middleware('can:ver-sucursales')
         ->name('sucursales.index');
 
     Route::view('/veterinarias', 'veterinarias.index')
+        ->middleware('can:ver-veterinarias')
         ->name('veterinarias.index');
 
     Route::view('/tipos-analisis', 'tipos-analisis.index')
+        ->middleware('can:ver-tipos-analisis')
         ->name('tipos-analisis.index');
 
     Route::view('/muestras', 'muestras.index')
+        ->middleware('can:ver-muestras')
         ->name('muestras.index');
 
     Route::view('/muestras/crear', 'muestras.crear')
+        ->middleware('can:crear-muestras')
         ->name('muestras.crear');
 
     Route::view('/muestras/editar/{id}', 'muestras.editar')
         ->name('muestras.editar');
 
     Route::view('/muestras/escanear', 'muestras.escanear')
+        ->middleware('can:escanear-muestras')
         ->name('muestras.escanear');
 
     // Ruta para imprimir etiqueta de muestra
@@ -50,25 +56,32 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Ruta
 
     Route::view('/especies', 'especies.index')
+        ->middleware('can:ver-especies')
         ->name('especies.index');
 
     Route::view('/unidades-medida', 'unidades-medida.index')
+        ->middleware('can:ver-unidades-medida')
         ->name('unidades-medida.index');
 
     Route::view('/insumos', 'insumos.index')
+        ->middleware('can:ver-insumos')
         ->name('insumos.index');
 
     Route::view('/categorias-insumo', 'categorias-insumo.index')
+        ->middleware('can:ver-categorias-insumo')
         ->name('categorias-insumo.index');
 
     // Rutas de inventario
     Route::view('/inventario/entradas', 'inventario.entradas')
+        ->middleware('can:crear-inventario')
         ->name('inventario.entradas');
 
     Route::get('/inventario/salidas', \App\Livewire\Inventario\RegistrarSalida::class)
+        ->middleware('can:editar-inventario')
         ->name('inventario.salidas');
 
     Route::get('/inventario/historial', \App\Livewire\Inventario\HistorialMovimientos::class)
+        ->middleware('can:ver-inventario')
         ->name('inventario.historial');
 
     Route::get('/usuarios', \App\Livewire\Usuarios\GestionarUsuarios::class)
@@ -76,6 +89,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('usuarios.index');
 
     Route::view('/roles', 'roles.index')
+        ->middleware('can:ver-roles')
         ->name('roles.index');
 
     // Permisos deshabilitado - se gestionan desde el seeder
@@ -84,12 +98,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Constructor de formularios dinámicos (Admin)
     Route::get('/plantillas', \App\Livewire\Plantillas\ListarPlantillas::class)
+        ->middleware('can:ver-plantillas')
         ->name('plantillas.index');
 
     Route::get('/plantillas/crear', \App\Livewire\Plantillas\GestionarPlantillas::class)
+        ->middleware('can:crear-plantillas')
         ->name('plantillas.crear');
 
     Route::get('/plantillas/{plantilla}/editar', \App\Livewire\Plantillas\GestionarPlantillas::class)
+        ->middleware('can:editar-plantillas')
         ->name('plantillas.editar');
 
     // Constructor de formularios dinámicos (Admin) - Ruta legacy
@@ -98,6 +115,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Lista de plantillas disponibles (Bioquímico)
     Route::get('/formularios/plantillas', \App\Livewire\Plantillas\SeleccionarPlantilla::class)
+        ->middleware('can:rellenar-plantillas')
         ->name('formularios.plantillas');
 
     // Rellenar análisis con una plantilla (Bioquímico)
@@ -122,10 +140,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Revisar análisis finalizados (Admin)
     Route::get('/analisis/revisar', \App\Livewire\Analisis\RevisarAnalisis::class)
+        ->middleware('can:ver-analisis')
         ->name('analisis.revisar');
 
     // Ver detalles de análisis (Admin)
     Route::get('/analisis/{analisisId}/ver', \App\Livewire\Analisis\VerAnalisis::class)
+        ->middleware('can:ver-analisis')
         ->name('analisis.ver');
 
     // Generar y descargar PDF de análisis aprobado
@@ -138,6 +158,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Auditorías del sistema
     Route::get('/auditorias', \App\Livewire\Auditorias\ListarAuditorias::class)
+        ->middleware('can:ver-auditorias')
         ->name('auditorias.index');
 });
 

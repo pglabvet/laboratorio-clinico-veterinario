@@ -393,7 +393,7 @@ class GestionarPlantillas extends Component
                     $plantilla = PlantillaFormulario::create([
                         'nombre' => $this->nombreFormulario,
                         'descripcion' => $this->descripcionFormulario,
-                        'tipo_analisis_id' => $this->tipo_analisis_id,
+                        'tipo_analisis_id' => $this->tipo_analisis_id ?: null,
                         'componentes' => $this->componentes,
                         'activo' => true,
                         'creado_por' => Auth::id(),
@@ -410,7 +410,7 @@ class GestionarPlantillas extends Component
                     $plantillaOriginal->update([
                         'nombre' => $this->nombreFormulario,
                         'descripcion' => $this->descripcionFormulario,
-                        'tipo_analisis_id' => $this->tipo_analisis_id,
+                        'tipo_analisis_id' => $this->tipo_analisis_id ?: null,
                         'componentes' => $this->componentes,
                     ]);
                     
@@ -424,7 +424,7 @@ class GestionarPlantillas extends Component
                 $plantilla = PlantillaFormulario::create([
                     'nombre' => $this->nombreFormulario,
                     'descripcion' => $this->descripcionFormulario,
-                    'tipo_analisis_id' => $this->tipo_analisis_id,
+                    'tipo_analisis_id' => $this->tipo_analisis_id ?: null,
                     'componentes' => $this->componentes,
                     'activo' => true,
                     'creado_por' => Auth::id(),

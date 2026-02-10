@@ -106,7 +106,7 @@
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
                                 <div class="flex items-center gap-2">
                                     {{-- Botón ver --}}
-                                    @can('ver-roles')
+                                    @can('mostrar-detalle-rol')
                                         <flux:button
                                             wire:click="ver({{ $role->id }})"
                                             variant="ghost"
@@ -242,13 +242,46 @@
                             'escanear-muestras',
                         ];
                         
+                        // Mapeo manual de permisos especiales a su grupo correspondiente
+                        $permisosEspeciales = [
+                            'mostrar-detalle-muestra' => 'muestras',
+                            'mostrar-detalle-sucursal' => 'sucursales',
+                            'mostrar-detalle-veterinaria' => 'veterinarias',
+                            'mostrar-detalle-especie' => 'especies',
+                            'mostrar-detalle-tipo-analisis' => 'tipos-analisis',
+                            'mostrar-detalle-permiso' => 'permisos',
+                            'mostrar-detalle-rol' => 'roles',
+                            'duplicar-plantilla' => 'plantillas',
+                            'guardar-sucursal' => 'sucursales',
+                            'guardar-veterinaria' => 'veterinarias',
+                            'guardar-especie' => 'especies',
+                            'guardar-tipo-analisis' => 'tipos-analisis',
+                            'guardar-unidad-medida' => 'unidades-medida',
+                            'guardar-insumo' => 'insumos',
+                            'guardar-categoria-insumo' => 'categorias-insumo',
+                            'guardar-rol' => 'roles',
+                            'guardar-permiso' => 'permisos',
+                            'enviar-resultados-muestra' => 'muestras',
+                            'ver-codigo-barras-muestra' => 'muestras',
+                            'filtro-de-sucursal-muestra' => 'muestras',
+                            'aprobar-analisis' => 'analisis',
+                            'rechazar-analisis' => 'analisis',
+                            'actualizar-datos-analisis' => 'analisis',
+                            'descargar-pdf-analisis' => 'analisis',
+                        ];
+
                         // Agrupar permisos por módulo/sección
-                        $permisosAgrupados = $allPermissions->groupBy(function($permission) use ($permisosDashboard) {
+                        $permisosAgrupados = $allPermissions->groupBy(function($permission) use ($permisosDashboard, $permisosEspeciales) {
                             $nombre = $permission->name;
                             
                             // Si está en la lista de permisos de Dashboard
                             if (in_array($nombre, $permisosDashboard)) {
                                 return 'dashboard';
+                            }
+
+                            // Si tiene mapeo especial, usar ese grupo
+                            if (isset($permisosEspeciales[$nombre])) {
+                                return $permisosEspeciales[$nombre];
                             }
                             
                             // Para otros permisos, tomar todo después del primer guión
@@ -307,12 +340,14 @@
                 >
                     Cancelar
                 </flux:button>
+                @can('guardar-rol')
                 <flux:button 
                     type="submit"
                     variant="primary"
                 >
                     {{ $modoEdicion ? 'Actualizar' : 'Guardar' }}
                 </flux:button>
+                @endcan
             </div>
         </form>
     </flux:modal>

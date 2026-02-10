@@ -22,6 +22,7 @@
         </div>
 
         {{-- Botón crear --}}
+        @can('crear-tipos-analisis')
         <flux:button 
             wire:click="crear"
             icon="plus"
@@ -29,6 +30,7 @@
         >
             Nuevo Tipo de Análisis
         </flux:button>
+        @endcan
     </div>
 
     {{-- Tabla de tipos de análisis --}}
@@ -105,6 +107,7 @@
                                 </div>
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
+                                @can('editar-tipos-analisis')
                                 <button type="button" wire:click="confirmarCambiarEstado({{ $tipoAnalisis->id }})" class="cursor-pointer group outline-none focus:outline-none">
                                     <div class="pointer-events-none">
                                         <flux:switch 
@@ -113,10 +116,14 @@
                                         />
                                     </div>
                                 </button>
+                                @else
+                                <flux:badge :color="$tipoAnalisis->estado ? 'green' : 'red'" size="sm">{{ $tipoAnalisis->estado ? 'Activo' : 'Inactivo' }}</flux:badge>
+                                @endcan
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
                                 <div class="flex items-center gap-2">
                                     {{-- Botón ver --}}
+                                    @can('mostrar-detalle-tipo-analisis')
                                     <flux:button
                                         wire:click="ver({{ $tipoAnalisis->id }})"
                                         variant="ghost"
@@ -125,8 +132,10 @@
                                         color="neutral"
                                         title="Ver detalles"
                                     />
+                                    @endcan
 
                                     {{-- Botón editar --}}
+                                    @can('editar-tipos-analisis')
                                     <flux:button
                                         wire:click="editar({{ $tipoAnalisis->id }})"
                                         variant="ghost"
@@ -135,8 +144,10 @@
                                         color="cyan"
                                         title="Editar"
                                     />
+                                    @endcan
 
                                     {{-- Botón eliminar --}}
+                                    @can('eliminar-tipos-analisis')
                                     <flux:button
                                         wire:click="confirmarEliminar({{ $tipoAnalisis->id }})"
                                         variant="ghost"
@@ -145,6 +156,7 @@
                                         color="red"
                                         title="Eliminar"
                                     />
+                                    @endcan
                                 </div>
                             </td>
                         </tr>
@@ -224,6 +236,7 @@
                 >
                     Cancelar
                 </flux:button>
+                @can('guardar-tipo-analisis')
                 <flux:button 
                     type="submit"
                     variant="primary"
@@ -232,6 +245,7 @@
                 >
                     {{ $modoEdicion ? 'Actualizar' : 'Guardar' }}
                 </flux:button>
+                @endcan
             </div>
         </form>
     </flux:modal>

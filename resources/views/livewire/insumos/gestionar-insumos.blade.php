@@ -10,6 +10,7 @@
             <flux:subheading>Administra los insumos utilizados en los análisis del laboratorio</flux:subheading>
         </div>
         {{-- Botón crear --}}
+        @can('crear-insumos')
         <flux:button 
             wire:click="crear"
             icon="plus"
@@ -17,6 +18,7 @@
         >
             Nuevo Insumo
         </flux:button>
+        @endcan
     </div>
 
     {{-- Barra de búsqueda y filtros --}}
@@ -157,6 +159,7 @@
                                 </td>
                             @endif
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
+                                @can('editar-insumos')
                                 <button type="button" wire:click="confirmarCambiarEstado({{ $insumo->id }})" class="cursor-pointer group outline-none focus:outline-none">
                                     <div class="pointer-events-none">
                                         <flux:switch 
@@ -165,6 +168,9 @@
                                         />
                                     </div>
                                 </button>
+                                @else
+                                <flux:badge :color="$insumo->estado ? 'green' : 'red'" size="sm">{{ $insumo->estado ? 'Activo' : 'Inactivo' }}</flux:badge>
+                                @endcan
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
                                 <div class="flex items-center gap-2">
@@ -175,6 +181,7 @@
                                     @endif
                                     
                                     {{-- Botón editar --}}
+                                    @can('editar-insumos')
                                     <flux:button
                                         wire:click="editar({{ $insumo->id }})"
                                         variant="ghost"
@@ -183,8 +190,10 @@
                                         color="cyan"
                                         title="Editar"
                                     />
+                                    @endcan
                                     
                                     {{-- Botón eliminar --}}
+                                    @can('eliminar-insumos')
                                     <flux:button
                                         wire:click="confirmarEliminar({{ $insumo->id }})"
                                         variant="ghost"
@@ -193,6 +202,7 @@
                                         color="red"
                                         title="Eliminar"
                                     />
+                                    @endcan
                                 </div>
                             </td>
                         </tr>
@@ -300,9 +310,11 @@
             <div class="flex gap-2 mt-6">
                 <flux:spacer />
                 <flux:button type="button" wire:click="cerrarModal" variant="outline" class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950">Cancelar</flux:button>
+                @can('guardar-insumo')
                 <flux:button type="submit" variant="primary">
                     {{ $modoEdicion ? 'Actualizar' : 'Guardar' }}
                 </flux:button>
+                @endcan
             </div>
         </form>
     </flux:modal>
