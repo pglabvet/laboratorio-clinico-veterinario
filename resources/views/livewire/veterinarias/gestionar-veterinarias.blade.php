@@ -145,13 +145,18 @@
                                 {{ $veterinaria->telefono }}
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
-                                <flux:badge 
-                                    :color="$veterinaria->estado ? 'green' : 'red'" 
-                                    size="sm"
-                                    inset="top bottom"
-                                >
-                                    {{ $veterinaria->estado ? 'Activa' : 'Inactiva' }}
-                                </flux:badge>
+                                @can('editar-veterinarias')
+                                <button type="button" wire:click="confirmarCambiarEstado({{ $veterinaria->id }})" class="cursor-pointer group outline-none focus:outline-none">
+                                    <flux:switch
+                                        size="sm"
+                                        :checked="$veterinaria->estado"
+                                        wire:key="switch-{{ $veterinaria->id }}-{{ $veterinaria->estado ? 'active' : 'inactive' }}"
+                                        class="pointer-events-none"
+                                    />
+                                </button>
+                                @else
+                                <flux:badge :color="$veterinaria->estado ? 'green' : 'red'" size="sm">{{ $veterinaria->estado ? 'Activa' : 'Inactiva' }}</flux:badge>
+                                @endcan
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
                                 <div class="flex items-center gap-2">
