@@ -109,18 +109,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('can:editar-plantillas')
         ->name('plantillas.editar');
 
-    // Constructor de formularios dinámicos (Admin) - Ruta legacy
-    Route::get('/formularios/constructor', \App\Livewire\Plantillas\GestionarPlantillas::class)
-        ->name('formularios.constructor');
-
-    // Lista de plantillas disponibles (Bioquímico)
-    Route::get('/formularios/plantillas', \App\Livewire\Plantillas\SeleccionarPlantilla::class)
-        ->middleware('can:rellenar-plantillas')
-        ->name('formularios.plantillas');
-
-    // Rellenar análisis con una plantilla (Bioquímico)
-    Route::get('/analisis/nuevo/{plantillaId}', \App\Livewire\Plantillas\RellenarFormulario::class)
-        ->name('analisis.nuevo');
 
     // Capturar resultados de análisis (Bioquímico)
     Route::get('/analisis/{analisisId}/resultados', \App\Livewire\Resultados\CapturarResultados::class)

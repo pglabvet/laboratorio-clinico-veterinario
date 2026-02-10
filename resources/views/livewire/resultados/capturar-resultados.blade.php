@@ -207,18 +207,22 @@
                 @else
                     {{-- Botones normales de captura --}}
                     <div class="flex gap-3">
+                        @can('guardar-borrador-resultados')
                         <flux:button 
                             @click="window.dispatchEvent(new Event('antes-de-guardar')); setTimeout(() => $wire.guardarBorrador(), 100)"
                             variant="outline" 
                             icon="document">
                             Guardar Borrador
                         </flux:button>
+                        @endcan
+                        @can('registrar-resultados')
                         <flux:button 
                             @click="window.dispatchEvent(new Event('antes-de-guardar')); setTimeout(() => $wire.finalizarYEnviar(), 100)"
                             variant="primary" 
                             icon="check">
                             Finalizar y Enviar
                         </flux:button>
+                        @endcan
                     </div>
                 @endif
             </div>

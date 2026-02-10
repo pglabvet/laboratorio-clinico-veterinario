@@ -249,16 +249,31 @@
                                         {{ $analisis->estado }}
                                     </flux:badge>
                                     
-                                    @if($analisis->estado === 'Pendiente')
-                                        <flux:button 
-                                            href="{{ route('analisis.capturar-resultados', $analisis->id) }}"
-                                            size="sm"
-                                            variant="primary"
-                                            icon="pencil"
-                                        >
-                                            Ingresar Resultados
-                                        </flux:button>
-                                    @endif
+                                    @can('ingresar-resultados')
+                                        @if($analisis->estado === 'Pendiente')
+                                            <flux:button 
+                                                href="{{ route('analisis.capturar-resultados', $analisis->id) }}"
+                                                size="sm"
+                                                variant="primary"
+                                                icon="pencil"
+                                            >
+                                                Ingresar Resultados
+                                            </flux:button>
+                                        @endif
+                                    @endcan
+
+                                    @can('ver-resultados')
+                                        @if(in_array($analisis->estado, ['Aprobado', 'Enviado']))
+                                            <flux:button 
+                                                href="{{ route('analisis.capturar-resultados', $analisis->id) }}"
+                                                size="sm"
+                                                variant="outline"
+                                                icon="eye"
+                                            >
+                                                Ver Resultados
+                                            </flux:button>
+                                        @endif
+                                    @endcan
                                 </div>
                             </div>
                         @endforeach

@@ -71,7 +71,6 @@ class RolesAndPermissionsSeeder extends Seeder
             // Muestras
             'ver-muestras',
             'crear-muestras',
-            'editar-muestras',
             'eliminar-muestras',
             'enviar-resultados-muestra',
             'ver-codigo-barras-muestra',
@@ -79,9 +78,6 @@ class RolesAndPermissionsSeeder extends Seeder
             
             // Análisis
             'ver-analisis',
-            'crear-analisis',
-            'editar-analisis',
-            'eliminar-analisis',
             'aprobar-analisis',
             'rechazar-analisis',
             'actualizar-datos-analisis',
@@ -89,9 +85,9 @@ class RolesAndPermissionsSeeder extends Seeder
             
             // Resultados
             'ver-resultados',
-            'crear-resultados',
-            'editar-resultados',
-            'eliminar-resultados',
+            'registrar-resultados',
+            'ingresar-resultados',
+            'guardar-borrador-resultados',
             
             // Inventario
             'ver-inventario',
@@ -140,7 +136,6 @@ class RolesAndPermissionsSeeder extends Seeder
             'editar-plantillas',
             'eliminar-plantillas',
             'duplicar-plantilla',
-            'rellenar-plantillas',          // Bioquímico: seleccionar y rellenar formularios
 
             // Mostrar detalle (botón ver/ojo)
             'mostrar-detalle-muestra',
@@ -193,11 +188,11 @@ class RolesAndPermissionsSeeder extends Seeder
             'crear-muestras',
             'editar-muestras',
             'ver-analisis',
-            'crear-analisis',
             'editar-analisis',
             'ver-resultados',
-            'crear-resultados',
-            'editar-resultados',
+            'registrar-resultados',
+            'ingresar-resultados',
+            'guardar-borrador-resultados',
             // Análisis extra
             'aprobar-analisis',
             'rechazar-analisis',
@@ -240,11 +235,11 @@ class RolesAndPermissionsSeeder extends Seeder
             'ver-muestras',
             'editar-muestras',
             'ver-analisis',
-            'crear-analisis',
             'editar-analisis',
             'ver-resultados',
-            'crear-resultados',
-            'editar-resultados',
+            'registrar-resultados',
+            'ingresar-resultados',
+            'guardar-borrador-resultados',
             'ver-insumos',
             'ver-categorias-insumo',
             'ver-inventario',
@@ -284,15 +279,13 @@ class RolesAndPermissionsSeeder extends Seeder
             'crear-muestras',
             'editar-muestras',
             'ver-analisis',
-            'crear-analisis',
             'editar-analisis',
             'eliminar-analisis',
             'ver-resultados',
-            'crear-resultados',
-            'editar-resultados',
-            'eliminar-resultados',
+            'registrar-resultados',
+            'ingresar-resultados',
+            'guardar-borrador-resultados',
             'ver-plantillas',
-            'rellenar-plantillas',
             'ver-insumos',
             'ver-categorias-insumo',
             'ver-inventario',
