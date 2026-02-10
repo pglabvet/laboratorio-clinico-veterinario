@@ -79,6 +79,26 @@ class EstadisticasPrincipales extends Component
         // Estadísticas desglosadas por estado
         $analisisPendientes = (clone $baseQuery)->where('estado', Analisis::ESTADO_PENDIENTE)->count();
         
+        // Análisis en revisión (esperando ser revisados)
+        $analisisEnRevision = 0;
+        if ($user->can('ver-analisis')) {
+            $queryRevision = Analisis::query()->where('estado', Analisis::ESTADO_EN_REVISION);
+            if (!$user->can('ver-estadisticas-completas') && $user->sucursal_id) {
+                $queryRevision->whereHas('muestra', function($q) use ($user) {
+                    $q->where('sucursal_id', $user->sucursal_id);
+                });
+            }
+            if ($this->sucursalId && $user->can('filtrar-por-sucursal')) {
+                $queryRevision->whereHas('muestra', function($q) {
+                    $q->where('sucursal_id', $this->sucursalId);
+                });
+            }
+            if ($this->fechaInicio && $this->fechaFin) {
+                $queryRevision->whereBetween('created_at', [$this->fechaInicio, $this->fechaFin]);
+            }
+            $analisisEnRevision = $queryRevision->count();
+        }
+        
         // Muestras recibidas hoy
         $queryMuestras = Muestra::query();
         
@@ -132,6 +152,7 @@ class EstadisticasPrincipales extends Component
         return view('livewire.dashboard.estadisticas-principales', [
             'muestrasPendientes' => $muestrasPendientes,
             'analisisPendientes' => $analisisPendientes,
+            'analisisEnRevision' => $analisisEnRevision,
             'muestrasHoy' => $muestrasHoy,
             'insumosStockBajo' => $insumosStockBajo,
             'totalSucursales' => $totalSucursales,
