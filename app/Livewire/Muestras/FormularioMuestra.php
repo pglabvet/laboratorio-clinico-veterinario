@@ -9,7 +9,7 @@ use App\Models\Sucursal;
 use App\Models\TipoAnalisis;
 use App\Models\PlantillaFormulario;
 use App\Models\Analisis;
-use App\Models\InventarioSucursal;
+use App\Services\MuestraService;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
 
@@ -281,12 +281,22 @@ class FormularioMuestra extends Component
         try {
             DB::beginTransaction();
 
+            $muestraService = app(MuestraService::class);
+
             // UC-B05: Validar stock antes de crear
-            $this->validarStockDisponible();
+            $plantillaIds = array_column($this->analisisSeleccionados, 'plantilla_id');
+            $resultado = $muestraService->validarStockDisponible($plantillaIds, $this->sucursal_id);
+            if (!empty($resultado['warnings'])) {
+                session()->flash('warning',
+                    '⚠️ ADVERTENCIA: Los siguientes insumos están por debajo del stock mínimo: ' .
+                    implode(', ', $resultado['warnings']) .
+                    '. Se recomienda reabastecer pronto.'
+                );
+            }
 
             // Generar código único si no existe
             if (!$this->codigo_muestra) {
-                $this->codigo_muestra = $this->generarCodigoMuestra();
+                $this->codigo_muestra = $muestraService->generarCodigoMuestra($this->sucursal_id);
             }
 
             // Crear o actualizar muestra
@@ -364,78 +374,5 @@ class FormularioMuestra extends Component
             'tiposAnalisis' => TipoAnalisis::orderBy('nombre')->get(),
             'puedeSeleccionarSucursal' => $puedeSeleccionarSucursal,
         ]);
-    }
-
-    /**
-     * Generar código único para la muestra por sucursal
-     * Formato: {PREFIJO}-AA0000 (Prefijo de sucursal + 2 letras + 4 dígitos)
-     * Ejemplo: S-AA0001 (Sucursal Sur), N-AA0002 (Sucursal Norte)
-     * Rango por sucursal: AA0000 - ZZ9999 (676 * 10,000 = 6,760,000 combinaciones)
-     */
-    private function generarCodigoMuestra()
-    {
-        // Obtener prefijo de la sucursal
-        $sucursal = Sucursal::find($this->sucursal_id);
-        if (!$sucursal) {
-            throw new \Exception('Sucursal no encontrada');
-        }
-        $prefijo = $sucursal->getPrefijo();
-        
-        // Obtener el último código de muestra de esta sucursal
-        $ultimaMuestra = Muestra::where('sucursal_id', $this->sucursal_id)
-            ->orderBy('id', 'desc')
-            ->first();
-        
-        if (!$ultimaMuestra) {
-            // Primera muestra de esta sucursal
-            return $prefijo . '-AA0001';
-        }
-        
-        // Extraer las partes del último código
-        $ultimoCodigo = $ultimaMuestra->codigo_muestra;
-        
-        // Si no sigue el formato PREFIJO-AA0000, empezar desde AA0001
-        if (!preg_match('/^[A-Z]{1,2}-([A-Z]{2})(\d{4})$/', $ultimoCodigo, $matches)) {
-            return $prefijo . '-AA0001';
-        }
-        
-        $letras = $matches[1];
-        $numero = (int)$matches[2];
-        
-        // Incrementar el número
-        $numero++;
-        
-        // Si el número excede 9999, incrementar las letras
-        if ($numero > 9999) {
-            $numero = 1;
-            $letras = $this->incrementarLetras($letras);
-        }
-        
-        return $prefijo . '-' . $letras . str_pad($numero, 4, '0', STR_PAD_LEFT);
-    }
-    
-    /**
-     * Incrementar las letras del código (AA -> AB -> AC ... -> AZ -> BA -> BB ... -> ZZ)
-     */
-    private function incrementarLetras($letras)
-    {
-        $letra1 = $letras[0];
-        $letra2 = $letras[1];
-        
-        // Incrementar segunda letra
-        if ($letra2 === 'Z') {
-            $letra2 = 'A';
-            // Incrementar primera letra
-            if ($letra1 === 'Z') {
-                // Se acabaron las combinaciones, volver a AA
-                return 'AA';
-            } else {
-                $letra1 = chr(ord($letra1) + 1);
-            }
-        } else {
-            $letra2 = chr(ord($letra2) + 1);
-        }
-        
-        return $letra1 . $letra2;
     }
 }

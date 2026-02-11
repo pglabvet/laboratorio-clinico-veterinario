@@ -8,9 +8,9 @@ use App\Models\Veterinaria;
 use App\Models\Sucursal;
 use App\Models\TipoAnalisis;
 use App\Models\Analisis;
-use App\Models\InventarioSucursal;
 use App\Models\TokenDescarga;
 use App\Models\Pdf;
+use App\Services\MuestraService;
 use App\Services\AnalisisPdfService;
 use App\Mail\ResultadosAnalisisMail;
 use Livewire\Component;
@@ -583,7 +583,11 @@ class GestionarMuestras extends Component
 
             // UC-B05: Validar stock antes de crear análisis
             if (!$this->modoEdicion) {
-                $this->validarStockDisponible();
+                $muestraService = app(MuestraService::class);
+                $resultado = $muestraService->validarStockPorTiposAnalisis($this->tipos_analisis_seleccionados, $this->sucursal_id);
+                if (!empty($resultado['warnings'])) {
+                    session()->flash('warning', '⚠️ ADVERTENCIA: Los siguientes insumos tienen stock bajo: ' . implode(', ', $resultado['warnings']) . '. Se recomienda reabastecer pronto.');
+                }
             }
 
             if ($this->modoEdicion) {
@@ -605,7 +609,8 @@ class GestionarMuestras extends Component
                 session()->flash('mensaje', 'Muestra actualizada exitosamente.');
             } else {
                 // Generar código único de muestra
-                $this->codigo_muestra = $this->generarCodigoMuestra();
+                $muestraService = $muestraService ?? app(MuestraService::class);
+                $this->codigo_muestra = $muestraService->generarCodigoMuestra($this->sucursal_id);
 
                 $muestra = Muestra::create([
                     'codigo_muestra' => $this->codigo_muestra,
@@ -650,139 +655,7 @@ class GestionarMuestras extends Component
         }
     }
 
-    /**
-     * UC-B05: Validar stock disponible antes de crear análisis
-     * - BLOQUEA si stock = 0
-     * - ADVIERTE si stock <= stock_mínimo (pero > 0)
-     */
-    private function validarStockDisponible()
-    {
-        $tiposAnalisis = TipoAnalisis::with('plantillas.insumos')
-            ->whereIn('id', $this->tipos_analisis_seleccionados)
-            ->get();
 
-        $insumosConStockCero = [];
-        $insumosConStockBajo = [];
-
-        foreach ($tiposAnalisis as $tipoAnalisis) {
-            $plantilla = $tipoAnalisis->plantillas()->where('activo', true)->first();
-
-            if (!$plantilla || $plantilla->insumos->isEmpty()) {
-                continue; // Sin insumos configurados, no validar
-            }
-
-            foreach ($plantilla->insumos as $insumo) {
-                $cantidadRequerida = $insumo->pivot->cantidad_requerida;
-
-                $inventario = InventarioSucursal::where('insumo_id', $insumo->id)
-                    ->where('sucursal_id', $this->sucursal_id)
-                    ->first();
-
-                if (!$inventario || $inventario->stock_actual <= 0) {
-                    // BLOQUEO: Stock en cero
-                    $insumosConStockCero[] = $insumo->nombre;
-                } elseif ($inventario->stock_actual < $cantidadRequerida) {
-                    // BLOQUEO: Stock insuficiente para realizar el análisis
-                    $insumosConStockCero[] = "{$insumo->nombre} (Disponible: {$inventario->stock_actual}, Requerido: {$cantidadRequerida})";
-                } elseif ($inventario->stock_actual <= $inventario->stock_minimo) {
-                    // ADVERTENCIA: Stock bajo pero suficiente
-                    $insumosConStockBajo[] = $insumo->nombre;
-                }
-            }
-        }
-
-        // Bloquear si hay stock en cero o insuficiente
-        if (!empty($insumosConStockCero)) {
-            throw new \Exception(
-                "❌ No se puede crear el análisis. Los siguientes insumos tienen stock insuficiente: " .
-                    implode(', ', $insumosConStockCero) .
-                    ". Por favor, registre una entrada de inventario antes de continuar."
-            );
-        }
-
-        // Advertir si hay stock bajo (pero permitir continuar)
-        if (!empty($insumosConStockBajo)) {
-            session()->flash(
-                'warning',
-                '⚠️ ADVERTENCIA: Los siguientes insumos tienen stock bajo: ' .
-                    implode(', ', $insumosConStockBajo) .
-                    '. Se recomienda reabastecer pronto.'
-            );
-        }
-    }
-
-    /**
-     * Generar código único para la muestra por sucursal
-     * Formato: {PREFIJO}-AA0000 (Prefijo de sucursal + 2 letras + 4 dígitos)
-     * Ejemplo: S-AA0001 (Sucursal Sur), N-AA0002 (Sucursal Norte)
-     * Rango por sucursal: AA0000 - ZZ9999 (676 * 10,000 = 6,760,000 combinaciones)
-     */
-    private function generarCodigoMuestra()
-    {
-        // Obtener prefijo de la sucursal
-        $sucursal = Sucursal::find($this->sucursal_id);
-        if (!$sucursal) {
-            throw new \Exception('Sucursal no encontrada');
-        }
-        $prefijo = $sucursal->getPrefijo();
-
-        // Obtener el último código de muestra de esta sucursal
-        $ultimaMuestra = Muestra::where('sucursal_id', $this->sucursal_id)
-            ->orderBy('id', 'desc')
-            ->first();
-
-        if (!$ultimaMuestra) {
-            // Primera muestra de esta sucursal
-            return $prefijo . '-AA0001';
-        }
-
-        // Extraer las partes del último código
-        $ultimoCodigo = $ultimaMuestra->codigo_muestra;
-
-        // Si no sigue el formato PREFIJO-AA0000, empezar desde AA0001
-        if (!preg_match('/^[A-Z]{1,2}-([A-Z]{2})(\d{4})$/', $ultimoCodigo, $matches)) {
-            return $prefijo . '-AA0001';
-        }
-
-        $letras = $matches[1];
-        $numero = (int)$matches[2];
-
-        // Incrementar el número
-        $numero++;
-
-        // Si el número excede 9999, incrementar las letras
-        if ($numero > 9999) {
-            $numero = 1;
-            $letras = $this->incrementarLetras($letras);
-        }
-
-        return $prefijo . '-' . $letras . str_pad($numero, 4, '0', STR_PAD_LEFT);
-    }
-
-    /**
-     * Incrementar las letras del código (AA -> AB -> AC ... -> AZ -> BA -> BB ... -> ZZ)
-     */
-    private function incrementarLetras($letras)
-    {
-        $letra1 = $letras[0];
-        $letra2 = $letras[1];
-
-        // Incrementar segunda letra
-        if ($letra2 === 'Z') {
-            $letra2 = 'A';
-            // Incrementar primera letra
-            if ($letra1 === 'Z') {
-                // Se acabaron las combinaciones, volver a AA
-                return 'AA';
-            } else {
-                $letra1 = chr(ord($letra1) + 1);
-            }
-        } else {
-            $letra2 = chr(ord($letra2) + 1);
-        }
-
-        return $letra1 . $letra2;
-    }
 
     /**
      * Abrir modal de confirmación para eliminar
