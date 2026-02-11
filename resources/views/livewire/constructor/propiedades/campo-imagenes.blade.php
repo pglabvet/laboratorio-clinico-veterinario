@@ -17,10 +17,14 @@
     </div>
 
     <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
-        <p class="text-xs text-blue-800 dark:text-blue-300">
-            <i class="fas fa-info-circle mr-1"></i>
-            Este componente permite subir 2 imágenes que se mostrarán lado a lado en la misma fila.
+        <p class="text-xs font-semibold text-blue-800 dark:text-blue-300 mb-1">
+            <i class="fas fa-info-circle mr-1"></i> ¿Cómo funciona este componente?
         </p>
+        <ul class="text-xs text-blue-700 dark:text-blue-300 space-y-1 ml-4 list-disc">
+            <li>Permite al bioquímico <strong>subir hasta 2 imágenes</strong> que se mostrarán lado a lado en el reporte PDF.</li>
+            <li>Útil para adjuntar fotografías de microscopía, placas de cultivo, tinciones o cualquier evidencia visual del análisis.</li>
+            <li>Las imágenes se redimensionan automáticamente para ajustarse al ancho del PDF.</li>
+        </ul>
     </div>
 </div>
         </label>

@@ -57,7 +57,10 @@
         {{-- User Info --}}
         <div class="flex items-center gap-2 rounded-lg border border-zinc-200 px-2 py-1.5 dark:border-zinc-700 sm:px-3">
             <flux:avatar size="xs" :name="auth()->user()->name" :initials="auth()->user()->initials()" />
-            <span class="hidden text-sm font-medium text-zinc-900 dark:text-white sm:inline">{{ auth()->user()->name }}</span>
+            <div class="hidden sm:block">
+                <span class="text-sm font-medium text-zinc-900 dark:text-white">{{ auth()->user()->name }}</span>
+                <p class="text-[10px] leading-tight text-zinc-500 dark:text-zinc-400">{{ auth()->user()->sucursal->nombre ?? 'General' }}</p>
+            </div>
         </div>
     </div>
 </flux:header>

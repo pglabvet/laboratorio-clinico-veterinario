@@ -59,7 +59,7 @@ class FormularioMuestra extends Component
             'veterinaria_id' => 'required|exists:veterinarias,id',
             'sucursal_id' => 'required|exists:sucursales,id',
             'tipo_muestra' => 'required|string|max:100',
-            'fecha_recepcion' => 'required|date',
+
             'observaciones' => 'nullable|string',
             'analisisSeleccionados' => 'required|array|min:1',
         ];
@@ -74,14 +74,14 @@ class FormularioMuestra extends Component
         'veterinaria_id.required' => 'Debe seleccionar una veterinaria.',
         'sucursal_id.required' => 'Debe seleccionar una sucursal.',
         'tipo_muestra.required' => 'El tipo de muestra es obligatorio.',
-        'fecha_recepcion.required' => 'La fecha de recepción es obligatoria.',
+
         'analisisSeleccionados.required' => 'Debe agregar al menos un análisis.',
         'analisisSeleccionados.min' => 'Debe agregar al menos un análisis.',
     ];
 
     public function mount($id = null)
     {
-        $this->fecha_recepcion = now()->format('Y-m-d');
+
         $this->sucursal_id = auth()->user()->sucursal_id ?? Sucursal::first()?->id;
 
         if ($id) {
@@ -96,7 +96,7 @@ class FormularioMuestra extends Component
         $this->muestra_id = $muestra->id;
         $this->codigo_muestra = $muestra->codigo_muestra;
         $this->tipo_muestra = $muestra->tipo_muestra;
-        $this->fecha_recepcion = $muestra->fecha_recepcion->format('Y-m-d');
+
         $this->observaciones = $muestra->observaciones;
         $this->sucursal_id = $muestra->sucursal_id;
         
@@ -314,7 +314,7 @@ class FormularioMuestra extends Component
                     'veterinaria_id' => $this->veterinaria_id,
                     'sucursal_id' => $this->sucursal_id,
                     'tipo_muestra' => $this->tipo_muestra,
-                    'fecha_recepcion' => $this->fecha_recepcion,
+                    'fecha_recepcion' => $this->muestra_id ? Muestra::find($this->muestra_id)->fecha_recepcion : now(),
                     'estado' => $this->estado,
                     'observaciones' => $this->observaciones,
                 ]
@@ -370,7 +370,7 @@ class FormularioMuestra extends Component
         return view('livewire.muestras.formulario-muestra', [
             'especies' => Especie::where('estado', true)->orderBy('nombre')->get(),
             'veterinarias' => Veterinaria::where('estado', true)->orderBy('nombre')->get(),
-            'sucursales' => Sucursal::orderBy('nombre')->get(),
+            'sucursales' => Sucursal::where('estado', true)->orderBy('nombre')->get(),
             'tiposAnalisis' => TipoAnalisis::orderBy('nombre')->get(),
             'puedeSeleccionarSucursal' => $puedeSeleccionarSucursal,
         ]);

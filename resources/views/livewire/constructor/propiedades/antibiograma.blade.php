@@ -24,9 +24,12 @@
     </div>
 
     <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
-        <p class="text-xs text-blue-800 dark:text-blue-300">
-            <i class="fas fa-info-circle mr-1"></i>
-            Los antibióticos se agregarán al llenar el formulario
+        <p class="text-xs font-semibold text-blue-800 dark:text-blue-300 mb-1">
+            <i class="fas fa-info-circle mr-1"></i> ¿Cómo funciona este componente?
         </p>
+        <ul class="text-xs text-blue-700 dark:text-blue-300 space-y-1 ml-4 list-disc">
+            <li>Genera una tabla de antibiograma con las columnas que definas arriba (por defecto: SENSIBLE, INTERMEDIO, RESISTENTE).</li>
+            <li>Los <strong>antibióticos</strong> (filas) no se configuran aquí. El bioquímico los agregará al momento de capturar resultados, ya que varían según cada caso.</li>
+        </ul>
     </div>
 </div>

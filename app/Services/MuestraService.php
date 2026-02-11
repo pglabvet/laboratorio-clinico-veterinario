@@ -25,8 +25,10 @@ class MuestraService
         $prefijo = $sucursal->getPrefijo();
 
         // Obtener el último código de muestra de esta sucursal
+        // lockForUpdate() previene race conditions cuando dos usuarios crean muestras simultáneamente
         $ultimaMuestra = Muestra::where('sucursal_id', $sucursalId)
             ->orderBy('id', 'desc')
+            ->lockForUpdate()
             ->first();
 
         if (!$ultimaMuestra) {

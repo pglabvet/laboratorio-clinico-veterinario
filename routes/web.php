@@ -125,10 +125,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('/resultados/preview', 'livewire.resultados.capturar-resultados')
         ->name('resultados.preview');
 
-    // Ver listado de análisis completados
-    Route::get('/analisis', \App\Livewire\AnalisisListado::class)
-        ->name('analisis.index');
-
     // Revisar análisis finalizados (Admin)
     Route::get('/analisis/revisar', \App\Livewire\Analisis\RevisarAnalisis::class)
         ->middleware('can:ver-analisis')

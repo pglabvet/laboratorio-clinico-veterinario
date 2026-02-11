@@ -1,0 +1,305 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Analisis;
+use App\Models\Muestra;
+use App\Models\TokenDescarga;
+use App\Mail\ResultadosAnalisisMail;
+use Illuminate\Support\Facades\Mail;
+
+class EnvioResultadosService
+{
+    protected AnalisisPdfService $pdfService;
+
+    public function __construct(AnalisisPdfService $pdfService)
+    {
+        $this->pdfService = $pdfService;
+    }
+
+    /**
+     * Preparar envío de un análisis individual por WhatsApp.
+     * Genera PDF, token de descarga y retorna la URL de WhatsApp.
+     *
+     * @return array{url: string, mensaje: string}
+     * @throws \Exception
+     */
+    public function prepararWhatsApp(int $analisisId): array
+    {
+        $analisis = Analisis::with([
+            'tipoAnalisis',
+            'muestra.veterinaria',
+            'muestra.sucursal',
+            'muestra.especie',
+            'pdfs'
+        ])->findOrFail($analisisId);
+
+        $this->validarEstadoEnvio($analisis);
+
+        $telefono = $analisis->muestra->veterinaria->telefono ?? null;
+        if (!$telefono) {
+            throw new \Exception('La veterinaria no tiene un número de teléfono registrado.');
+        }
+
+        // Obtener o generar el PDF
+        $pdf = $analisis->pdfs()->latest()->first();
+        if (!$pdf) {
+            $resultado = $this->pdfService->generar($analisis);
+            $pdf = $resultado['modelo'];
+        }
+
+        // Crear token de descarga (3 días)
+        $tokenDescarga = TokenDescarga::crearParaPdf($pdf->id, 3);
+        $urlDescarga = $tokenDescarga->getUrlDescarga();
+
+        // Construir mensaje y URL
+        $mensaje = $this->construirMensajeWhatsApp($analisis, $urlDescarga);
+        $telefonoFormateado = $this->formatearTelefonoWhatsApp($telefono);
+        $urlWhatsApp = 'https://wa.me/' . $telefonoFormateado . '?text=' . rawurlencode($mensaje);
+
+        // Marcar como enviado
+        $analisis->update(['estado' => Analisis::ESTADO_ENVIADO]);
+
+        return [
+            'url' => $urlWhatsApp,
+            'mensaje' => 'Enlace de WhatsApp generado. El análisis ha sido marcado como enviado.',
+        ];
+    }
+
+    /**
+     * Preparar envío de todos los análisis de una muestra por WhatsApp.
+     *
+     * @return array{url: string, mensaje: string}
+     * @throws \Exception
+     */
+    public function prepararWhatsAppMasivo(Muestra $muestra): array
+    {
+        $muestra->load([
+            'veterinaria',
+            'especie',
+            'sucursal',
+            'analisis.tipoAnalisis',
+            'analisis.pdfs'
+        ]);
+
+        $analisisCollection = $muestra->analisis;
+
+        $this->validarColeccionParaEnvio($analisisCollection);
+
+        $telefono = $muestra->veterinaria->telefono ?? null;
+        if (!$telefono) {
+            throw new \Exception('La veterinaria no tiene un número de teléfono registrado.');
+        }
+
+        $linksDescarga = [];
+
+        foreach ($analisisCollection as $analisis) {
+            $pdf = $analisis->pdfs()->latest()->first();
+            if (!$pdf) {
+                $resultado = $this->pdfService->generar($analisis);
+                $pdf = $resultado['modelo'];
+            }
+
+            $tokenDescarga = TokenDescarga::crearParaPdf($pdf->id, 3);
+            $linksDescarga[] = [
+                'nombre' => $analisis->tipoAnalisis->nombre ?? 'Análisis',
+                'url' => $tokenDescarga->getUrlDescarga(),
+            ];
+
+            $analisis->update(['estado' => Analisis::ESTADO_ENVIADO]);
+        }
+
+        $mensaje = $this->construirMensajeWhatsAppMultiple($muestra, $linksDescarga);
+        $telefonoFormateado = $this->formatearTelefonoWhatsApp($telefono);
+        $urlWhatsApp = 'https://wa.me/' . $telefonoFormateado . '?text=' . rawurlencode($mensaje);
+
+        return [
+            'url' => $urlWhatsApp,
+            'mensaje' => 'Enlace de WhatsApp generado. Todos los análisis han sido marcados como enviados.',
+        ];
+    }
+
+    /**
+     * Enviar resultado de un análisis individual por Email.
+     *
+     * @return string Mensaje de éxito
+     * @throws \Exception
+     */
+    public function enviarEmail(int $analisisId): string
+    {
+        $analisis = Analisis::with([
+            'tipoAnalisis',
+            'muestra.veterinaria',
+            'muestra.sucursal',
+            'muestra.especie',
+            'pdfs'
+        ])->findOrFail($analisisId);
+
+        $this->validarEstadoEnvio($analisis);
+
+        $email = $analisis->muestra->veterinaria->email ?? null;
+        if (!$email) {
+            throw new \Exception('La veterinaria no tiene un correo electrónico registrado.');
+        }
+
+        // Obtener o generar el PDF
+        $pdf = $analisis->pdfs()->latest()->first();
+        if (!$pdf) {
+            $resultado = $this->pdfService->generar($analisis);
+            $pdf = $resultado['modelo'];
+        }
+
+        $muestra = $analisis->muestra->load(['veterinaria', 'sucursal', 'especie']);
+
+        Mail::to($email)->send(
+            new ResultadosAnalisisMail($muestra, [$analisis->id], true)
+        );
+
+        $analisis->update(['estado' => Analisis::ESTADO_ENVIADO]);
+
+        return 'Resultados enviados por correo electrónico a ' . $email;
+    }
+
+    /**
+     * Enviar todos los análisis de una muestra por Email.
+     *
+     * @return string Mensaje de éxito
+     * @throws \Exception
+     */
+    public function enviarEmailMasivo(Muestra $muestra): string
+    {
+        $muestra->load([
+            'veterinaria',
+            'especie',
+            'sucursal',
+            'analisis.tipoAnalisis',
+            'analisis.pdfs'
+        ]);
+
+        $analisisCollection = $muestra->analisis;
+
+        $this->validarColeccionParaEnvio($analisisCollection);
+
+        $email = $muestra->veterinaria->email ?? null;
+        if (!$email) {
+            throw new \Exception('La veterinaria no tiene un correo electrónico registrado.');
+        }
+
+        $analisisIds = [];
+
+        foreach ($analisisCollection as $analisis) {
+            $pdf = $analisis->pdfs()->latest()->first();
+            if (!$pdf) {
+                $resultado = $this->pdfService->generar($analisis);
+                $pdf = $resultado['modelo'];
+            }
+
+            $analisisIds[] = $analisis->id;
+            $analisis->update(['estado' => Analisis::ESTADO_ENVIADO]);
+        }
+
+        Mail::to($email)->send(
+            new ResultadosAnalisisMail($muestra, $analisisIds, true)
+        );
+
+        return 'Todos los resultados fueron enviados por correo electrónico a ' . $email;
+    }
+
+    // ─── Métodos privados auxiliares ───────────────────────────────────
+
+    /**
+     * Validar que un análisis esté en estado válido para envío.
+     */
+    private function validarEstadoEnvio(Analisis $analisis): void
+    {
+        $estadosValidos = [Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO];
+        if (!in_array($analisis->estado, $estadosValidos)) {
+            throw new \Exception(
+                'Solo se pueden enviar análisis aprobados o ya enviados. Estado actual: ' . $analisis->estado
+            );
+        }
+    }
+
+    /**
+     * Validar una colección de análisis para envío masivo.
+     */
+    private function validarColeccionParaEnvio($analisisCollection): void
+    {
+        if ($analisisCollection->isEmpty()) {
+            throw new \Exception('No hay análisis para enviar.');
+        }
+
+        $estadosValidos = [Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO];
+        $noValidos = $analisisCollection->filter(function ($analisis) use ($estadosValidos) {
+            return !in_array($analisis->estado, $estadosValidos);
+        });
+
+        if ($noValidos->count() > 0) {
+            $nombresNoValidos = $noValidos->map(
+                fn($a) => ($a->tipoAnalisis->nombre ?? 'Sin nombre') . ' (' . $a->estado . ')'
+            )->implode(', ');
+            throw new \Exception(
+                'Todos los análisis deben estar aprobados o enviados. Pendientes: ' . $nombresNoValidos
+            );
+        }
+    }
+
+    /**
+     * Formatear número de teléfono para WhatsApp.
+     * Limpia caracteres no numéricos y añade código de país de Bolivia (591).
+     */
+    private function formatearTelefonoWhatsApp(string $telefono): string
+    {
+        $telefonoLimpio = preg_replace('/[^0-9]/', '', $telefono);
+        return '591' . ltrim($telefonoLimpio, '0');
+    }
+
+    /**
+     * Construir mensaje de WhatsApp para un análisis individual.
+     */
+    private function construirMensajeWhatsApp(Analisis $analisis, string $urlDescarga): string
+    {
+        $muestra = $analisis->muestra;
+        $sucursal = $muestra->sucursal->nombre ?? 'N/A';
+
+        return "*PGLABVET LABORATORIO CLINICO VETERINARIO*\n" .
+            "_{$sucursal}_\n" .
+            "------------------------------------\n\n" .
+            "*Paciente:* {$muestra->paciente_nombre}\n" .
+            "*Propietario:* {$muestra->propietario_nombre}\n" .
+            "*Analisis:* " . ($analisis->tipoAnalisis->nombre ?? 'N/A') . "\n" .
+            "*Codigo:* {$muestra->codigo_muestra}\n\n" .
+            "------------------------------------\n" .
+            "*Descarga tu resultado aqui:*\n" .
+            $urlDescarga . "\n\n" .
+            "_Enlace valido por 3 dias_\n\n" .
+            "_Gracias por confiar en nosotros!_";
+    }
+
+    /**
+     * Construir mensaje de WhatsApp para múltiples análisis.
+     */
+    private function construirMensajeWhatsAppMultiple(Muestra $muestra, array $linksDescarga): string
+    {
+        $sucursal = $muestra->sucursal->nombre ?? 'N/A';
+
+        $mensaje = "*PGLABVET LABORATORIO CLINICO VETERINARIO*\n" .
+            "_{$sucursal}_\n" .
+            "------------------------------------\n\n" .
+            "*Paciente:* {$muestra->paciente_nombre}\n" .
+            "*Propietario:* {$muestra->propietario_nombre}\n" .
+            "*Codigo:* {$muestra->codigo_muestra}\n\n" .
+            "------------------------------------\n" .
+            "*Resultados disponibles:*\n\n";
+
+        foreach ($linksDescarga as $index => $link) {
+            $numero = $index + 1;
+            $mensaje .= "{$numero}. *{$link['nombre']}*\n{$link['url']}\n\n";
+        }
+
+        $mensaje .= "_Enlaces validos por 3 dias_\n\n" .
+            "_Gracias por confiar en nosotros!_";
+
+        return $mensaje;
+    }
+}

@@ -32,4 +32,15 @@
             <option value="derecha">Derecha</option>
         </select>
     </div>
+
+    <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+        <p class="text-xs font-semibold text-blue-800 dark:text-blue-300 mb-1">
+            <i class="fas fa-info-circle mr-1"></i> ¿Cómo funciona este componente?
+        </p>
+        <ul class="text-xs text-blue-700 dark:text-blue-300 space-y-1 ml-4 list-disc">
+            <li>Inserta un <strong>encabezado o separador visual</strong> entre secciones del reporte. No es editable por el bioquímico.</li>
+            <li>Puedes ajustar el <strong>tamaño</strong> (grande, mediano, pequeño) y la <strong>alineación</strong> (izquierda, centro, derecha) según la jerarquía visual que necesites.</li>
+            <li>Ideal para separar bloques como: "RESULTADOS", "OBSERVACIONES", "ÍNDICES ERITROCITARIOS", etc.</li>
+        </ul>
+    </div>
 </div>

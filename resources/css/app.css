@@ -55,7 +55,7 @@
 }
 
 [data-flux-label] {
-    @apply  !mb-0 !leading-tight;
+    @apply !mb-0 !leading-tight;
 }
 
 input:focus[data-flux-control],
@@ -72,8 +72,13 @@ select:focus[data-flux-control] {
 
 /* Dot-grid subtle drift animation */
 @keyframes login-dot-drift {
-    0%   { background-position: 0px 0px; }
-    100% { background-position: 24px 24px; }
+    0% {
+        background-position: 0px 0px;
+    }
+
+    100% {
+        background-position: 24px 24px;
+    }
 }
 
 .login-dot-grid {
@@ -88,7 +93,7 @@ select:focus[data-flux-control] {
 
 .login-btn:hover {
     box-shadow: 0 0 20px rgba(6, 182, 212, 0.25),
-                0 0 40px rgba(6, 182, 212, 0.10);
+        0 0 40px rgba(6, 182, 212, 0.10);
 }
 
 .login-btn:active {

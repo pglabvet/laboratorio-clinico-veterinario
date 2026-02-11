@@ -8,15 +8,11 @@ use App\Models\Veterinaria;
 use App\Models\Sucursal;
 use App\Models\TipoAnalisis;
 use App\Models\Analisis;
-use App\Models\TokenDescarga;
-use App\Models\Pdf;
 use App\Services\MuestraService;
-use App\Services\AnalisisPdfService;
-use App\Mail\ResultadosAnalisisMail;
+use App\Services\EnvioResultadosService;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 
 class GestionarMuestras extends Component
 {
@@ -84,7 +80,7 @@ class GestionarMuestras extends Component
             'veterinaria_id' => 'required|exists:veterinarias,id',
             'sucursal_id' => 'required|exists:sucursales,id',
             'tipo_muestra' => 'required|string|max:100',
-            'fecha_recepcion' => 'required|date',
+
             'observaciones' => 'nullable|string',
             'tipos_analisis_seleccionados' => 'required|array|min:1',
             'tipos_analisis_seleccionados.*' => 'exists:tipos_analisis,id',
@@ -101,7 +97,7 @@ class GestionarMuestras extends Component
         'veterinaria_id.required' => 'Debe seleccionar una veterinaria.',
         'sucursal_id.required' => 'Debe seleccionar una sucursal.',
         'tipo_muestra.required' => 'El tipo de muestra es obligatorio.',
-        'fecha_recepcion.required' => 'La fecha de recepción es obligatoria.',
+
         'tipos_analisis_seleccionados.required' => 'Debe seleccionar al menos un tipo de análisis.',
         'tipos_analisis_seleccionados.min' => 'Debe seleccionar al menos un tipo de análisis.',
     ];
@@ -111,7 +107,7 @@ class GestionarMuestras extends Component
      */
     public function mount()
     {
-        $this->fecha_recepcion = now()->format('Y-m-d');
+
         $this->sucursal_id = auth()->user()->sucursal_id ?? Sucursal::first()?->id;
 
         // Si hay una muestra recién creada, abrir su modal automáticamente
@@ -204,77 +200,21 @@ class GestionarMuestras extends Component
     public function enviarWhatsApp($analisisId)
     {
         try {
-            $analisis = Analisis::with([
-                'tipoAnalisis',
-                'muestra.veterinaria',
-                'muestra.sucursal',
-                'muestra.especie',
-                'pdfs'
-            ])->find($analisisId);
+            $service = app(EnvioResultadosService::class);
+            $resultado = $service->prepararWhatsApp($analisisId);
 
-            if (!$analisis) {
-                session()->flash('error', 'Análisis no encontrado.');
-                return;
-            }
+            $this->dispatch('abrir-whatsapp', url: $resultado['url']);
 
-            // Validar que esté aprobado o enviado
-            $estadosValidos = [Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO];
-            if (!in_array($analisis->estado, $estadosValidos)) {
-                session()->flash('error', 'Solo se pueden enviar análisis aprobados o ya enviados. Estado actual: ' . $analisis->estado);
-                return;
-            }
-
-            // Verificar teléfono de la veterinaria
-            $telefono = $analisis->muestra->veterinaria->telefono ?? null;
-            if (!$telefono) {
-                session()->flash('error', 'La veterinaria no tiene un número de teléfono registrado.');
-                return;
-            }
-
-            // Obtener o generar el PDF
-            $pdf = $analisis->pdfs()->latest()->first();
-
-            if (!$pdf) {
-                // Generar PDF automáticamente
-                $pdfService = app(AnalisisPdfService::class);
-                $resultado = $pdfService->generar($analisis);
-                $pdf = $resultado['modelo'];
-            }
-
-            // Crear token de descarga (3 días)
-            $tokenDescarga = TokenDescarga::crearParaPdf($pdf->id, 3);
-            $urlDescarga = $tokenDescarga->getUrlDescarga();
-
-            // Construir mensaje de WhatsApp
-            $mensaje = $this->construirMensajeWhatsApp($analisis, $urlDescarga);
-
-            // Construir URL de WhatsApp
-            $telefonoFormateado = $this->formatearTelefonoWhatsApp($telefono);
-            $urlWhatsApp = 'https://wa.me/' . $telefonoFormateado . '?text=' . rawurlencode($mensaje);
-
-            // Emitir evento para abrir URL en nueva pestaña
-            $this->dispatch('abrir-whatsapp', url: $urlWhatsApp);
-
-            // Cambiar estado a Enviado SOLO si todo salió bien
-            $analisis->update(['estado' => Analisis::ESTADO_ENVIADO]);
-
-            // Actualizar el modal si está abierto
             if ($this->muestraAnalisis) {
                 $this->muestraAnalisis->load('analisis.tipoAnalisis');
             }
 
-            session()->flash('mensaje', 'Enlace de WhatsApp generado. El análisis ha sido marcado como enviado.');
+            session()->flash('mensaje', $resultado['mensaje']);
         } catch (\Exception $e) {
-            // Registrar el error para poder investigarlo
             \Log::error('Error al generar enlace de WhatsApp para análisis ' . $analisisId . ': ' . $e->getMessage(), [
                 'exception' => $e,
             ]);
-
-            // Informar claramente al usuario que el análisis no fue marcado como enviado
-            session()->flash(
-                'error',
-                'No se pudo generar el enlace de WhatsApp. El análisis no ha sido marcado como enviado. Detalle técnico: ' . $e->getMessage()
-            );
+            session()->flash('error', 'No se pudo generar el enlace de WhatsApp. El análisis no ha sido marcado como enviado. Detalle técnico: ' . $e->getMessage());
         }
     }
 
@@ -289,77 +229,13 @@ class GestionarMuestras extends Component
         }
 
         try {
-            $this->muestraAnalisis->load([
-                'veterinaria',
-                'especie',
-                'analisis.tipoAnalisis',
-                'analisis.pdfs'
-            ]);
+            $service = app(EnvioResultadosService::class);
+            $resultado = $service->prepararWhatsAppMasivo($this->muestraAnalisis);
 
-            $analisisCollection = $this->muestraAnalisis->analisis;
-
-            // Validar que todos estén aprobados o enviados
-            $estadosValidos = [Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO];
-            $noValidos = $analisisCollection->filter(function ($analisis) use ($estadosValidos) {
-                return !in_array($analisis->estado, $estadosValidos);
-            });
-
-            if ($noValidos->count() > 0) {
-                $nombresNoValidos = $noValidos->map(fn($a) => ($a->tipoAnalisis->nombre ?? 'Sin nombre') . ' (' . $a->estado . ')')->implode(', ');
-                session()->flash('error', 'Todos los análisis deben estar aprobados o enviados. Pendientes: ' . $nombresNoValidos);
-                return;
-            }
-
-            if ($analisisCollection->isEmpty()) {
-                session()->flash('error', 'No hay análisis para enviar.');
-                return;
-            }
-
-            // Verificar teléfono de la veterinaria
-            $telefono = $this->muestraAnalisis->veterinaria->telefono ?? null;
-            if (!$telefono) {
-                session()->flash('error', 'La veterinaria no tiene un número de teléfono registrado.');
-                return;
-            }
-
-            $pdfService = app(AnalisisPdfService::class);
-            $linksDescarga = [];
-
-            foreach ($analisisCollection as $analisis) {
-                // Obtener o generar el PDF
-                $pdf = $analisis->pdfs()->latest()->first();
-
-                if (!$pdf) {
-                    $resultado = $pdfService->generar($analisis);
-                    $pdf = $resultado['modelo'];
-                }
-
-                // Crear token de descarga (3 días)
-                $tokenDescarga = TokenDescarga::crearParaPdf($pdf->id, 3);
-
-                $linksDescarga[] = [
-                    'nombre' => $analisis->tipoAnalisis->nombre ?? 'Análisis',
-                    'url' => $tokenDescarga->getUrlDescarga(),
-                ];
-
-                // Cambiar estado a Enviado
-                $analisis->update(['estado' => Analisis::ESTADO_ENVIADO]);
-            }
-
-            // Construir mensaje consolidado
-            $mensaje = $this->construirMensajeWhatsAppMultiple($this->muestraAnalisis, $linksDescarga);
-
-            // Construir URL de WhatsApp
-            $telefonoFormateado = $this->formatearTelefonoWhatsApp($telefono);
-            $urlWhatsApp = 'https://wa.me/' . $telefonoFormateado . '?text=' . rawurlencode($mensaje);
-
-            // Actualizar el modal
             $this->muestraAnalisis->load('analisis.tipoAnalisis');
+            $this->dispatch('abrir-whatsapp', url: $resultado['url']);
 
-            // Emitir evento para abrir URL en nueva pestaña
-            $this->dispatch('abrir-whatsapp', url: $urlWhatsApp);
-
-            session()->flash('mensaje', 'Enlace de WhatsApp generado. Todos los análisis han sido marcados como enviados.');
+            session()->flash('mensaje', $resultado['mensaje']);
         } catch (\Exception $e) {
             session()->flash('error', 'Error al generar enlaces: ' . $e->getMessage());
         }
@@ -371,67 +247,19 @@ class GestionarMuestras extends Component
     public function enviarEmail($analisisId)
     {
         try {
-            $analisis = Analisis::with([
-                'tipoAnalisis',
-                'muestra.veterinaria',
-                'muestra.sucursal',
-                'muestra.especie',
-                'pdfs'
-            ])->find($analisisId);
+            $service = app(EnvioResultadosService::class);
+            $mensaje = $service->enviarEmail($analisisId);
 
-            if (!$analisis) {
-                session()->flash('error', 'Análisis no encontrado.');
-                return;
-            }
-
-            // Validar que esté aprobado o enviado
-            $estadosValidos = [Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO];
-            if (!in_array($analisis->estado, $estadosValidos)) {
-                session()->flash('error', 'Solo se pueden enviar análisis aprobados o ya enviados. Estado actual: ' . $analisis->estado);
-                return;
-            }
-
-            // Verificar email de la veterinaria
-            $email = $analisis->muestra->veterinaria->email ?? null;
-            if (!$email) {
-                session()->flash('error', 'La veterinaria no tiene un correo electrónico registrado.');
-                return;
-            }
-
-            // Obtener o generar el PDF
-            $pdf = $analisis->pdfs()->latest()->first();
-            if (!$pdf) {
-                $pdfService = app(AnalisisPdfService::class);
-                $resultado = $pdfService->generar($analisis);
-                $pdf = $resultado['modelo'];
-            }
-
-            // Cargar muestra con relaciones necesarias
-            $muestra = $analisis->muestra->load(['veterinaria', 'sucursal', 'especie']);
-
-            // Enviar email con PDF adjunto
-            Mail::to($email)->send(
-                new ResultadosAnalisisMail($muestra, [$analisis->id], true)
-            );
-
-            // Cambiar estado a Enviado
-            $analisis->update(['estado' => Analisis::ESTADO_ENVIADO]);
-
-            // Actualizar el modal si está abierto
             if ($this->muestraAnalisis) {
                 $this->muestraAnalisis->load('analisis.tipoAnalisis');
             }
 
-            session()->flash('mensaje', 'Resultados enviados por correo electrónico a ' . $email);
+            session()->flash('mensaje', $mensaje);
         } catch (\Exception $e) {
             \Log::error('Error al enviar email para análisis ' . $analisisId . ': ' . $e->getMessage(), [
                 'exception' => $e,
             ]);
-
-            session()->flash(
-                'error',
-                'No se pudo enviar el correo electrónico. Detalle: ' . $e->getMessage()
-            );
+            session()->flash('error', 'No se pudo enviar el correo electrónico. Detalle: ' . $e->getMessage());
         }
     }
 
@@ -446,129 +274,19 @@ class GestionarMuestras extends Component
         }
 
         try {
-            $this->muestraAnalisis->load([
-                'veterinaria',
-                'especie',
-                'sucursal',
-                'analisis.tipoAnalisis',
-                'analisis.pdfs'
-            ]);
+            $service = app(EnvioResultadosService::class);
+            $mensaje = $service->enviarEmailMasivo($this->muestraAnalisis);
 
-            $analisisCollection = $this->muestraAnalisis->analisis;
-
-            // Validar que todos estén aprobados o enviados
-            $estadosValidos = [Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO];
-            $noValidos = $analisisCollection->filter(function ($analisis) use ($estadosValidos) {
-                return !in_array($analisis->estado, $estadosValidos);
-            });
-
-            if ($noValidos->count() > 0) {
-                $nombresNoValidos = $noValidos->map(fn($a) => ($a->tipoAnalisis->nombre ?? 'Sin nombre') . ' (' . $a->estado . ')')->implode(', ');
-                session()->flash('error', 'Todos los análisis deben estar aprobados o enviados. Pendientes: ' . $nombresNoValidos);
-                return;
-            }
-
-            if ($analisisCollection->isEmpty()) {
-                session()->flash('error', 'No hay análisis para enviar.');
-                return;
-            }
-
-            // Verificar email de la veterinaria
-            $email = $this->muestraAnalisis->veterinaria->email ?? null;
-            if (!$email) {
-                session()->flash('error', 'La veterinaria no tiene un correo electrónico registrado.');
-                return;
-            }
-
-            $pdfService = app(AnalisisPdfService::class);
-            $analisisIds = [];
-
-            foreach ($analisisCollection as $analisis) {
-                // Obtener o generar el PDF
-                $pdf = $analisis->pdfs()->latest()->first();
-                if (!$pdf) {
-                    $resultado = $pdfService->generar($analisis);
-                    $pdf = $resultado['modelo'];
-                }
-
-                $analisisIds[] = $analisis->id;
-
-                // Cambiar estado a Enviado
-                $analisis->update(['estado' => Analisis::ESTADO_ENVIADO]);
-            }
-
-            // Enviar email con todos los PDFs adjuntos
-            Mail::to($email)->send(
-                new ResultadosAnalisisMail($this->muestraAnalisis, $analisisIds, true)
-            );
-
-            // Actualizar el modal
             $this->muestraAnalisis->load('analisis.tipoAnalisis');
-
-            // Cerrar modal después de envío exitoso
             $this->cerrarModalAnalisis();
 
-            session()->flash('mensaje', 'Todos los resultados fueron enviados por correo electrónico a ' . $email);
+            session()->flash('mensaje', $mensaje);
         } catch (\Exception $e) {
             \Log::error('Error al enviar todos los análisis por email: ' . $e->getMessage(), [
                 'exception' => $e,
             ]);
-
             session()->flash('error', 'Error al enviar los resultados por correo: ' . $e->getMessage());
         }
-    }
-
-    /**
-     * Formatear número de teléfono para WhatsApp
-     * Limpia caracteres no numéricos y añade código de país de Bolivia (591)
-     */
-    private function formatearTelefonoWhatsApp(string $telefono): string
-    {
-        $telefonoLimpio = preg_replace('/[^0-9]/', '', $telefono);
-        return '591' . ltrim($telefonoLimpio, '0');
-    }
-
-    /**
-     * Construir mensaje de WhatsApp para un análisis individual
-     */
-    private function construirMensajeWhatsApp(Analisis $analisis, string $urlDescarga): string
-    {
-        $muestra = $analisis->muestra;
-        $sucursal = $muestra->sucursal->nombre ?? 'N/A';
-
-        return "*LABORATORIO CLINICO VETERINARIO*\n" .
-            "*Sucursal:* {$sucursal}\n\n" .
-            "*Codigo:* {$muestra->codigo_muestra}\n" .
-            "*Paciente:* {$muestra->paciente_nombre}\n" .
-            "*Propietario:* {$muestra->propietario_nombre}\n" .
-            "*Analisis:* " . ($analisis->tipoAnalisis->nombre ?? 'N/A') . "\n\n" .
-            "Descarga tu resultado aqui _(valido por 3 dias)_:\n" .
-            $urlDescarga . "\n\n" .
-            "_Gracias por confiar en nosotros._";
-    }
-
-    /**
-     * Construir mensaje de WhatsApp para múltiples análisis
-     */
-    private function construirMensajeWhatsAppMultiple(Muestra $muestra, array $linksDescarga): string
-    {
-        $sucursal = $muestra->sucursal->nombre ?? 'N/A';
-
-        $mensaje = "*LABORATORIO CLINICO VETERINARIO*\n" .
-            "*Sucursal:* {$sucursal}\n\n" .
-            "*Codigo:* {$muestra->codigo_muestra}\n" .
-            "*Paciente:* {$muestra->paciente_nombre}\n" .
-            "*Propietario:* {$muestra->propietario_nombre}\n\n" .
-            "*Resultados disponibles (validos por 3 dias):*\n\n";
-
-        foreach ($linksDescarga as $index => $link) {
-            $numero = $index + 1;
-            $mensaje .= "{$numero}. *{$link['nombre']}*\n{$link['url']}\n\n";
-        }
-
-        $mensaje .= "_Gracias por confiar en nosotros._";
-
-        return $mensaje;
     }
 
     /**
@@ -688,7 +406,7 @@ class GestionarMuestras extends Component
             $muestra = Muestra::findOrFail($this->muestraAEliminar);
 
             // Verificar si tiene análisis en proceso o completados
-            if ($muestra->analisis()->whereIn('estado', ['En revision', 'Aprobado', 'Enviado'])->count() > 0) {
+            if ($muestra->analisis()->whereIn('estado', [Analisis::ESTADO_EN_REVISION, Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO])->count() > 0) {
                 session()->flash('error', 'No se puede eliminar la muestra porque tiene análisis en revisión, aprobados o enviados.');
                 $this->modalEliminar = false;
                 $this->muestraAEliminar = null;
@@ -738,7 +456,6 @@ class GestionarMuestras extends Component
         $this->tipo_muestra = '';
         $this->observaciones = '';
         $this->tipos_analisis_seleccionados = [];
-        $this->fecha_recepcion = now()->format('Y-m-d');
         $this->sucursal_id = auth()->user()->sucursal_id ?? Sucursal::first()?->id;
         $this->estado = 'Pendiente';
     }
