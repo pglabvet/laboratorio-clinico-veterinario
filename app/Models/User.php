@@ -69,7 +69,7 @@ class User extends Authenticatable
     /**
      * Get the sucursal that the user belongs to.
      */
-    public function sucursal()
+    public function sucursal(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Sucursal::class);
     }

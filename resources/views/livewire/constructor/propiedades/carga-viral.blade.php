@@ -211,11 +211,16 @@
         </p>
     </div>
 
-    {{-- Información de ayuda --}}
     <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
-        <p class="text-xs text-blue-800 dark:text-blue-300">
-            <i class="fas fa-info-circle mr-1"></i>
-            <strong>El bioquímico completará los valores de cada campo definido.</strong>
+        <p class="text-xs font-semibold text-blue-800 dark:text-blue-300 mb-1">
+            <i class="fas fa-info-circle mr-1"></i> ¿Cómo funciona este componente?
         </p>
+        <ul class="text-xs text-blue-700 dark:text-blue-300 space-y-1 ml-4 list-disc">
+            <li>Diseñado para reportes de <strong>PCR en tiempo real</strong> (qPCR). Incluye campos del análisis, umbral de referencia e interpretaciones automáticas.</li>
+            <li>Los campos que definas arriba aparecerán como formulario para el bioquímico (ej: muestra analizada, resultado, técnica utilizada).</li>
+            <li>El <strong>umbral</strong> (ej: 10×10⁵ copias/ml) se usa para clasificar automáticamente el resultado como No Detectado, Infección Regresiva o Progresiva.</li>
+            <li>La <strong>gráfica</strong> (opcional) muestra visualmente la posición del resultado del paciente respecto al umbral.</li>
+            <li>Los textos de interpretación se imprimen automáticamente en el PDF según el resultado ingresado.</li>
+        </ul>
     </div>
 </div>

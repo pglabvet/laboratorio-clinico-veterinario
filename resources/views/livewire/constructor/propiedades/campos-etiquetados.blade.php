@@ -41,9 +41,12 @@
     </div>
 
     <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
-        <p class="text-xs text-blue-800 dark:text-blue-300">
-            <i class="fas fa-info-circle mr-1"></i>
-            Este componente mostrará una lista de campos con etiquetas que el bioquímico completará con texto libre.
+        <p class="text-xs font-semibold text-blue-800 dark:text-blue-300 mb-1">
+            <i class="fas fa-info-circle mr-1"></i> ¿Cómo funciona este componente?
         </p>
+        <ul class="text-xs text-blue-700 dark:text-blue-300 space-y-1 ml-4 list-disc">
+            <li>Muestra una lista vertical de campos, cada uno con su <strong>etiqueta</strong> (nombre del campo) y un espacio para que el bioquímico escriba texto libre.</li>
+            <li>Las etiquetas se definen aquí y aparecerán en negrita a la izquierda. El bioquímico solo completa el valor a la derecha.</li>
+        </ul>
     </div>
 </div>

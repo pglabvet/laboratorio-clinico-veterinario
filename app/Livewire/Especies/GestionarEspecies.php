@@ -164,7 +164,6 @@ class GestionarEspecies extends Component
                 return;
             }
 
-
             $especie->delete();
             session()->flash('mensaje', 'Especie eliminada exitosamente.');
             

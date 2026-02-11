@@ -106,9 +106,15 @@
     </div>
 
     <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
-        <p class="text-xs text-blue-800 dark:text-blue-300">
-            <i class="fas fa-info-circle mr-1"></i>
-            La tabla tiene 3 columnas fijas: ANÁLISIS (no editable), RESULTADO y RANGOS DE REFERENCIA (ambas editables por el bioquímico).
+        <p class="text-xs font-semibold text-blue-800 dark:text-blue-300 mb-1">
+            <i class="fas fa-info-circle mr-1"></i> ¿Cómo funciona este componente?
         </p>
+        <ul class="text-xs text-blue-700 dark:text-blue-300 space-y-1 ml-4 list-disc">
+            <li>La tabla tiene 3 columnas fijas: <strong>ANÁLISIS</strong> (nombre del examen), <strong>RESULTADO</strong> (valor obtenido) y <strong>RANGOS DE REFERENCIA</strong> (valores normales).</li>
+            <li>Las columnas ANÁLISIS y RANGOS DE REFERENCIA se llenan automáticamente con los datos que configures aquí. <strong>No son editables</strong> por el bioquímico.</li>
+            <li>Solo la columna <strong>RESULTADO</strong> es editable al momento de capturar resultados.</li>
+            <li>Los rangos de referencia y unidades que definas aquí aparecerán precargados en el reporte final.</li>
+            <li>Ideal para perfiles como: Perfil Hepático, Perfil Renal, Perfil Tiroideo, etc.</li>
+        </ul>
     </div>
 </div>

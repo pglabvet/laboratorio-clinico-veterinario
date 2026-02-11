@@ -150,18 +150,23 @@ class Muestra extends Model
         // Refrescar la muestra para asegurar datos frescos
         $this->refresh();
 
-        // Obtener conteos directamente de la BD para asegurar precisión
-        $totalAnalisis = $this->analisis()->count();
+        // Obtener conteos directamente de la BD con una sola query
+        $conteos = $this->analisis()
+            ->selectRaw('estado, count(*) as total')
+            ->groupBy('estado')
+            ->pluck('total', 'estado');
+
+        $totalAnalisis = $conteos->sum();
 
         // Si no hay análisis, mantener el estado actual
         if ($totalAnalisis === 0) {
             return;
         }
 
-        $enviados = $this->analisis()->where('estado', Analisis::ESTADO_ENVIADO)->count();
-        $aprobados = $this->analisis()->where('estado', Analisis::ESTADO_APROBADO)->count();
-        $enRevision = $this->analisis()->where('estado', Analisis::ESTADO_EN_REVISION)->count();
-        $pendientes = $this->analisis()->where('estado', Analisis::ESTADO_PENDIENTE)->count();
+        $enviados = $conteos->get(Analisis::ESTADO_ENVIADO, 0);
+        $aprobados = $conteos->get(Analisis::ESTADO_APROBADO, 0);
+        $enRevision = $conteos->get(Analisis::ESTADO_EN_REVISION, 0);
+        $pendientes = $conteos->get(Analisis::ESTADO_PENDIENTE, 0);
 
         // Determinar el nuevo estado de la muestra
         // IMPORTANTE: El orden de las condiciones importa

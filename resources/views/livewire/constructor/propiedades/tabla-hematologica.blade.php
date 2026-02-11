@@ -162,9 +162,14 @@
     </div>
 
     <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
-        <p class="text-xs text-blue-800 dark:text-blue-300">
-            <i class="fas fa-info-circle mr-1"></i>
-            Tabla especializada para análisis hematológicos con parámetros principales, diferenciales e índices eritrocitarios.
+        <p class="text-xs font-semibold text-blue-800 dark:text-blue-300 mb-1">
+            <i class="fas fa-info-circle mr-1"></i> ¿Cómo funciona este componente?
         </p>
+        <ul class="text-xs text-blue-700 dark:text-blue-300 space-y-1 ml-4 list-disc">
+            <li><strong>Parámetros Principales (izquierda):</strong> Son los valores básicos del hemograma (Eritrocitos, Leucocitos, Hematocrito, Hemoglobina, etc.). Cada uno tiene unidad y rango de referencia min/max.</li>
+            <li><strong>Diferenciales (derecha):</strong> Conteo diferencial leucocitario (Segmentados, Eosinófilos, Basófilos, Linfocitos, Monocitos). Tienen valores relativos (%) y absolutos.</li>
+            <li><strong>Índices Eritrocitarios (abajo):</strong> VCM, HbCM, CCMHb con su unidad y valor de referencia.</li>
+            <li>El bioquímico solo completará los campos de <strong>resultado</strong>. Los nombres, unidades y rangos se precargan con lo que configures aquí.</li>
+        </ul>
     </div>
 </div>

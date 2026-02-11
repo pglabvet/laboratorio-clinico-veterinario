@@ -21,4 +21,15 @@
             Este texto solo es para la vista previa
         </p>
     </div>
+
+    <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+        <p class="text-xs font-semibold text-blue-800 dark:text-blue-300 mb-1">
+            <i class="fas fa-info-circle mr-1"></i> ¿Cómo funciona este componente?
+        </p>
+        <ul class="text-xs text-blue-700 dark:text-blue-300 space-y-1 ml-4 list-disc">
+            <li>Proporciona un <strong>área de texto libre</strong> donde el bioquímico puede escribir observaciones, conclusiones o comentarios sin formato predefinido.</li>
+            <li>El contenido de ejemplo que escribas aquí es solo para la vista previa de la plantilla, <strong>no aparecerá</strong> al capturar resultados.</li>
+            <li>Ideal para: Observaciones generales, Conclusiones, Notas adicionales, Interpretación clínica, etc.</li>
+        </ul>
+    </div>
 </div>

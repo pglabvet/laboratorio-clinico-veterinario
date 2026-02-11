@@ -80,9 +80,13 @@
     </div>
 
     <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
-        <p class="text-xs text-blue-800 dark:text-blue-300">
-            <i class="fas fa-info-circle mr-1"></i>
-            Este componente crea una tabla de dos columnas. Puedes dividirla en secciones con subtítulos opcionales.
+        <p class="text-xs font-semibold text-blue-800 dark:text-blue-300 mb-1">
+            <i class="fas fa-info-circle mr-1"></i> ¿Cómo funciona este componente?
         </p>
+        <ul class="text-xs text-blue-700 dark:text-blue-300 space-y-1 ml-4 list-disc">
+            <li>Crea una tabla de <strong>2 columnas</strong>: la izquierda muestra el nombre del campo (fijo) y la derecha es donde el bioquímico escribe el resultado.</li>
+            <li>Puedes organizarla en <strong>secciones</strong> con subtítulos opcionales. Por ejemplo: "EXAMEN MACROSCÓPICO" con campos COLOR, CONSISTENCIA, y luego "EXAMEN MICROSCÓPICO" con otros campos.</li>
+            <li>Los nombres de los campos (ej: COLOR, CONSISTENCIA, pH) se definen aquí y no son editables por el bioquímico.</li>
+        </ul>
     </div>
 </div>

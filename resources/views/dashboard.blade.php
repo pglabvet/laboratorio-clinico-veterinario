@@ -1,9 +1,23 @@
 <x-layouts.app :title="__('Dashboard')">
     <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
         {{-- Título del Dashboard --}}
-        <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-zinc-900 dark:text-white">Dashboard</h1>
+                @php
+                    $hora = now()->hour;
+                    if ($hora >= 5 && $hora < 12) {
+                        $saludo = 'Buenos días';
+                        $icono = '☀️';
+                    } elseif ($hora >= 12 && $hora < 19) {
+                        $saludo = 'Buenas tardes';
+                        $icono = '🌤️';
+                    } else {
+                        $saludo = 'Buenas noches';
+                        $icono = '🌙';
+                    }
+                    $nombre = explode(' ', auth()->user()->name)[0];
+                @endphp
+                <h1 class="text-2xl font-bold text-zinc-900 dark:text-white">{{ $saludo }}, {{ $nombre }} <span class="inline-block animate-pulse">{{ $icono }}</span></h1>
                 <p class="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
                     @can('ver-estadisticas-completas')
                     Panel de control administrativo

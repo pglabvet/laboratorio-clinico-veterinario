@@ -281,7 +281,13 @@
                 </thead>
                 <tbody class="divide-y divide-neutral-200 bg-white dark:divide-neutral-700 dark:bg-neutral-800">
                     @forelse ($muestras as $muestra)
-                        <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50" wire:key="muestra-{{ $muestra->id }}">
+                        <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50 transition-colors duration-150 border-l-4 {{ match($muestra->estado) {
+                            'Pendiente' => 'border-l-yellow-400',
+                            'En proceso' => 'border-l-blue-400',
+                            'Completado' => 'border-l-green-400',
+                            'Enviado' => 'border-l-purple-400',
+                            default => 'border-l-transparent',
+                        } }}" wire:key="muestra-{{ $muestra->id }}">
                             <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-neutral-900 dark:text-neutral-100">
                                 {{ $muestra->codigo_muestra }}
                             </td>
@@ -313,7 +319,7 @@
                             <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-700 dark:text-neutral-300">
                                 <div class="flex flex-col">
                                     <span>{{ $muestra->fecha_recepcion->format('d/m/Y') }}</span>
-                                    <span class="text-xs text-neutral-500 dark:text-neutral-400">{{ $muestra->created_at->format('H:i:s') }}</span>
+                                    <span class="text-xs text-neutral-500 dark:text-neutral-400">{{ $muestra->fecha_recepcion->format('H:i:s') }}</span>
                                 </div>
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
@@ -530,7 +536,15 @@
                  wire:key="barcode-modal-{{ $muestraCodigoBarras->id }}-{{ $muestraCodigoBarras->codigo_muestra }}"
                  x-data="{ 
                     muestraId: {{ $muestraCodigoBarras->id }},
+                    codigoMuestra: '{{ $muestraCodigoBarras->codigo_muestra }}',
                     previousPrintWindow: null,
+                    copied: false,
+                    copyCode() {
+                        navigator.clipboard.writeText(this.codigoMuestra).then(() => {
+                            this.copied = true;
+                            setTimeout(() => this.copied = false, 2000);
+                        });
+                    },
                     printBarcode() {
                         if (this.previousPrintWindow && !this.previousPrintWindow.closed) {
                             this.previousPrintWindow.close();
@@ -609,6 +623,14 @@
                         variant="ghost"
                     >
                         Cerrar
+                    </flux:button>
+                    <flux:button 
+                        type="button"
+                        @click="copyCode()"
+                        variant="outline"
+                        icon="clipboard"
+                    >
+                        <span x-text="copied ? '¡Copiado!' : 'Copiar Código'"></span>
                     </flux:button>
                     <flux:button 
                         type="button"

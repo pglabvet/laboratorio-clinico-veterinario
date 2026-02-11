@@ -109,13 +109,15 @@
         </flux:button>
     </div>
 
-    <!-- Información del componente -->
     <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
-        <p class="text-xs text-blue-800 dark:text-blue-300">
-            <i class="fas fa-info-circle mr-1"></i>
-            Este componente crea una tabla con análisis medidos en diferentes momentos del tiempo. 
-            Los campos <span class="font-semibold text-yellow-700 dark:text-yellow-500">amarillos</span> (análisis y rangos) se configuran aquí, 
-            mientras que los campos <span class="font-semibold text-green-700 dark:text-green-500">verdes</span> (hora y resultado) se llenarán al capturar resultados.
+        <p class="text-xs font-semibold text-blue-800 dark:text-blue-300 mb-1">
+            <i class="fas fa-info-circle mr-1"></i> ¿Cómo funciona este componente?
         </p>
+        <ul class="text-xs text-blue-700 dark:text-blue-300 space-y-1 ml-4 list-disc">
+            <li>Diseñado para análisis que requieren <strong>múltiples mediciones en el tiempo</strong> (ej: Cortisol Basal, Supresión con Dexametasona).</li>
+            <li>El nombre del análisis, rangos de referencia y unidad se configuran aquí en la plantilla. <strong>No son editables</strong> por el bioquímico.</li>
+            <li>Los campos de <strong>hora</strong> y <strong>resultado</strong> los completa el bioquímico al capturar resultados.</li>
+            <li>Si activas la gráfica, se generará automáticamente un gráfico de líneas mostrando la evolución de los valores en el tiempo.</li>
+        </ul>
     </div>
 </div>
