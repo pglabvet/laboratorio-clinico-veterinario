@@ -164,12 +164,6 @@ class GestionarEspecies extends Component
                 return;
             }
 
-            if ($especie->rangosReferencia()->count() > 0) {
-                session()->flash('error', 'No se puede eliminar la especie porque tiene rangos de referencia asociados.');
-                $this->modalEliminar = false;
-                $this->especieAEliminar = null;
-                return;
-            }
 
             $especie->delete();
             session()->flash('mensaje', 'Especie eliminada exitosamente.');

@@ -263,6 +263,9 @@
                             Veterinaria
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
+                            Sucursal
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
                             Análisis
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
@@ -293,6 +296,9 @@
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-700 dark:text-neutral-300">
                                 {{ $muestra->veterinaria->nombre ?? 'N/A' }}
+                            </td>
+                            <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-700 dark:text-neutral-300">
+                                {{ $muestra->sucursal->nombre ?? 'N/A' }}
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-700 dark:text-neutral-300">
                                 <span class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
@@ -360,7 +366,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-6 py-12 text-center">
+                            <td colspan="9" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center justify-center">
                                     <svg class="mb-3 h-12 w-12 text-neutral-400 dark:text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

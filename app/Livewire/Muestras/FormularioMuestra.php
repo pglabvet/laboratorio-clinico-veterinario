@@ -21,7 +21,7 @@ class FormularioMuestra extends Component
     public $tipo_muestra;
     public $fecha_recepcion;
     public $estado = 'Pendiente';
-    public $observaciones;
+    public $observaciones = 'Sin Observaciones';
     public $sucursal_id;
 
     // Propiedades del formulario - Paciente
@@ -355,11 +355,14 @@ class FormularioMuestra extends Component
 
     public function render()
     {
+        $puedeSeleccionarSucursal = auth()->user()->can('vista-general-sistema');
+
         return view('livewire.muestras.formulario-muestra', [
-            'especies' => Especie::orderBy('nombre')->get(),
-            'veterinarias' => Veterinaria::orderBy('nombre')->get(),
+            'especies' => Especie::where('estado', true)->orderBy('nombre')->get(),
+            'veterinarias' => Veterinaria::where('estado', true)->orderBy('nombre')->get(),
             'sucursales' => Sucursal::orderBy('nombre')->get(),
             'tiposAnalisis' => TipoAnalisis::orderBy('nombre')->get(),
+            'puedeSeleccionarSucursal' => $puedeSeleccionarSucursal,
         ]);
     }
 
