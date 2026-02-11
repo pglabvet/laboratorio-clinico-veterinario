@@ -1,7 +1,7 @@
 <div class="grid gap-4 md:grid-cols-2">
     @can('registrar-muestras')
     {{-- Registrar Nueva Muestra --}}
-    <a href="{{ route('muestras.crear') }}" class="group relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 p-8 text-white shadow-lg transition-all hover:shadow-2xl hover:scale-[1.02]">
+    <a href="{{ route('muestras.crear') }}" wire:navigate class="group relative overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 p-8 text-white shadow-lg transition-all hover:shadow-2xl hover:scale-[1.02]">
         <div class="relative">
             <div class="mb-4 inline-flex rounded-lg bg-white/20 p-4 backdrop-blur-sm">
                 <svg class="size-8" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
@@ -26,9 +26,9 @@
     </a>
     @endcan
 
-    @can('escanear-muestras')
+    @can('ver-escanear-dashboard')
     {{-- Escanear Código --}}
-    <a href="{{ route('muestras.escanear') }}" class="group relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-500 to-purple-700 p-8 text-white shadow-lg transition-all hover:shadow-2xl hover:scale-[1.02]">
+    <a href="{{ route('muestras.escanear') }}" wire:navigate class="group relative overflow-hidden rounded-xl bg-gradient-to-br from-purple-500 to-purple-700 p-8 text-white shadow-lg transition-all hover:shadow-2xl hover:scale-[1.02]">
         <div class="relative">
             <div class="mb-4 inline-flex rounded-lg bg-white/20 p-4 backdrop-blur-sm">
                 <svg class="size-8" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">

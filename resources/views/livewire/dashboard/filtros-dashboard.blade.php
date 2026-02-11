@@ -57,16 +57,14 @@
             @endif
             @endcan
 
-            @if($fechaInicio || $sucursalId)
             <flux:button 
                 wire:click="limpiarFiltros"
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 icon="x-mark"
             >
                 Limpiar
             </flux:button>
-            @endif
         </div>
     </div>
 </div>

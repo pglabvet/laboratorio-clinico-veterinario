@@ -239,7 +239,7 @@
                             // Acciones rápidas
                             'ver-acciones-rapidas',
                             'registrar-muestras',
-                            'escanear-muestras',
+                            'ver-escanear-dashboard',
                         ];
                         
                         // Mapeo manual de permisos especiales a su grupo correspondiente
@@ -261,6 +261,7 @@
                             'guardar-categoria-insumo' => 'categorias-insumo',
                             'guardar-rol' => 'roles',
                             'guardar-permiso' => 'permisos',
+                            'escanear-muestras' => 'muestras',
                             'enviar-resultados-muestra' => 'muestras',
                             'ver-codigo-barras-muestra' => 'muestras',
                             'filtro-de-sucursal-muestra' => 'muestras',
@@ -395,11 +396,15 @@
                             $permisosDashboard = [
                                 'ver-dashboard',
                                 'ver-estadisticas-completas',
+                                'ver-filtros-dashboard',
                                 'filtrar-por-sucursal',
                                 'ver-graficos-estadisticas',
                                 'ver-actividad-reciente',
                                 'ver-alertas-inventario',
                                 'ver-ultimas-muestras',
+                                'ver-acciones-rapidas',
+                                'registrar-muestras',
+                                'ver-escanear-dashboard',
                             ];
                             
                             // Agrupar permisos por módulo/sección
