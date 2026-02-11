@@ -1,19 +1,19 @@
 <div x-data="formularioConstructor()" x-init="init()" class="min-h-screen bg-gray-50 dark:bg-zinc-800">
-    <div class="container mx-auto px-4 pt-2 pb-6">
+    <div class="px-2">
         <!-- Título y Botón Volver -->
         <div class="mb-6">
-            <div class="flex items-center gap-4 mb-2">
+            <div class="mb-4">
                 <flux:button href="{{ route('plantillas.index') }}" variant="outline" icon="arrow-left" class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950">
                     Volver
                 </flux:button>
-                <h1 class="text-2xl font-bold text-gray-800 dark:text-zinc-100">
-                    @if($plantillaId)
-                        Editar Plantilla
-                    @else
-                        Nueva Plantilla
-                    @endif
-                </h1>
             </div>
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-zinc-100">
+                @if($plantillaId)
+                    Editar Plantilla
+                @else
+                    Nueva Plantilla
+                @endif
+            </h1>
             <p class="text-gray-600 dark:text-zinc-400">
                 @if($plantillaId)
                     Modifica los campos y estructura de la plantilla de formulario

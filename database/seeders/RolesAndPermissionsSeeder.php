@@ -76,6 +76,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'enviar-resultados-muestra',
             'ver-codigo-barras-muestra',
             'filtro-de-sucursal-muestra',
+
+            // Vista general del sistema
+            'vista-general-sistema',         // Ver datos de TODAS las sucursales (sin este permiso, solo ve su sucursal)
             
             // Análisis
             'ver-analisis',
@@ -264,8 +267,6 @@ class RolesAndPermissionsSeeder extends Seeder
         ]);
 
         // Crear rol de Bioquímico
-        // Dashboard: SOLO ve gráficos con filtros (para analizar rendimiento)
-        //           NO ve tarjetas de estadísticas (debe procesar todo lo pendiente sin filtrar)
         $bioquimicoRole = Role::firstOrCreate(['name' => 'Bioquímico', 'guard_name' => 'web']);
         $bioquimicoRole->syncPermissions([
             // Dashboard
@@ -283,10 +284,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'ver-unidades-medida',
             'ver-muestras',
             'crear-muestras',
-            'editar-muestras',
             'ver-analisis',
-            'editar-analisis',
-            'eliminar-analisis',
             'ver-resultados',
             'registrar-resultados',
             'ingresar-resultados',
@@ -309,51 +307,6 @@ class RolesAndPermissionsSeeder extends Seeder
             // Muestras extra
             'enviar-resultados-muestra',
             'ver-codigo-barras-muestra',
-        ]);
-
-        // Crear rol de Recepcionista
-        // Dashboard: Ve estadísticas, solo puede registrar muestras (no escanear)
-        $recepcionistaRole = Role::firstOrCreate(['name' => 'Recepcionista', 'guard_name' => 'web']);
-        $recepcionistaRole->syncPermissions([
-            // Dashboard
-            'ver-dashboard',
-            'ver-actividad-reciente',
-            'ver-acciones-rapidas',
-            'registrar-muestras',
-            // Módulos
-            'ver-veterinarias',
-            'ver-especies',
-            'ver-tipos-analisis',
-            'ver-muestras',
-            'crear-muestras',
-            'ver-analisis',
-            'ver-resultados',
-            // Mostrar detalle
-            'mostrar-detalle-muestra',
-            'mostrar-detalle-veterinaria',
-            'mostrar-detalle-especie',
-            'mostrar-detalle-tipo-analisis',
-            // Muestras extra
-            'ver-codigo-barras-muestra',
-        ]);
-
-        // Crear rol de Usuario básico (solo lectura)
-        // Dashboard: Ve estadísticas y actividad reciente, sin acciones
-        $usuarioRole = Role::firstOrCreate(['name' => 'Usuario', 'guard_name' => 'web']);
-        $usuarioRole->syncPermissions([
-            // Dashboard
-            'ver-dashboard',
-            'ver-actividad-reciente',
-            // Módulos
-            'ver-especies',
-            'ver-tipos-analisis',
-            'ver-muestras',
-            'ver-analisis',
-            'ver-resultados',
-            // Mostrar detalle
-            'mostrar-detalle-muestra',
-            'mostrar-detalle-especie',
-            'mostrar-detalle-tipo-analisis',
         ]);
 
         $this->command->info('Roles y permisos creados exitosamente.');

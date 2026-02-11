@@ -988,6 +988,10 @@ class GestionarMuestras extends Component
         $muestras = Muestra::query()
             ->with(['especie', 'veterinaria', 'sucursal'])
             ->withCount('analisis')
+            // Filtrar por sucursal del usuario si no tiene vista general
+            ->when(!auth()->user()->can('vista-general-sistema'), function ($query) {
+                $query->where('sucursal_id', auth()->user()->sucursal_id);
+            })
             ->when($this->buscar, function ($query) {
                 $searchTerm = '%' . $this->buscar . '%';
                 $query->where(function ($q) use ($searchTerm) {

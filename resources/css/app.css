@@ -67,3 +67,30 @@ select:focus[data-flux-control] {
 /* \[:where(&)\]:size-4 {
     @apply size-4;
 } */
+
+/* ===== Login Page ===== */
+
+/* Dot-grid subtle drift animation */
+@keyframes login-dot-drift {
+    0%   { background-position: 0px 0px; }
+    100% { background-position: 24px 24px; }
+}
+
+.login-dot-grid {
+    animation: login-dot-drift 20s linear infinite;
+}
+
+/* Login button — cyan glow on hover */
+.login-btn {
+    position: relative;
+    transition: box-shadow 0.3s ease, transform 0.15s ease;
+}
+
+.login-btn:hover {
+    box-shadow: 0 0 20px rgba(6, 182, 212, 0.25),
+                0 0 40px rgba(6, 182, 212, 0.10);
+}
+
+.login-btn:active {
+    transform: scale(0.985);
+}

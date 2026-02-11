@@ -32,9 +32,10 @@ class PdfController extends Controller
             'resultados'
         ])->findOrFail($analisisId);
 
-        // Verificar que esté aprobado
-        if ($analisis->estado !== Analisis::ESTADO_APROBADO) {
-            abort(403, 'Solo se pueden generar PDFs de análisis aprobados. Estado actual: ' . $analisis->estado);
+        // Verificar que esté aprobado o enviado
+        $estadosValidos = [Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO];
+        if (!in_array($analisis->estado, $estadosValidos)) {
+            abort(403, 'Solo se pueden generar PDFs de análisis aprobados o enviados. Estado actual: ' . $analisis->estado);
         }
 
         try {
@@ -63,8 +64,9 @@ class PdfController extends Controller
             'resultados'
         ])->findOrFail($analisisId);
 
-        if ($analisis->estado !== Analisis::ESTADO_APROBADO) {
-            return back()->with('error', 'Solo se pueden ver PDFs de análisis aprobados.');
+        $estadosValidos = [Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO];
+        if (!in_array($analisis->estado, $estadosValidos)) {
+            return back()->with('error', 'Solo se pueden ver PDFs de análisis aprobados o enviados.');
         }
 
         try {
@@ -93,8 +95,8 @@ class PdfController extends Controller
         $image = str_replace(' ', '+', $image);
         $imageData = base64_decode($image);
 
-        // Guardar archivo
-        $path = "charts/{$analisisId}_{$request->input('component_index')}.png";
+        // Guardar archivo con estructura año/mes
+        $path = "charts/" . date('Y/m') . "/{$analisisId}_{$request->input('component_index')}.png";
         \Storage::disk('public')->put($path, $imageData);
 
         return response()->json(['success' => true, 'path' => $path]);

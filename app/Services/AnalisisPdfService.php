@@ -15,9 +15,10 @@ class AnalisisPdfService
      */
     public function generar(Analisis $analisis): array
     {
-        // Validar que el análisis esté aprobado
-        if ($analisis->estado !== Analisis::ESTADO_APROBADO) {
-            throw new \Exception('Solo se pueden generar PDFs de análisis aprobados.');
+        // Validar que el análisis esté aprobado o enviado
+        $estadosValidos = [Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO];
+        if (!in_array($analisis->estado, $estadosValidos)) {
+            throw new \Exception('Solo se pueden generar PDFs de análisis aprobados o enviados.');
         }
 
         // Cargar relaciones necesarias
@@ -100,11 +101,21 @@ class AnalisisPdfService
             $tipo = $componente['tipo'];
             $resultado = $resultadosPorTipo->get($tipo)?->first();
             
-            // Buscar si hay gráfica guardada para este componente
-            $chartPath = storage_path("app/public/charts/{$analisis->id}_{$index}.png");
+            // Buscar si hay gráfica guardada para este componente (nueva estructura año/mes)
+            $chartPattern = storage_path("app/public/charts/*/*/{$analisis->id}_{$index}.png");
+            $chartFiles = glob($chartPattern);
+            $chartPath = $chartFiles[0] ?? null;
+
+            // Fallback: buscar en la estructura antigua (plana)
+            if (!$chartPath) {
+                $oldPath = storage_path("app/public/charts/{$analisis->id}_{$index}.png");
+                if (file_exists($oldPath)) {
+                    $chartPath = $oldPath;
+                }
+            }
+
             $chartBase64 = null;
-            
-            if (file_exists($chartPath)) {
+            if ($chartPath && file_exists($chartPath)) {
                 $chartBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($chartPath));
             }
 

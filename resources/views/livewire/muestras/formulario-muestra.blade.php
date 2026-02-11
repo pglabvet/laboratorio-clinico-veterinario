@@ -125,6 +125,7 @@
                         wire:model="sucursal_id"
                         label="Sucursal "
                         :error="$errors->first('sucursal_id')"
+                        :disabled="!$puedeSeleccionarSucursal"
                     >
                         @foreach($sucursales as $sucursal)
                             <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>

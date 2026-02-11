@@ -228,20 +228,15 @@
                     <div class="space-y-3">
                         @foreach($muestra->analisis as $analisis)
                             <div class="flex items-center justify-between rounded-lg border border-neutral-200 bg-neutral-50 p-4 transition-colors hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800">
-                                <div class="flex flex-1 items-start gap-3">
+                                <div class="flex flex-1 items-center gap-3">
                                     <div class="flex size-9 flex-shrink-0 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
                                         <x-lucide-flask-conical class="size-5 text-blue-600 dark:text-blue-400" />
                                     </div>
                                     <div class="flex-1">
-                                        <p class="mb-1 text-sm font-bold text-neutral-900 dark:text-neutral-100">
+                                        <p class="mb-1 text-base font-bold text-neutral-900 dark:text-neutral-100">
                                             {{ $analisis->tipoAnalisis->nombre ?? 'N/A' }}
                                         </p>
-                                        @if($analisis->bioquimico)
-                                            <div class="flex items-center gap-1.5 text-xs text-neutral-600 dark:text-neutral-400">
-                                                <x-lucide-user class="size-3" />
-                                                <span>Asignado a: {{ $analisis->bioquimico->name }}</span>
-                                            </div>
-                                        @endif
+                                        
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3">
