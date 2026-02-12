@@ -54,7 +54,7 @@
             @endcan
         </flux:sidebar.group>
 
-        @canany(['ver-unidades-medida', 'ver-insumos', 'ver-categorias-insumo', 'ver-inventario'])
+        @canany(['ver-unidades-medida', 'ver-insumos', 'ver-categorias-insumo', 'ver-historial-inventario', 'ver-registrar-entrada', 'ver-salidas-manuales'])
         <flux:sidebar.group :heading="__('Inventario')" class="grid">
             @can('ver-unidades-medida')
             <flux:sidebar.item icon="scale" :href="route('unidades-medida.index')" :current="request()->routeIs('unidades-medida.*')" wire:navigate>
@@ -71,17 +71,17 @@
                 {{ __('Categorías de Insumos') }}
             </flux:sidebar.item>
             @endcan
-            @can('crear-inventario')
+            @can('ver-registrar-entrada')
             <flux:sidebar.item icon="arrow-down-tray" :href="route('inventario.entradas')" :current="request()->routeIs('inventario.entradas')" wire:navigate>
                 {{ __('Registrar Entrada') }}
             </flux:sidebar.item>
             @endcan
-            @can('editar-inventario')
+            @can('ver-salidas-manuales')
             <flux:sidebar.item icon="arrow-up-tray" :href="route('inventario.salidas')" :current="request()->routeIs('inventario.salidas')" wire:navigate>
                 {{ __('Salidas Manuales') }}
             </flux:sidebar.item>
             @endcan
-            @can('ver-inventario')
+            @can('ver-historial-inventario')
             <flux:sidebar.item icon="clipboard-document-list" :href="route('inventario.historial')" :current="request()->routeIs('inventario.historial')" wire:navigate>
                 {{ __('Historial') }}
             </flux:sidebar.item>

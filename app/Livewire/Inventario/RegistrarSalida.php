@@ -197,7 +197,7 @@ class RegistrarSalida extends Component
             // Verificar si quedó por debajo del stock mínimo
             $mensaje = 'Salida registrada exitosamente.';
             if ($inventario->stock_actual < $inventario->stock_minimo) {
-                $mensaje .= ' ⚠️ ALERTA: El stock quedó por debajo del mínimo (' . $inventario->stock_minimo . ' ' . $this->unidadMedida . ').';
+                $mensaje .= '  ALERTA: El stock quedó por debajo del mínimo (' . $inventario->stock_minimo . ' ' . $this->unidadMedida . ').';
             }
 
             session()->flash('mensaje', $mensaje);
@@ -263,7 +263,7 @@ class RegistrarSalida extends Component
         }
         
         if ($this->filtro_categoria) {
-            $insumosQuery->where('categoria_insumo_id', $this->filtro_categoria);
+            $insumosQuery->where('categoria_id', $this->filtro_categoria);
         }
 
         $insumos = $insumosQuery->orderBy('nombre')->get();

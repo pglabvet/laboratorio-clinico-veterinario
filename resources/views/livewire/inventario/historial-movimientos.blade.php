@@ -7,7 +7,8 @@
 
     {{-- Estadísticas rápidas --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="block rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
+        {{-- Total Movimientos --}}
+        <div class="group block rounded-xl border border-cyan-200/60 bg-gradient-to-br from-cyan-50 via-white to-sky-50 p-6 transition-all hover:shadow-lg hover:shadow-cyan-100/50 dark:border-cyan-800/30 dark:from-cyan-950/30 dark:via-zinc-900 dark:to-sky-950/20 dark:hover:shadow-cyan-900/20">
             <div class="flex items-start justify-between">
                 <div class="flex-1">
                     <flux:heading size="sm" class="text-zinc-600 dark:text-zinc-400 font-medium">
@@ -18,14 +19,18 @@
                             {{ number_format($estadisticas['total_movimientos']) }}
                         </flux:heading>
                     </div>
+                    <flux:subheading class="mt-1 text-xs">
+                        Registros totales
+                    </flux:subheading>
                 </div>
-                <div class="rounded-lg bg-zinc-100 p-3 dark:bg-zinc-800">
-                    <flux:icon.clipboard-document-list class="size-6 text-zinc-600 dark:text-zinc-400" />
+                <div class="rounded-lg bg-gradient-to-br from-cyan-100 to-sky-200 p-3 transition-transform group-hover:scale-110 shadow-sm dark:from-cyan-800/30 dark:to-sky-800/20">
+                    <flux:icon.clipboard-document-list class="size-6 text-cyan-600 dark:text-cyan-400" />
                 </div>
             </div>
         </div>
 
-        <div class="block rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
+        {{-- Entradas este mes --}}
+        <div class="group block rounded-xl border border-green-200/60 bg-gradient-to-br from-green-50 via-white to-emerald-50 p-6 transition-all hover:shadow-lg hover:shadow-green-100/50 dark:border-green-800/30 dark:from-green-950/30 dark:via-zinc-900 dark:to-emerald-950/20 dark:hover:shadow-green-900/20">
             <div class="flex items-start justify-between">
                 <div class="flex-1">
                     <flux:heading size="sm" class="text-zinc-600 dark:text-zinc-400 font-medium">
@@ -36,14 +41,18 @@
                             {{ number_format($estadisticas['entradas_mes_actual']) }}
                         </flux:heading>
                     </div>
+                    <flux:subheading class="mt-1 text-xs">
+                        Ingresos al inventario
+                    </flux:subheading>
                 </div>
-                <div class="rounded-lg bg-green-100 p-3 dark:bg-green-900/20">
+                <div class="rounded-lg bg-gradient-to-br from-green-100 to-emerald-200 p-3 transition-transform group-hover:scale-110 shadow-sm dark:from-green-800/30 dark:to-emerald-800/20">
                     <flux:icon.arrow-up-tray class="size-6 text-green-600 dark:text-green-400" />
                 </div>
             </div>
         </div>
 
-        <div class="block rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
+        {{-- Salidas este mes --}}
+        <div class="group block rounded-xl border border-red-200/60 bg-gradient-to-br from-red-50 via-white to-rose-50 p-6 transition-all hover:shadow-lg hover:shadow-red-100/50 dark:border-red-800/30 dark:from-red-950/30 dark:via-zinc-900 dark:to-rose-950/20 dark:hover:shadow-red-900/20">
             <div class="flex items-start justify-between">
                 <div class="flex-1">
                     <flux:heading size="sm" class="text-zinc-600 dark:text-zinc-400 font-medium">
@@ -54,8 +63,11 @@
                             {{ number_format($estadisticas['salidas_mes_actual']) }}
                         </flux:heading>
                     </div>
+                    <flux:subheading class="mt-1 text-xs">
+                        <span class="text-red-600 dark:text-red-400">Salidas del inventario</span>
+                    </flux:subheading>
                 </div>
-                <div class="rounded-lg bg-red-100 p-3 dark:bg-red-900/20">
+                <div class="rounded-lg bg-gradient-to-br from-red-100 to-rose-200 p-3 transition-transform group-hover:scale-110 shadow-sm dark:from-red-800/30 dark:to-rose-800/20">
                     <flux:icon.arrow-down-tray class="size-6 text-red-600 dark:text-red-400" />
                 </div>
             </div>

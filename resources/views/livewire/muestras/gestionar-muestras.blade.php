@@ -620,7 +620,8 @@
                     <flux:button 
                         type="button"
                         wire:click="cerrarModalCodigoBarras"
-                        variant="ghost"
+                        variant="outline"
+                        class="shadow-sm"
                     >
                         Cerrar
                     </flux:button>
@@ -810,7 +811,7 @@
                         :disabled="!$muestraAnalisis->puedeEnviarTodosAnalisis()"
                         title="{{ $muestraAnalisis->puedeEnviarTodosAnalisis() ? 'Enviar todos por WhatsApp' : 'Todos los análisis deben estar aprobados' }}"
                     >
-                        Enviar todo
+                        Enviar todo por WhatsApp
                     </flux:button>
                     <flux:button 
                         type="button"
@@ -825,7 +826,7 @@
                     <flux:button 
                         type="button"
                         wire:click="cerrarModalAnalisis"
-                        variant="ghost"
+                        variant="outline"
                     >
                         Cerrar
                     </flux:button>

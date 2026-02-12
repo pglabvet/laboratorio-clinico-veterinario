@@ -26,7 +26,7 @@
                 <div class="flex-1">
                     <flux:input 
                         wire:model.live="codigo_muestra"
-                        placeholder="Código de Muestra (Ej: C-AA0003)"
+                        placeholder="Código de Muestra (Ej: CAA0003)"
                         autofocus
                         wire:keydown.enter="escanear"
                     />
@@ -49,15 +49,14 @@
                         Buscar
                     </flux:button>
 
-                    @if($muestra || $mensaje_error)
-                        <flux:button 
-                            wire:click="limpiar" 
-                            variant="outline"
-                            icon="x-mark"
-                        >
-                            Limpiar
-                        </flux:button>
-                    @endif
+                    <flux:button 
+                        wire:click="limpiar" 
+                        variant="outline"
+                        icon="x-mark"
+                        :disabled="!$codigo_muestra"
+                    >
+                        Limpiar
+                    </flux:button>
                 </div>
             </div>
         </div>

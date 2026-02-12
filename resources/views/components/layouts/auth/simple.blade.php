@@ -2,13 +2,20 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
     <head>
         @include('partials.head')
+        <style>
+            /* Forzar labels y textos de Flux a blanco en login */
+            [data-flux-label], [data-flux-control] label, .text-zinc-800, .dark\:text-white {
+                color: #ffffff !important;
+            }
+        </style>
     </head>
     <body class="min-h-screen antialiased" style="background-color: #2a2d35;">
-        <div class="relative grid min-h-dvh lg:grid-cols-[1fr_1.1fr]">
+        <div class="relative grid min-h-dvh lg:grid-cols-[1fr_1.1fr]" style="background-color: #8a8d95;">
 
             {{-- Panel izquierdo: Imagen de fondo (solo desktop) --}}
-            <div class="relative hidden overflow-hidden lg:block">
-                <img src="{{ asset('images/login.jpg') }}"
+            <div class="relative hidden overflow-hidden lg:block"
+                 style="-webkit-mask-image: linear-gradient(to right, black 60%, transparent 100%); mask-image: linear-gradient(to right, black 60%, transparent 100%);">
+                <img src="{{ asset('images/fondo-login-izq.webp') }}"
                      alt="Laboratorio Veterinario"
                      class="absolute inset-0 h-full w-full object-cover" />
 
@@ -31,14 +38,20 @@
             </div>
 
             {{-- Panel derecho: Formulario --}}
-            <div class="relative flex min-h-dvh flex-col items-center justify-center p-6 md:p-10 lg:min-h-0"
-                 style="background: linear-gradient(180deg, #2a2d35 0%, #2d3039 100%);">
+            <div class="relative flex min-h-dvh flex-col items-center justify-center p-6 md:p-10 lg:min-h-0 overflow-hidden">
 
-                {{-- Borde izquierdo sutil (solo desktop) --}}
-                <div class="absolute top-0 bottom-0 left-0 hidden w-[1px] lg:block"
-                     style="background: linear-gradient(180deg, transparent 0%, rgba(63,63,70,0.5) 30%, rgba(63,63,70,0.5) 70%, transparent 100%);"></div>
+                {{-- Imagen de fondo del panel derecho --}}
+                <img src="{{ asset('images/fondo-login-der.webp') }}"
+                     alt=""
+                     class="absolute inset-0 h-full w-full object-cover"
+                     style="-webkit-mask-image: linear-gradient(to left, black 40%, transparent 100%); mask-image: linear-gradient(to left, black 40%, transparent 100%);" />
 
-                <div class="flex w-full max-w-sm flex-col gap-2">
+                {{-- Overlay oscuro para legibilidad del formulario --}}
+                <div class="absolute inset-0" style="background: rgba(42, 45, 53, 0.4);"></div>
+
+
+
+                <div class="relative z-10 flex w-full max-w-sm flex-col gap-2">
                     <div class="flex flex-col gap-6">
                         {{ $slot }}
                     </div>

@@ -1,3 +1,5 @@
 <x-layouts.app title="Registrar Entrada de Insumos">
-    @livewire('insumos.registrar-entrada-insumos')
+    @can('ver-registrar-entrada')
+        @livewire('insumos.registrar-entrada-insumos')
+    @endcan
 </x-layouts.app>

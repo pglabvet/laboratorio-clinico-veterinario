@@ -204,7 +204,7 @@
                             <flux:button 
                                 type="button"
                                 wire:click="seleccionarTodosPermisos"
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
                             >
                                 Seleccionar todos
@@ -212,7 +212,7 @@
                             <flux:button 
                                 type="button"
                                 wire:click="limpiarPermisos"
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
                             >
                                 Limpiar
@@ -261,6 +261,9 @@
                             'guardar-categoria-insumo' => 'categorias-insumo',
                             'guardar-rol' => 'roles',
                             'guardar-permiso' => 'permisos',
+                            'ver-registrar-entrada' => 'inventario',
+                            'ver-salidas-manuales' => 'inventario',
+                            'ver-historial-inventario' => 'inventario',
                             'escanear-muestras' => 'muestras',
                             'enviar-resultados-muestra' => 'muestras',
                             'ver-codigo-barras-muestra' => 'muestras',
