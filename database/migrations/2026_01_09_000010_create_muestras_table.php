@@ -36,11 +36,13 @@ return new class extends Migration
             $table->index(['sucursal_id', 'estado']); // Filtro compuesto más frecuente
         });
 
-        // Índices GIN con pg_trgm para búsqueda rápida con ILIKE '%texto%' (PostgreSQL)
-        DB::statement('CREATE EXTENSION IF NOT EXISTS pg_trgm');
-        DB::statement('CREATE INDEX muestras_codigo_muestra_trgm ON muestras USING gin (codigo_muestra gin_trgm_ops)');
-        DB::statement('CREATE INDEX muestras_paciente_nombre_trgm ON muestras USING gin (paciente_nombre gin_trgm_ops)');
-        DB::statement('CREATE INDEX muestras_propietario_nombre_trgm ON muestras USING gin (propietario_nombre gin_trgm_ops)');
+        // Índices GIN con pg_trgm para búsqueda rápida con ILIKE '%texto%' (solo PostgreSQL)
+        if (DB::connection()->getDriverName() === 'pgsql') {
+            DB::statement('CREATE EXTENSION IF NOT EXISTS pg_trgm');
+            DB::statement('CREATE INDEX muestras_codigo_muestra_trgm ON muestras USING gin (codigo_muestra gin_trgm_ops)');
+            DB::statement('CREATE INDEX muestras_paciente_nombre_trgm ON muestras USING gin (paciente_nombre gin_trgm_ops)');
+            DB::statement('CREATE INDEX muestras_propietario_nombre_trgm ON muestras USING gin (propietario_nombre gin_trgm_ops)');
+        }
     }
 
     /**
