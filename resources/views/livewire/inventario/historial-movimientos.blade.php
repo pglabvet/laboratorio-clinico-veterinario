@@ -102,7 +102,7 @@
                 placeholder=""
             >
                 <option value="">Sucursales</option>
-                @foreach($sucursales as $sucursal)
+                @foreach($this->sucursales as $sucursal)
                     <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
                 @endforeach
             </flux:select>

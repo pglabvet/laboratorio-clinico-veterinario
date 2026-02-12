@@ -319,10 +319,10 @@ class GestionarSucursales extends Component
     {
         $sucursales = Sucursal::query()
             ->when($this->buscar, function ($query) {
-                $query->where('nombre', 'like', '%' . $this->buscar . '%')
-                    ->orWhere('codigo', 'like', '%' . $this->buscar . '%')
-                    ->orWhere('direccion', 'like', '%' . $this->buscar . '%')
-                    ->orWhere('telefono', 'like', '%' . $this->buscar . '%');
+                $query->where('nombre', 'ilike', '%' . $this->buscar . '%')
+                    ->orWhere('codigo', 'ilike', '%' . $this->buscar . '%')
+                    ->orWhere('direccion', 'ilike', '%' . $this->buscar . '%')
+                    ->orWhere('telefono', 'ilike', '%' . $this->buscar . '%');
             })
             ->orderBy($this->sortBy, $this->sortDirection)
             ->paginate(10);

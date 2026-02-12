@@ -23,6 +23,31 @@ class GraficosEstadisticas extends Component
         $this->sucursalId = $filtros['sucursalId'] ?? null;
     }
 
+    public function placeholder()
+    {
+        return <<<'HTML'
+        <div class="grid gap-4 md:grid-cols-2">
+            @for ($i = 0; $i < 2; $i++)
+            <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
+                <div class="h-5 w-40 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700 mb-2"></div>
+                <div class="h-3 w-56 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700 mb-6"></div>
+                <div class="space-y-4">
+                    @for ($j = 0; $j < 4; $j++)
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <div class="h-3 w-24 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700"></div>
+                            <div class="h-3 w-8 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700"></div>
+                        </div>
+                        <div class="h-2 w-full animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-700"></div>
+                    </div>
+                    @endfor
+                </div>
+            </div>
+            @endfor
+        </div>
+        HTML;
+    }
+
     public function render()
     {
         /** @var User $user */

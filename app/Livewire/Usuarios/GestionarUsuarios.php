@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Sucursal;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\Attributes\Computed;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -307,8 +308,8 @@ class GestionarUsuarios extends Component
         $usuarios = User::with(['roles', 'sucursal'])
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
-                    $q->where('name', 'like', '%' . $this->search . '%')
-                      ->orWhere('email', 'like', '%' . $this->search . '%');
+                    $q->where('name', 'ilike', '%' . $this->search . '%')
+                      ->orWhere('email', 'ilike', '%' . $this->search . '%');
                 });
             })
             ->when($this->filtroSucursal, function ($query) {
@@ -317,13 +318,20 @@ class GestionarUsuarios extends Component
             ->orderBy('name')
             ->paginate(10);
 
-        $roles = Role::all();
-        $sucursales = Sucursal::orderBy('nombre')->get();
-
         return view('livewire.usuarios.gestionar-usuarios', [
             'usuarios' => $usuarios,
-            'roles' => $roles,
-            'sucursales' => $sucursales,
         ]);
+    }
+
+    #[Computed]
+    public function roles()
+    {
+        return Role::all();
+    }
+
+    #[Computed]
+    public function sucursales()
+    {
+        return Sucursal::orderBy('nombre')->get();
     }
 }

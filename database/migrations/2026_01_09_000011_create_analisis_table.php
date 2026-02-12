@@ -25,6 +25,12 @@ return new class extends Migration
             $table->timestamp('fecha_finalizacion')->nullable();
             $table->timestamp('fecha_aprobacion')->nullable();
             $table->timestamps();
+
+            // Índices de rendimiento para filtros y ordenamiento
+            $table->index('estado');
+            $table->index('fecha_finalizacion');
+            $table->index('fecha_aprobacion');
+            $table->index(['muestra_id', 'estado']); // Para actualizarEstadoSegunAnalisis()
         });
     }
 

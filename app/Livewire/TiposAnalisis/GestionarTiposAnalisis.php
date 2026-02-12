@@ -301,8 +301,8 @@ class GestionarTiposAnalisis extends Component
         $tiposAnalisis = TipoAnalisis::query()
             ->withCount('plantillas')
             ->when($this->buscar, function ($query) {
-                $query->where('nombre', 'like', '%' . $this->buscar . '%')
-                    ->orWhere('descripcion', 'like', '%' . $this->buscar . '%');
+                $query->where('nombre', 'ilike', '%' . $this->buscar . '%')
+                    ->orWhere('descripcion', 'ilike', '%' . $this->buscar . '%');
             })
             ->orderBy($this->sortBy, $this->sortDirection)
             ->paginate(10);

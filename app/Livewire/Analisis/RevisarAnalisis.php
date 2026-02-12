@@ -4,6 +4,7 @@ namespace App\Livewire\Analisis;
 
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\Attributes\Computed;
 use App\Models\Analisis;
 use App\Models\TipoAnalisis;
 use App\Models\Sucursal;
@@ -239,17 +240,21 @@ class RevisarAnalisis extends Component
         $query->orderBy($this->ordenarPor, $this->ordenDireccion);
 
         $analisis = $query->paginate(15);
-        
-        $tiposAnalisis = TipoAnalisis::where('estado', true)
-            ->orderBy('nombre')
-            ->get();
-
-        $sucursales = Sucursal::all();
 
         return view('livewire.analisis.revisar-analisis', [
             'analisis' => $analisis,
-            'tiposAnalisis' => $tiposAnalisis,
-            'sucursales' => $sucursales,
         ]);
+    }
+
+    #[Computed]
+    public function tiposAnalisis()
+    {
+        return TipoAnalisis::where('estado', true)->orderBy('nombre')->get();
+    }
+
+    #[Computed]
+    public function sucursales()
+    {
+        return Sucursal::all();
     }
 }

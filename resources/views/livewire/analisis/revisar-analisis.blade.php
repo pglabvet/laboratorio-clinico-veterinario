@@ -143,7 +143,7 @@
                     <div class="w-full sm:w-auto">
                         <flux:dropdown>
                             <flux:button variant="outline" icon="beaker" icon-trailing="chevron-down">
-                                {{ $filtroTipoAnalisis ? Str::limit($tiposAnalisis->firstWhere('id', $filtroTipoAnalisis)?->nombre, 12) : 'Tipo análisis' }}
+                                {{ $filtroTipoAnalisis ? Str::limit($this->tiposAnalisis->firstWhere('id', $filtroTipoAnalisis)?->nombre, 12) : 'Tipo análisis' }}
                             </flux:button>
 
                             <flux:menu>
@@ -151,7 +151,7 @@
                                     Todos los tipos
                                 </flux:menu.item>
                                 <flux:menu.separator />
-                                @foreach($tiposAnalisis as $tipo)
+                                @foreach($this->tiposAnalisis as $tipo)
                                     <flux:menu.item wire:click="$set('filtroTipoAnalisis', '{{ $tipo->id }}')" icon="document-text">
                                         {{ $tipo->nombre }}
                                     </flux:menu.item>
@@ -164,7 +164,7 @@
                 <div class="w-full sm:w-auto">
                     <flux:dropdown>
                         <flux:button variant="outline" icon="building-office" icon-trailing="chevron-down">
-                            {{ $filtroSucursal ? $sucursales->firstWhere('id', $filtroSucursal)?->nombre : 'Sucursal' }}
+                            {{ $filtroSucursal ? $this->sucursales->firstWhere('id', $filtroSucursal)?->nombre : 'Sucursal' }}
                         </flux:button>
 
                         <flux:menu>
@@ -172,7 +172,7 @@
                                 Todas las sucursales
                             </flux:menu.item>
                             <flux:menu.separator />
-                            @foreach($sucursales as $sucursal)
+                            @foreach($this->sucursales as $sucursal)
                                 <flux:menu.item wire:click="$set('filtroSucursal', '{{ $sucursal->id }}')" icon="building-office-2">
                                     {{ $sucursal->nombre }}
                                 </flux:menu.item>

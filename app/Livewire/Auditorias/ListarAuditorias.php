@@ -5,6 +5,7 @@ namespace App\Livewire\Auditorias;
 use App\Models\Auditoria;
 use App\Models\User;
 use Livewire\Component;
+use Livewire\Attributes\Computed;
 use Livewire\WithPagination;
 
 /**
@@ -155,10 +156,6 @@ class ListarAuditorias extends Component
         // Obtener los datos paginados (20 por página)
         $auditorias = $query->orderBy('created_at', 'desc')->paginate(20);
 
-        // Datos para los filtros desplegables
-        $usuarios = User::orderBy('name')->get(['id', 'name']);
-        $entidades = Auditoria::select('entidad')->distinct()->orderBy('entidad')->pluck('entidad');
-
         // Obtener detalle si hay una auditoría seleccionada
         $detalle = null;
         if ($this->auditoriaSeleccionada) {
@@ -167,9 +164,19 @@ class ListarAuditorias extends Component
 
         return view('livewire.auditorias.listar-auditorias', [
             'auditorias' => $auditorias,
-            'usuarios' => $usuarios,
-            'entidades' => $entidades,
             'detalle' => $detalle,
         ]);
+    }
+
+    #[Computed]
+    public function usuarios()
+    {
+        return User::orderBy('name')->get(['id', 'name']);
+    }
+
+    #[Computed]
+    public function entidades()
+    {
+        return Auditoria::select('entidad')->distinct()->orderBy('entidad')->pluck('entidad');
     }
 }

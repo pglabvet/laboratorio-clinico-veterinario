@@ -316,11 +316,11 @@ class GestionarVeterinarias extends Component
     {
         $veterinarias = Veterinaria::query()
             ->when($this->buscar, function ($query) {
-                $query->where('nombre', 'like', '%' . $this->buscar . '%')
-                    ->orWhere('responsable', 'like', '%' . $this->buscar . '%')
-                    ->orWhere('email', 'like', '%' . $this->buscar . '%')
-                    ->orWhere('telefono', 'like', '%' . $this->buscar . '%')
-                    ->orWhere('direccion', 'like', '%' . $this->buscar . '%');
+                $query->where('nombre', 'ilike', '%' . $this->buscar . '%')
+                    ->orWhere('responsable', 'ilike', '%' . $this->buscar . '%')
+                    ->orWhere('email', 'ilike', '%' . $this->buscar . '%')
+                    ->orWhere('telefono', 'ilike', '%' . $this->buscar . '%')
+                    ->orWhere('direccion', 'ilike', '%' . $this->buscar . '%');
             })
             ->orderBy($this->sortBy, $this->sortDirection)
             ->paginate(10);

@@ -11,6 +11,7 @@ use App\Models\PlantillaFormulario;
 use App\Models\Analisis;
 use App\Services\MuestraService;
 use Livewire\Component;
+use Livewire\Attributes\Computed;
 use Illuminate\Support\Facades\DB;
 
 class FormularioMuestra extends Component
@@ -365,14 +366,36 @@ class FormularioMuestra extends Component
 
     public function render()
     {
-        $puedeSeleccionarSucursal = auth()->user()->can('vista-general-sistema');
+        return view('livewire.muestras.formulario-muestra');
+    }
 
-        return view('livewire.muestras.formulario-muestra', [
-            'especies' => Especie::where('estado', true)->orderBy('nombre')->get(),
-            'veterinarias' => Veterinaria::where('estado', true)->orderBy('nombre')->get(),
-            'sucursales' => Sucursal::where('estado', true)->orderBy('nombre')->get(),
-            'tiposAnalisis' => TipoAnalisis::orderBy('nombre')->get(),
-            'puedeSeleccionarSucursal' => $puedeSeleccionarSucursal,
-        ]);
+    #[Computed]
+    public function especies()
+    {
+        return Especie::where('estado', true)->orderBy('nombre')->get();
+    }
+
+    #[Computed]
+    public function veterinarias()
+    {
+        return Veterinaria::where('estado', true)->orderBy('nombre')->get();
+    }
+
+    #[Computed]
+    public function sucursales()
+    {
+        return Sucursal::where('estado', true)->orderBy('nombre')->get();
+    }
+
+    #[Computed]
+    public function tiposAnalisis()
+    {
+        return TipoAnalisis::orderBy('nombre')->get();
+    }
+
+    #[Computed]
+    public function puedeSeleccionarSucursal()
+    {
+        return auth()->user()->can('vista-general-sistema');
     }
 }

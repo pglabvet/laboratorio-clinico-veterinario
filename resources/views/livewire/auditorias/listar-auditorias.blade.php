@@ -34,7 +34,7 @@
         {{-- Filtro por usuario --}}
         <flux:select wire:model.live="filtroUsuario" size="sm" placeholder="Todos los usuarios">
             <flux:select.option value="">Todos los usuarios</flux:select.option>
-            @foreach($usuarios as $usuario)
+            @foreach($this->usuarios as $usuario)
                 <flux:select.option value="{{ $usuario->id }}">{{ $usuario->name }}</flux:select.option>
             @endforeach
         </flux:select>
@@ -50,7 +50,7 @@
         {{-- Filtro por entidad (Muestra, Insumo, etc.) --}}
         <flux:select wire:model.live="filtroEntidad" size="sm" placeholder="Todas las entidades">
             <flux:select.option value="">Todas las entidades</flux:select.option>
-            @foreach($entidades as $entidad)
+            @foreach($this->entidades as $entidad)
                 <flux:select.option value="{{ $entidad }}">
                     {{ \App\Models\Auditoria::nombresEntidades()[$entidad] ?? $entidad }}
                 </flux:select.option>

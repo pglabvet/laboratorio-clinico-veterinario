@@ -22,6 +22,32 @@ class ActividadReciente extends Component
         $this->sucursalId = $filtros['sucursalId'] ?? null;
     }
 
+    public function placeholder()
+    {
+        return <<<'HTML'
+        <div class="rounded-xl border border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-900">
+            <div class="border-b border-zinc-200 px-6 py-4 dark:border-zinc-700">
+                <div class="space-y-2">
+                    <div class="h-5 w-40 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700"></div>
+                    <div class="h-3 w-64 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700"></div>
+                </div>
+            </div>
+            <div class="p-4 space-y-3">
+                @for ($i = 0; $i < 5; $i++)
+                <div class="flex gap-4 items-center">
+                    <div class="h-4 w-24 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700"></div>
+                    <div class="h-4 w-28 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700"></div>
+                    <div class="h-4 w-32 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700"></div>
+                    <div class="h-4 w-20 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700"></div>
+                    <div class="h-5 w-16 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-700"></div>
+                    <div class="h-4 w-24 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700"></div>
+                </div>
+                @endfor
+            </div>
+        </div>
+        HTML;
+    }
+
     public function render()
     {
         /** @var User $user */

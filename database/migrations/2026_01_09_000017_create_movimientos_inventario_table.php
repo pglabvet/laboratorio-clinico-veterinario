@@ -22,6 +22,10 @@ return new class extends Migration
             $table->foreignId('usuario_id')->constrained('users')->onDelete('cascade');
             $table->timestamp('fecha');
             $table->timestamps();
+
+            // Índices de rendimiento para filtros y ordenamiento
+            $table->index(['tipo_movimiento', 'fecha']); // Historial filtrado por tipo + fecha
+            $table->index(['sucursal_id', 'tipo_movimiento']); // Filtro por sucursal + tipo
         });
     }
 

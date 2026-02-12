@@ -20,8 +20,8 @@ class ListarPlantillas extends Component
     {
         $plantillas = PlantillaFormulario::query()
             ->when($this->busqueda, function ($query) {
-                $query->where('nombre', 'like', '%' . $this->busqueda . '%')
-                    ->orWhere('descripcion', 'like', '%' . $this->busqueda . '%');
+                $query->where('nombre', 'ilike', '%' . $this->busqueda . '%')
+                    ->orWhere('descripcion', 'ilike', '%' . $this->busqueda . '%');
             })
             ->with(['creador', 'tipoAnalisis'])
             ->latest()

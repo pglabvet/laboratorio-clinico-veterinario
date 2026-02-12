@@ -8,6 +8,7 @@ use App\Models\InventarioSucursal;
 use App\Models\MovimientoInventario;
 use App\Models\CategoriaInsumo;
 use Livewire\Component;
+use Livewire\Attributes\Computed;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
 
@@ -239,27 +240,29 @@ class RegistrarSalida extends Component
         return $this->redirect(route('inventario.historial'), navigate: true);
     }
 
+    #[Computed]
+    public function sucursales()
+    {
+        return Sucursal::where('estado', true)->orderBy('nombre')->get();
+    }
+
+    #[Computed]
+    public function categorias()
+    {
+        return CategoriaInsumo::where('estado', true)->orderBy('nombre')->get();
+    }
+
     /**
      * Render del componente
      */
     public function render()
     {
-        // Obtener sucursales activas
-        $sucursales = Sucursal::where('estado', true)
-            ->orderBy('nombre')
-            ->get();
-
-        // Obtener categorías activas
-        $categorias = CategoriaInsumo::where('estado', true)
-            ->orderBy('nombre')
-            ->get();
-
         // Obtener insumos activos con su inventario (filtrados por categoría si está seleccionada)
         $insumosQuery = Insumo::with(['unidadMedida', 'inventarios.sucursal'])
             ->where('estado', true);
 
         if ($this->buscar) {
-            $insumosQuery->where('nombre', 'like', '%' . $this->buscar . '%');
+            $insumosQuery->where('nombre', 'ilike', '%' . $this->buscar . '%');
         }
         
         if ($this->filtro_categoria) {
@@ -310,8 +313,6 @@ class RegistrarSalida extends Component
         $movimientos = $movimientosQuery->paginate(10);
 
         return view('livewire.inventario.registrar-salida', [
-            'sucursales' => $sucursales,
-            'categorias' => $categorias,
             'insumos' => $insumos,
             'movimientos' => $movimientos,
         ]);

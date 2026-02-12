@@ -8,6 +8,7 @@ use App\Models\InventarioSucursal;
 use App\Models\MovimientoInventario;
 use App\Models\CategoriaInsumo;
 use Livewire\Component;
+use Livewire\Attributes\Computed;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -163,21 +164,23 @@ class RegistrarEntradaInsumos extends Component
         $this->resetPage();
     }
 
+    #[Computed]
+    public function sucursales()
+    {
+        return Sucursal::where('estado', true)->orderBy('nombre')->get();
+    }
+
+    #[Computed]
+    public function categorias()
+    {
+        return CategoriaInsumo::where('estado', true)->orderBy('nombre')->get();
+    }
+
     /**
      * Renderizar vista
      */
     public function render()
     {
-        // Obtener sucursales activas
-        $sucursales = Sucursal::where('estado', true)
-            ->orderBy('nombre')
-            ->get();
-
-        // Obtener categorías activas
-        $categorias = CategoriaInsumo::where('estado', true)
-            ->orderBy('nombre')
-            ->get();
-
         // Obtener insumos activos (filtrados por categoría si está seleccionada)
         $insumosQuery = Insumo::with('unidadMedida', 'categoria')
             ->where('estado', true);
@@ -231,8 +234,6 @@ class RegistrarEntradaInsumos extends Component
         $entradasRecientes = $entradasQuery->paginate(10);
 
         return view('livewire.insumos.registrar-entrada-insumos', [
-            'sucursales' => $sucursales,
-            'categorias' => $categorias,
             'insumos' => $insumos,
             'entradasRecientes' => $entradasRecientes,
             'motivosDisponibles' => self::MOTIVOS,

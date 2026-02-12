@@ -157,7 +157,7 @@
                     <div class="w-full sm:w-auto">
                         <flux:dropdown>
                             <flux:button variant="outline" icon="heart" icon-trailing="chevron-down">
-                                {{ $filtroEspecie ? $especies->firstWhere('id', $filtroEspecie)?->nombre : 'Especie' }}
+                                {{ $filtroEspecie ? $this->especies->firstWhere('id', $filtroEspecie)?->nombre : 'Especie' }}
                             </flux:button>
 
                             <flux:menu>
@@ -165,7 +165,7 @@
                                     Todas las especies
                                 </flux:menu.item>
                                 <flux:menu.separator />
-                                @foreach($especies as $especie)
+                                @foreach($this->especies as $especie)
                                     <flux:menu.item wire:click="$set('filtroEspecie', '{{ $especie->id }}')" icon="heart">
                                         {{ $especie->nombre }}
                                     </flux:menu.item>
@@ -178,7 +178,7 @@
                     <div class="w-full sm:w-auto">
                         <flux:dropdown>
                             <flux:button variant="outline" icon="building-office" icon-trailing="chevron-down">
-                                {{ $filtroVeterinaria ? Str::limit($veterinarias->firstWhere('id', $filtroVeterinaria)?->nombre, 12) : 'Veterinaria' }}
+                                {{ $filtroVeterinaria ? Str::limit($this->veterinarias->firstWhere('id', $filtroVeterinaria)?->nombre, 12) : 'Veterinaria' }}
                             </flux:button>
 
                             <flux:menu>
@@ -186,7 +186,7 @@
                                     Todas las veterinarias
                                 </flux:menu.item>
                                 <flux:menu.separator />
-                                @foreach($veterinarias as $veterinaria)
+                                @foreach($this->veterinarias as $veterinaria)
                                     <flux:menu.item wire:click="$set('filtroVeterinaria', '{{ $veterinaria->id }}')" icon="building-office">
                                         {{ $veterinaria->nombre }}
                                     </flux:menu.item>
@@ -200,7 +200,7 @@
                     <div class="w-full sm:w-auto">
                         <flux:dropdown>
                             <flux:button variant="outline" icon="building-storefront" icon-trailing="chevron-down">
-                                {{ $filtroSucursal ? Str::limit($sucursales->firstWhere('id', $filtroSucursal)?->nombre, 12) : 'Sucursal' }}
+                                {{ $filtroSucursal ? Str::limit($this->sucursales->firstWhere('id', $filtroSucursal)?->nombre, 12) : 'Sucursal' }}
                             </flux:button>
 
                             <flux:menu>
@@ -208,7 +208,7 @@
                                     Todas las sucursales
                                 </flux:menu.item>
                                 <flux:menu.separator />
-                                @foreach($sucursales as $sucursal)
+                                @foreach($this->sucursales as $sucursal)
                                     <flux:menu.item wire:click="$set('filtroSucursal', '{{ $sucursal->id }}')" icon="building-storefront">
                                         {{ $sucursal->nombre }}
                                     </flux:menu.item>

@@ -33,7 +33,7 @@
                 :error="$errors->first('sucursal_id')"
             >
                 <option value="">Seleccione...</option>
-                @foreach($sucursales as $sucursal)
+                @foreach($this->sucursales as $sucursal)
                     <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
                 @endforeach
             </flux:select>
@@ -45,7 +45,7 @@
                 placeholder="Todas las categorías"
             >
                 <option value="">Todas las categorías</option>
-                @foreach($categorias as $categoria)
+                @foreach($this->categorias as $categoria)
                     <option value="{{ $categoria->id }}">{{ $categoria->nombre }}</option>
                 @endforeach
             </flux:select>
@@ -164,7 +164,7 @@
                     {{-- Filtro de Sucursal --}}
                     <flux:dropdown>
                         <flux:button variant="outline" icon="building-office-2" icon-trailing="chevron-down" class="w-full sm:w-auto justify-between">
-                            {{ $filtroSucursal ? $sucursales->firstWhere('id', $filtroSucursal)?->nombre : 'Sucursales' }}
+                            {{ $filtroSucursal ? $this->sucursales->firstWhere('id', $filtroSucursal)?->nombre : 'Sucursales' }}
                         </flux:button>
 
                         <flux:menu>
@@ -172,7 +172,7 @@
                                 Todas las sucursales
                             </flux:menu.item>
                             <flux:menu.separator />
-                            @foreach($sucursales as $sucursal)
+                            @foreach($this->sucursales as $sucursal)
                                 <flux:menu.item wire:click="$set('filtroSucursal', '{{ $sucursal->id }}')" icon="building-storefront">
                                     {{ $sucursal->nombre }}
                                 </flux:menu.item>

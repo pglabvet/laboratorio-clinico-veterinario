@@ -62,7 +62,7 @@
 
         @can('ver-dashboard')
         {{-- Estadísticas Principales --}}
-        <livewire:dashboard.estadisticas-principales />
+        <livewire:dashboard.estadisticas-principales lazy />
         @endcan
 
         @can('ver-acciones-rapidas')
@@ -72,17 +72,17 @@
 
         @can('ver-graficos-estadisticas')
         {{-- Gráficos Estadísticas --}}
-        <livewire:dashboard.graficos-estadisticas />
+        <livewire:dashboard.graficos-estadisticas lazy />
         @endcan
 
         @can('ver-ultimas-muestras')
         {{-- Últimas Muestras (Vista Bioquímico) --}}
-        <livewire:dashboard.ultimas-muestras />
+        <livewire:dashboard.ultimas-muestras lazy />
         @endcan
 
         @can('ver-actividad-reciente')
         {{-- Actividad Reciente --}}
-        <livewire:dashboard.actividad-reciente />
+        <livewire:dashboard.actividad-reciente lazy />
         @endcan
     </div>
 </x-layouts.app>
