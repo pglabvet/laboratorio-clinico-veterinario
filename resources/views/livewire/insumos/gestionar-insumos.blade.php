@@ -40,7 +40,7 @@
                     {{-- Filtro de Sucursal --}}
                     <flux:dropdown>
                         <flux:button variant="outline" icon="building-office-2" icon-trailing="chevron-down" class="w-full sm:w-auto justify-between">
-                            {{ $filtroSucursal ? $sucursales->firstWhere('id', $filtroSucursal)?->nombre : 'Sucursales' }}
+                            {{ $filtroSucursal ? $this->sucursales->firstWhere('id', $filtroSucursal)?->nombre : 'Sucursales' }}
                         </flux:button>
 
                         <flux:menu>
@@ -48,7 +48,7 @@
                                 Todas las sucursales
                             </flux:menu.item>
                             <flux:menu.separator />
-                            @foreach($sucursales as $sucursal)
+                            @foreach($this->sucursales as $sucursal)
                                 <flux:menu.item wire:click="$set('filtroSucursal', '{{ $sucursal->id }}')" icon="building-storefront">
                                     {{ $sucursal->nombre }}
                                 </flux:menu.item>
@@ -259,7 +259,7 @@
                 <flux:input.group label="Categoría" :error="$errors->first('categoria_id')">
                     <flux:select wire:model="categoria_id" placeholder="">
                         <option value="">Seleccione una categoria</option>
-                        @foreach($categorias as $categoria)
+                        @foreach($this->categorias as $categoria)
                             <option value="{{ $categoria->id }}">{{ $categoria->nombre }}</option>
                         @endforeach
                     </flux:select>
@@ -268,7 +268,7 @@
                 <flux:input.group label="Unidad de medida" :error="$errors->first('unidad_medida_id')" required>
                     <flux:select wire:model="unidad_medida_id" placeholder="">
                          <option value="">Selecciona una unidad de medida</option>
-                        @foreach($unidadesMedida as $unidad)
+                        @foreach($this->unidadesMedida as $unidad)
                             <option value="{{ $unidad->id }}">{{ $unidad->nombre }} ({{ $unidad->abreviatura }})</option>
                         @endforeach
                     </flux:select>

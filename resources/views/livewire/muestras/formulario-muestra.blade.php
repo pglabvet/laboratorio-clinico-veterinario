@@ -45,7 +45,7 @@
                         placeholder="Seleccione una especie"
                         :error="$errors->first('especie_id')"
                     >
-                        @foreach($especies as $especie)
+                        @foreach($this->especies as $especie)
                             <option value="{{ $especie->id }}">{{ $especie->nombre }}</option>
                         @endforeach
                     </flux:select>
@@ -100,7 +100,7 @@
                         placeholder="Seleccione una veterinaria"
                         :error="$errors->first('veterinaria_id')"
                     >
-                        @foreach($veterinarias as $veterinaria)
+                        @foreach($this->veterinarias as $veterinaria)
                             <option value="{{ $veterinaria->id }}">{{ $veterinaria->nombre }}</option>
                         @endforeach
                     </flux:select>
@@ -125,9 +125,9 @@
                         wire:model="sucursal_id"
                         label="Sucursal "
                         :error="$errors->first('sucursal_id')"
-                        :disabled="!$puedeSeleccionarSucursal"
+                        :disabled="!$this->puedeSeleccionarSucursal"
                     >
-                        @foreach($sucursales as $sucursal)
+                        @foreach($this->sucursales as $sucursal)
                             <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
                         @endforeach
                     </flux:select>
@@ -177,7 +177,7 @@
                                     placeholder=""
                                 >
                                     <option value="">Seleccione un tipo de análisis</option>
-                                    @foreach($tiposAnalisis as $tipo)
+                                    @foreach($this->tiposAnalisis as $tipo)
                                         <option value="{{ $tipo->id }}">{{ $tipo->nombre }}</option>
                                     @endforeach
                                 </flux:select>

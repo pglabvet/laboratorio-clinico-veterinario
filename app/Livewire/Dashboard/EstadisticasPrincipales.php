@@ -28,6 +28,26 @@ class EstadisticasPrincipales extends Component
         $this->sucursalId = $filtros['sucursalId'] ?? null;
     }
 
+    public function placeholder()
+    {
+        return <<<'HTML'
+        <div class="grid gap-4 lg:grid-cols-4 md:grid-cols-2">
+            @for ($i = 0; $i < 4; $i++)
+            <div class="rounded-xl border border-zinc-200/60 bg-white p-6 dark:border-zinc-700/60 dark:bg-zinc-900">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1 space-y-3">
+                        <div class="h-4 w-32 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700"></div>
+                        <div class="h-8 w-16 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700"></div>
+                        <div class="h-3 w-20 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700"></div>
+                    </div>
+                    <div class="h-12 w-12 animate-pulse rounded-lg bg-zinc-200 dark:bg-zinc-700"></div>
+                </div>
+            </div>
+            @endfor
+        </div>
+        HTML;
+    }
+
     public function render()
     {
         /** @var User $user */

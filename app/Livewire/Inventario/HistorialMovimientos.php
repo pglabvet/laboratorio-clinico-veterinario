@@ -6,6 +6,7 @@ use App\Models\MovimientoInventario;
 use App\Models\Sucursal;
 use App\Models\Insumo;
 use Livewire\Component;
+use Livewire\Attributes\Computed;
 use Livewire\WithPagination;
 
 class HistorialMovimientos extends Component
@@ -151,7 +152,7 @@ class HistorialMovimientos extends Component
         // Búsqueda por texto (en nombre de insumo)
         if ($this->buscar) {
             $movimientosQuery->whereHas('insumo', function ($query) {
-                $query->where('nombre', 'like', '%' . $this->buscar . '%');
+                $query->where('nombre', 'ilike', '%' . $this->buscar . '%');
             });
         }
 
@@ -160,10 +161,6 @@ class HistorialMovimientos extends Component
 
         // Paginación
         $movimientos = $movimientosQuery->paginate(20);
-
-        // Datos para los filtros
-        $sucursales = Sucursal::where('estado', true)->orderBy('nombre')->get();
-        $insumos = Insumo::where('estado', true)->orderBy('nombre')->get();
 
         // Estadísticas rápidas
         $estadisticas = [
@@ -180,9 +177,19 @@ class HistorialMovimientos extends Component
 
         return view('livewire.inventario.historial-movimientos', [
             'movimientos' => $movimientos,
-            'sucursales' => $sucursales,
-            'insumos' => $insumos,
             'estadisticas' => $estadisticas,
         ]);
+    }
+
+    #[Computed]
+    public function sucursales()
+    {
+        return Sucursal::where('estado', true)->orderBy('nombre')->get();
+    }
+
+    #[Computed]
+    public function insumos()
+    {
+        return Insumo::where('estado', true)->orderBy('nombre')->get();
     }
 }

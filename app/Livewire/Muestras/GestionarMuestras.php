@@ -12,6 +12,7 @@ use App\Services\MuestraService;
 use App\Services\EnvioResultadosService;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\Attributes\Computed;
 use Illuminate\Support\Facades\DB;
 
 class GestionarMuestras extends Component
@@ -585,11 +586,11 @@ class GestionarMuestras extends Component
             ->when($this->buscar, function ($query) {
                 $searchTerm = '%' . $this->buscar . '%';
                 $query->where(function ($q) use ($searchTerm) {
-                    $q->where('muestras.codigo_muestra', 'like', $searchTerm)
-                        ->orWhere('muestras.paciente_nombre', 'like', $searchTerm)
-                        ->orWhere('muestras.propietario_nombre', 'like', $searchTerm)
+                    $q->where('muestras.codigo_muestra', 'ilike', $searchTerm)
+                        ->orWhere('muestras.paciente_nombre', 'ilike', $searchTerm)
+                        ->orWhere('muestras.propietario_nombre', 'ilike', $searchTerm)
                         ->orWhereHas('veterinaria', function ($subQuery) use ($searchTerm) {
-                            $subQuery->where('nombre', 'like', $searchTerm);
+                            $subQuery->where('nombre', 'ilike', $searchTerm);
                         });
                 });
             })
@@ -614,17 +615,32 @@ class GestionarMuestras extends Component
             ->orderBy($this->sortBy, $this->sortDirection)
             ->paginate(10);
 
-        $especies = Especie::where('estado', true)->orderBy('nombre')->get();
-        $veterinarias = Veterinaria::where('estado', true)->orderBy('nombre')->get();
-        $sucursales = Sucursal::where('estado', true)->orderBy('nombre')->get();
-        $tiposAnalisis = TipoAnalisis::where('estado', true)->orderBy('nombre')->get();
-
         return view('livewire.muestras.gestionar-muestras', [
             'muestras' => $muestras,
-            'especies' => $especies,
-            'veterinarias' => $veterinarias,
-            'sucursales' => $sucursales,
-            'tiposAnalisis' => $tiposAnalisis,
         ]);
+    }
+
+    #[Computed]
+    public function especies()
+    {
+        return Especie::where('estado', true)->orderBy('nombre')->get();
+    }
+
+    #[Computed]
+    public function veterinarias()
+    {
+        return Veterinaria::where('estado', true)->orderBy('nombre')->get();
+    }
+
+    #[Computed]
+    public function sucursales()
+    {
+        return Sucursal::where('estado', true)->orderBy('nombre')->get();
+    }
+
+    #[Computed]
+    public function tiposAnalisis()
+    {
+        return TipoAnalisis::where('estado', true)->orderBy('nombre')->get();
     }
 }

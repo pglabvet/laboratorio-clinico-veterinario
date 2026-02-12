@@ -29,7 +29,7 @@
                         placeholder="Todas las sucursales"
                     >
                         <option value="">Todas las sucursales</option>
-                        @foreach ($sucursales as $sucursal)
+                        @foreach ($this->sucursales as $sucursal)
                             <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
                         @endforeach
                     </flux:select>
@@ -410,7 +410,7 @@
                     placeholder="Selecciona un rol"
                 >
                     <option value="">Selecciona un rol</option>
-                    @foreach ($roles as $rol)
+                    @foreach ($this->roles as $rol)
                         <option value="{{ $rol->id }}">{{ $rol->name }}</option>
                     @endforeach
                 </flux:select>
@@ -425,7 +425,7 @@
                     placeholder="Selecciona una sucursal"
                 >
                     <option value="">Sin sucursal asignada</option>
-                    @foreach ($sucursales as $sucursal)
+                    @foreach ($this->sucursales as $sucursal)
                         <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
                     @endforeach
                 </flux:select>

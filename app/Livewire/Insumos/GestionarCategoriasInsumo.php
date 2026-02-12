@@ -234,7 +234,7 @@ class GestionarCategoriasInsumo extends Component
 
         // Búsqueda por nombre
         if ($this->buscar) {
-            $query->where('nombre', 'like', '%' . $this->buscar . '%');
+            $query->where('nombre', 'ilike', '%' . $this->buscar . '%');
         }
 
         $categorias = $query->orderBy($this->sortBy, $this->sortDirection)->paginate(10);

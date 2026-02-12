@@ -284,8 +284,8 @@ class GestionarEspecies extends Component
     {
         $especies = Especie::query()
             ->when($this->buscar, function ($query) {
-                $query->where('nombre', 'like', '%' . $this->buscar . '%')
-                    ->orWhere('descripcion', 'like', '%' . $this->buscar . '%');
+                $query->where('nombre', 'ilike', '%' . $this->buscar . '%')
+                    ->orWhere('descripcion', 'ilike', '%' . $this->buscar . '%');
             })
             ->orderBy($this->sortBy, $this->sortDirection)
             ->paginate(10);

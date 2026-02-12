@@ -8,6 +8,7 @@ use App\Models\Sucursal;
 use App\Models\InventarioSucursal;
 use App\Models\CategoriaInsumo;
 use Livewire\Component;
+use Livewire\Attributes\Computed;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
 
@@ -345,20 +346,34 @@ class GestionarInsumos extends Component
         $this->resetPage();
     }
 
+    #[Computed]
+    public function unidadesMedida()
+    {
+        return UnidadMedida::where('estado', true)->orderBy('nombre')->get();
+    }
+
+    #[Computed]
+    public function categorias()
+    {
+        return CategoriaInsumo::where('estado', true)->orderBy('nombre')->get();
+    }
+
+    #[Computed]
+    public function sucursales()
+    {
+        return Sucursal::where('estado', true)->orderBy('nombre')->get();
+    }
+
     /**
      * Renderizar componente
      */
     public function render()
     {
-        $unidadesMedida = UnidadMedida::where('estado', true)->orderBy('nombre')->get();
-        $categorias = CategoriaInsumo::where('estado', true)->orderBy('nombre')->get();
-        $sucursales = Sucursal::where('estado', true)->orderBy('nombre')->get();
-
         $query = Insumo::with(['categoria', 'unidadMedida', 'inventarios.sucursal']);
 
         // Búsqueda por nombre
         if ($this->buscar) {
-            $query->where('nombre', 'like', '%' . $this->buscar . '%');
+            $query->where('nombre', 'ilike', '%' . $this->buscar . '%');
         }
 
         // Filtro por sucursal
@@ -380,9 +395,6 @@ class GestionarInsumos extends Component
 
         return view('livewire.insumos.gestionar-insumos', [
             'insumos' => $insumos,
-            'unidadesMedida' => $unidadesMedida,
-            'categorias' => $categorias,
-            'sucursales' => $sucursales,
         ]);
     }
 }

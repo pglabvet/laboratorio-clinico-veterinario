@@ -235,8 +235,8 @@ class GestionarUnidadesMedida extends Component
         $unidades = UnidadMedida::query()
             ->when($this->buscar, function ($query) {
                 $query->where(function ($q) {
-                    $q->where('nombre', 'like', '%' . $this->buscar . '%')
-                      ->orWhere('abreviatura', 'like', '%' . $this->buscar . '%');
+                    $q->where('nombre', 'ilike', '%' . $this->buscar . '%')
+                      ->orWhere('abreviatura', 'ilike', '%' . $this->buscar . '%');
                 });
             })
             ->orderBy($this->sortBy, $this->sortDirection)
