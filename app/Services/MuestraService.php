@@ -12,8 +12,8 @@ class MuestraService
 {
     /**
      * Generar código único para la muestra por sucursal.
-     * Formato: {PREFIJO}-AA0000 (Prefijo de sucursal + 2 letras + 4 dígitos)
-     * Ejemplo: S-AA0001 (Sucursal Sur), N-AA0002 (Sucursal Norte)
+     * Formato: {PREFIJO}AA0000 (Prefijo de sucursal + 2 letras + 4 dígitos)
+     * Ejemplo: SAA0001 (Sucursal Sur), NAA0002 (Sucursal Norte)
      * Rango por sucursal: AA0000 - ZZ9999 (676 * 10,000 = 6,760,000 combinaciones)
      */
     public function generarCodigoMuestra(int $sucursalId): string
@@ -32,18 +32,18 @@ class MuestraService
             ->first();
 
         if (!$ultimaMuestra) {
-            return $prefijo . '-AA0001';
+            return $prefijo . 'AA0001';
         }
 
         $ultimoCodigo = $ultimaMuestra->codigo_muestra;
 
-        // Si no sigue el formato PREFIJO-AA0000, empezar desde AA0001
-        if (!preg_match('/^[A-Z]{1,2}-([A-Z]{2})(\d{4})$/', $ultimoCodigo, $matches)) {
-            return $prefijo . '-AA0001';
+        // Si no sigue el formato PREFIJOAA0000, empezar desde AA0001
+        if (!preg_match('/^[A-Z]{1,2}([A-Z]{2})(\d{4})$/', $ultimoCodigo, $matches)) {
+            return $prefijo . 'AA0001';
         }
 
         $letras = $matches[1];
-        $numero = (int) $matches[2];
+        $numero = (int)$matches[2];
 
         $numero++;
 
@@ -52,7 +52,7 @@ class MuestraService
             $letras = $this->incrementarLetras($letras);
         }
 
-        return $prefijo . '-' . $letras . str_pad($numero, 4, '0', STR_PAD_LEFT);
+        return $prefijo . $letras . str_pad($numero, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -67,10 +67,12 @@ class MuestraService
             $letra2 = 'A';
             if ($letra1 === 'Z') {
                 return 'AA';
-            } else {
+            }
+            else {
                 $letra1 = chr(ord($letra1) + 1);
             }
-        } else {
+        }
+        else {
             $letra2 = chr(ord($letra2) + 1);
         }
 
@@ -108,9 +110,11 @@ class MuestraService
 
                 if (!$inventario || $inventario->stock_actual <= 0) {
                     $insumosInsuficientes[] = "{$insumo->nombre} (sin stock)";
-                } elseif ($inventario->stock_actual < $cantidadRequerida) {
+                }
+                elseif ($inventario->stock_actual < $cantidadRequerida) {
                     $insumosInsuficientes[] = "{$insumo->nombre} (Disponible: {$inventario->stock_actual}, Requerido: {$cantidadRequerida})";
-                } elseif ($inventario->stock_actual <= $inventario->stock_minimo) {
+                }
+                elseif ($inventario->stock_actual <= $inventario->stock_minimo) {
                     $insumosStockBajo[] = $insumo->nombre;
                 }
             }
@@ -121,7 +125,7 @@ class MuestraService
                 '❌ No se puede crear el análisis. Los siguientes insumos tienen stock insuficiente: ' .
                 implode(', ', $insumosInsuficientes) .
                 '. Por favor, registre una entrada de inventario antes de continuar.'
-            );
+                );
         }
 
         return ['warnings' => $insumosStockBajo];

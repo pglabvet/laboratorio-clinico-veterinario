@@ -183,7 +183,7 @@ class RegistrarEntradaInsumos extends Component
             ->where('estado', true);
         
         if ($this->filtro_categoria) {
-            $insumosQuery->where('categoria_insumo_id', $this->filtro_categoria);
+            $insumosQuery->where('categoria_id', $this->filtro_categoria);
         }
         
         $insumos = $insumosQuery->orderBy('nombre')->get();

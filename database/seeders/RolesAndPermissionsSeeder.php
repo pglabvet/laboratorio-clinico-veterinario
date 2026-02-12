@@ -21,54 +21,54 @@ class RolesAndPermissionsSeeder extends Seeder
             // ========================================
             // DASHBOARD - TODOS LOS PERMISOS
             // ========================================
-            
+
             // Tarjetas de estadísticas principales
-            'ver-dashboard',                      // Ver tarjetas de estadísticas (Muestras/Análisis Pendientes, etc.)
-            'ver-estadisticas-completas',         // Ver estadísticas de TODAS las sucursales (solo Administrador)
-            
+            'ver-dashboard', // Ver tarjetas de estadísticas (Muestras/Análisis Pendientes, etc.)
+            'ver-estadisticas-completas', // Ver estadísticas de TODAS las sucursales (solo Administrador)
+
             // Filtros del dashboard
-            'ver-filtros-dashboard',              // Mostrar filtros de fecha y sucursal en dashboard
-            'filtrar-por-sucursal',               // Poder filtrar datos por sucursal específica (solo Administrador)
-            
+            'ver-filtros-dashboard', // Mostrar filtros de fecha y sucursal en dashboard
+            'filtrar-por-sucursal', // Poder filtrar datos por sucursal específica (solo Administrador)
+
             // Gráficos y reportes
-            'ver-graficos-estadisticas',          // Ver gráficos de distribución y análisis (todos los roles pueden analizar)
-            
+            'ver-graficos-estadisticas', // Ver gráficos de distribución y análisis (todos los roles pueden analizar)
+
             // Secciones de información
-            'ver-actividad-reciente',             // Ver últimas acciones del sistema
-            'ver-alertas-inventario',             // Ver alertas de stock bajo
-            'ver-ultimas-muestras',               // Ver listado de muestras recientes
-            
+            'ver-actividad-reciente', // Ver últimas acciones del sistema
+            'ver-alertas-inventario', // Ver alertas de stock bajo
+            'ver-ultimas-muestras', // Ver listado de muestras recientes
+
             // Acciones rápidas (botones del dashboard)
-            'ver-acciones-rapidas',               // Mostrar la sección completa de "Acciones Rápidas"
-            'registrar-muestras',                 // Botón "Registrar Nueva Muestra"
-            'escanear-muestras',                  // Acceso a página "Escanear Muestra" (sidebar + ruta)
-            'ver-escanear-dashboard',             // Card "Escanear Código" en el dashboard (acciones rápidas)
-            
+            'ver-acciones-rapidas', // Mostrar la sección completa de "Acciones Rápidas"
+            'registrar-muestras', // Botón "Registrar Nueva Muestra"
+            'escanear-muestras', // Acceso a página "Escanear Muestra" (sidebar + ruta)
+            'ver-escanear-dashboard', // Card "Escanear Código" en el dashboard (acciones rápidas)
+
             // ========================================
             // MÓDULOS - PERMISOS DE GESTIÓN
             // ========================================
-            
+
             // Usuarios
             'ver-usuarios',
             'crear-usuarios',
             'editar-usuarios',
             'eliminar-usuarios',
             'gestionar-usuarios', // Permiso compuesto para CRUD completo
-            
+
             // Sucursales
             'ver-sucursales',
             'crear-sucursales',
             'editar-sucursales',
             'eliminar-sucursales',
             'guardar-sucursal',
-            
+
             // Veterinarias
             'ver-veterinarias',
             'crear-veterinarias',
             'editar-veterinarias',
             'eliminar-veterinarias',
             'guardar-veterinaria',
-            
+
             // Muestras
             'ver-muestras',
             'crear-muestras',
@@ -78,27 +78,26 @@ class RolesAndPermissionsSeeder extends Seeder
             'filtro-de-sucursal-muestra',
 
             // Vista general del sistema
-            'vista-general-sistema',         // Ver datos de TODAS las sucursales (sin este permiso, solo ve su sucursal)
-            
+            'vista-general-sistema', // Ver datos de TODAS las sucursales (sin este permiso, solo ve su sucursal)
+
             // Análisis
             'ver-analisis',
             'aprobar-analisis',
             'rechazar-analisis',
             'actualizar-datos-analisis',
             'descargar-pdf-analisis',
-            
+
             // Resultados
             'ver-resultados',
             'registrar-resultados',
             'ingresar-resultados',
             'guardar-borrador-resultados',
-            
+
             // Inventario
-            'ver-inventario',
-            'crear-inventario',
-            'editar-inventario',
-            'eliminar-inventario',
-            
+            'ver-historial-inventario',
+            'ver-registrar-entrada',
+            'ver-salidas-manuales',
+
             // Especies
             'ver-especies',
             'crear-especies',
@@ -202,9 +201,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'ver-plantillas',
             'ver-insumos',
             'ver-categorias-insumo',
-            'ver-inventario',
-            'crear-inventario',
-            'editar-inventario',
+            'ver-historial-inventario',
+            'ver-registrar-entrada',
+            'ver-salidas-manuales',
             // Análisis extra
             'aprobar-analisis',
             'rechazar-analisis',

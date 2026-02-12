@@ -28,7 +28,7 @@ class EscanearMuestra extends Component
         if (session()->has('codigo_escaneado')) {
             $this->codigo_muestra = session('codigo_escaneado');
             session()->forget('codigo_escaneado');
-            
+
             // Escanear automáticamente
             $this->escanear();
         }
@@ -51,11 +51,11 @@ class EscanearMuestra extends Component
             'analisis.tipoAnalisis',
             'analisis.bioquimico'
         ])
-        ->where('codigo_muestra', $this->codigo_muestra)
-        ->when(!auth()->user()->can('vista-general-sistema'), function ($query) {
+            ->where('codigo_muestra', $this->codigo_muestra)
+            ->when(!auth()->user()->can('vista-general-sistema'), function ($query) {
             $query->where('sucursal_id', auth()->user()->sucursal_id);
         })
-        ->first();
+            ->first();
 
         if (!$this->muestra) {
             $this->mensaje_error = 'No se encontró ninguna muestra con el código: ' . $this->codigo_muestra;
@@ -75,10 +75,17 @@ class EscanearMuestra extends Component
      */
     public function updatedCodigoMuestra()
     {
+        // Si el input está vacío, limpiar los resultados
+        if (empty($this->codigo_muestra)) {
+            $this->muestra = null;
+            $this->mensaje_error = '';
+            return;
+        }
+
         // Si el código tiene el formato completo, escanear automáticamente
-        // Formato: PREFIJO-AA0000 (Prefijo sucursal 1-2 letras + guión + 2 letras + 4 dígitos)
-        // Ejemplo: S-AA0001, N-AA0002, C-AA0003, EQ-AA0004
-        if (strlen($this->codigo_muestra) >= 8 && preg_match('/^[A-Z]{1,2}-[A-Z]{2}\d{4}$/', $this->codigo_muestra)) {
+        // Formato: PREFIJOAA0000 (Prefijo sucursal 1-2 letras + 2 letras + 4 dígitos)
+        // Ejemplo: SAA0001, NAA0002, CAA0003, EQAA0004
+        if (strlen($this->codigo_muestra) >= 7 && preg_match('/^[A-Z]{1,2}[A-Z]{2}\d{4}$/', $this->codigo_muestra)) {
             $this->escanear();
         }
     }

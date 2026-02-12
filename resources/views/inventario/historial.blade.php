@@ -48,7 +48,9 @@
     </flux:header>
 
     <flux:main class="p-6">
-        <livewire:inventario.historial-movimientos />
+        @can('ver-historial-inventario')
+            <livewire:inventario.historial-movimientos />
+        @endcan
     </flux:main>
 
     @fluxScripts

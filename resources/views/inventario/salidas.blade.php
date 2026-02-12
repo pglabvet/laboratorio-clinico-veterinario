@@ -48,7 +48,9 @@
     </flux:header>
 
     <flux:main class="p-6">
-        <livewire:inventario.registrar-salida />
+        @can('ver-salidas-manuales')
+            <livewire:inventario.registrar-salida />
+        @endcan
     </flux:main>
 
     @fluxScripts
