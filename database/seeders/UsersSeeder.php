@@ -17,8 +17,8 @@ class UsersSeeder extends Seeder
         $admin = User::firstOrCreate(
             ['email' => 'admin@labvet.com'],
             [
-                'name' => 'Administrador',
-                'password' => Hash::make('password123'),
+                'name' => 'marcos pillco mamani',
+                'password' => Hash::make('mpm210214503'),
                 'email_verified_at' => now(),
             ]
         );
@@ -29,14 +29,14 @@ class UsersSeeder extends Seeder
             ['email' => 'bioquimico@labvet.com'],
             [
                 'name' => 'Bioquímico Principal',
-                'password' => Hash::make('password123'),
+                'password' => Hash::make('bioquimico2025'),
                 'email_verified_at' => now(),
             ]
         );
         $bioquimico->assignRole('Bioquímico');
 
         $this->command->info('Usuarios creados exitosamente:');
-        $this->command->info('- Administrador: admin@labvet.com / password123');
-        $this->command->info('- Bioquímico: bioquimico@labvet.com / password123');
+        $this->command->info('- Administrador: admin@gmail.com / mpm210214503');
+        $this->command->info('- Bioquímico: bioquimico@gmail.com / bioquimico2025');
     }
 }

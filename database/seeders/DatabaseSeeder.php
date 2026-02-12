@@ -17,6 +17,15 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RolesAndPermissionsSeeder::class,
             UsersSeeder::class,
+      //      SucursalesSeeder::class,
+      //      EspeciesSeeder::class,
+      //      VeterinariasSeeder::class,
+      //      UnidadesMedidaSeeder::class,
+      //      TiposAnalisisSeeder::class,
+      //      CategoriasInsumoSeeder::class,
+      //      InsumosSeeder::class,
+      //      EntradasInventarioSeeder::class,
+      //      MuestrasSeeder::class,
         ]);
     }
 }

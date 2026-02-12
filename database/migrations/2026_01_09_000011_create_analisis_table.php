@@ -15,12 +15,22 @@ return new class extends Migration
             $table->id();
             $table->foreignId('muestra_id')->constrained('muestras')->onDelete('cascade');
             $table->foreignId('tipo_analisis_id')->constrained('tipos_analisis')->onDelete('cascade');
+            $table->foreignId('plantilla_formulario_id')->nullable()->constrained('plantillas_formulario')->onDelete('set null');
             $table->foreignId('bioquimico_id')->constrained('users')->onDelete('cascade');
-            $table->string('estado');
+            $table->foreignId('aprobador_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->enum('estado', ['Pendiente', 'En revision', 'Aprobado', 'Enviado'])->default('Pendiente');
             $table->text('observaciones_bioquimico')->nullable();
+            $table->text('observaciones_aprobador')->nullable();
             $table->timestamp('fecha_inicio')->nullable();
             $table->timestamp('fecha_finalizacion')->nullable();
+            $table->timestamp('fecha_aprobacion')->nullable();
             $table->timestamps();
+
+            // Índices de rendimiento para filtros y ordenamiento
+            $table->index('estado');
+            $table->index('fecha_finalizacion');
+            $table->index('fecha_aprobacion');
+            $table->index(['muestra_id', 'estado']); // Para actualizarEstadoSegunAnalisis()
         });
     }
 

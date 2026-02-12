@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Sucursal extends Model
 {
-    use HasFactory;
+    use Auditable, HasFactory;
 
     protected $table = 'sucursales';
 
@@ -41,8 +42,6 @@ class Sucursal extends Model
     {
         return $this->hasMany(Muestra::class);
     }
-   
-
 
     /**
      * Get the users for the sucursal.
@@ -66,5 +65,37 @@ class Sucursal extends Model
     public function scopeInactive($query)
     {
         return $query->where('estado', false);
+    }
+
+    /**
+     * Obtener el prefijo para códigos de muestra
+     * Extrae las primeras letras del nombre después de "Sucursal" para evitar conflictos
+     * Ejemplos:
+     *   "Sucursal Centro" -> "C"
+     *   "Sucursal Sur" -> "S"
+     *   "Sucursal Equipetrol" -> "EQ"
+     */
+    public function getPrefijo(): string
+    {
+        // Eliminar "Sucursal" del nombre y limpiar espacios
+        $nombreLimpio = trim(str_replace('Sucursal', '', $this->nombre));
+
+        // Mapeo especial para sucursales conocidas
+        $prefijosMapeados = [
+            'Centro' => 'C',
+            'Norte' => 'N',
+            'Sur' => 'S',
+            'Este' => 'E',
+            'Oeste' => 'O',
+            'Equipetrol' => 'EQ',
+        ];
+
+        // Si existe un mapeo, usarlo
+        if (isset($prefijosMapeados[$nombreLimpio])) {
+            return $prefijosMapeados[$nombreLimpio];
+        }
+
+        // Por defecto, usar las primeras 2 letras en mayúsculas
+        return strtoupper(substr($nombreLimpio, 0, 2));
     }
 }

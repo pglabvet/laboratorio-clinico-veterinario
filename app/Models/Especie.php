@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Especie extends Model
 {
-    use HasFactory;
+    use Auditable, HasFactory;
 
     protected $fillable = [
         'nombre',
@@ -26,13 +27,5 @@ class Especie extends Model
     public function muestras(): HasMany
     {
         return $this->hasMany(Muestra::class);
-    }
-
-    /**
-     * Relación con rangos de referencia
-     */
-    public function rangosReferencia(): HasMany
-    {
-        return $this->hasMany(RangoReferencia::class);
     }
 }

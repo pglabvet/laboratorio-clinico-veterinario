@@ -79,6 +79,31 @@ class GestionarRoles extends Component
     }
 
     /**
+     * Limpiar filtro de búsqueda
+     */
+    public function limpiarFiltro()
+    {
+        $this->buscar = '';
+        $this->resetPage();
+    }
+
+    /**
+     * Seleccionar todos los permisos
+     */
+    public function seleccionarTodosPermisos()
+    {
+        $this->permissions = Permission::all()->pluck('id')->toArray();
+    }
+
+    /**
+     * Limpiar todos los permisos
+     */
+    public function limpiarPermisos()
+    {
+        $this->permissions = [];
+    }
+
+    /**
      * Abrir modal para editar rol existente
      */
     public function editar($id)
@@ -227,7 +252,7 @@ class GestionarRoles extends Component
         $roles = Role::query()
             ->withCount(['permissions', 'users'])
             ->when($this->buscar, function ($query) {
-                $query->where('name', 'like', '%' . $this->buscar . '%');
+                $query->where('name', 'ilike', '%' . $this->buscar . '%');
             })
             ->orderBy($this->sortBy, $this->sortDirection)
             ->paginate(10);

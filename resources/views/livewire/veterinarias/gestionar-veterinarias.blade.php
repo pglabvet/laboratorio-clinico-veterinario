@@ -11,17 +11,33 @@
 
     {{-- Barra de acciones --}}
     <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        {{-- Búsqueda --}}
-        <div class="w-full sm:w-96">
-            <flux:input 
-                wire:model.live.debounce.300ms="buscar"
-                icon="magnifying-glass"
-                placeholder="Buscar veterinarias..."
-                class="w-full"
-            />
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
+            {{-- Búsqueda --}}
+            <div class="w-full sm:w-96">
+                <flux:input 
+                    wire:model.live.debounce.300ms="buscar"
+                    icon="magnifying-glass"
+                    placeholder="Buscar veterinarias..."
+                    class="w-full"
+                />
+            </div>
+
+            {{-- Botón limpiar filtro --}}
+            @if($buscar)
+                <div class="flex items-center">
+                    <flux:button 
+                        wire:click="limpiarBuscar"
+                        variant="ghost"
+                        icon="x-mark"
+                    >
+                        Limpiar
+                    </flux:button>
+                </div>
+            @endif
         </div>
 
         {{-- Botón crear --}}
+        @can('crear-veterinarias')
         <flux:button 
             wire:click="crear"
             icon="plus"
@@ -29,10 +45,11 @@
         >
             Nueva Veterinaria
         </flux:button>
+        @endcan
     </div>
 
     {{-- Tabla de veterinarias --}}
-    <div class="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow dark:border-neutral-700 dark:bg-neutral-800">
+    <div class="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-md ring-1 ring-neutral-200/50 dark:border-neutral-700 dark:bg-neutral-800 dark:ring-neutral-700/50">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
                 <thead class="bg-neutral-50 dark:bg-neutral-900">
@@ -114,7 +131,7 @@
                 </thead>
                 <tbody class="divide-y divide-neutral-200 bg-white dark:divide-neutral-700 dark:bg-neutral-800">
                     @forelse ($veterinarias as $veterinaria)
-                        <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50" wire:key="veterinaria-{{ $veterinaria->id }}">
+                        <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50" wire:key="veterinaria-{{ $veterinaria->id }}-{{ $veterinaria->estado ? 'activa' : 'inactiva' }}">
                             <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-neutral-900 dark:text-neutral-100">
                                 {{ $veterinaria->nombre }}
                             </td>
@@ -128,18 +145,18 @@
                                 {{ $veterinaria->telefono }}
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
-                                <button type="button" wire:click="confirmarCambiarEstado({{ $veterinaria->id }})" class="cursor-pointer group outline-none focus:outline-none">
-                                    <div class="pointer-events-none">
-                                        <flux:switch 
-                                            :checked="$veterinaria->estado"
-                                            wire:key="switch-{{ $veterinaria->id }}-{{ $veterinaria->estado ? 'active' : 'inactive' }}"
-                                        />
-                                    </div>
-                                </button>
+                                <flux:badge 
+                                    :color="$veterinaria->estado ? 'green' : 'red'" 
+                                    size="sm"
+                                    inset="top bottom"
+                                >
+                                    {{ $veterinaria->estado ? 'Activa' : 'Inactiva' }}
+                                </flux:badge>
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
                                 <div class="flex items-center gap-2">
                                     {{-- Botón ver --}}
+                                    @can('mostrar-detalle-veterinaria')
                                     <flux:button
                                         wire:click="ver({{ $veterinaria->id }})"
                                         variant="ghost"
@@ -148,8 +165,10 @@
                                         color="neutral"
                                         title="Ver detalles"
                                     />
+                                    @endcan
 
                                     {{-- Botón editar --}}
+                                    @can('editar-veterinarias')
                                     <flux:button
                                         wire:click="editar({{ $veterinaria->id }})"
                                         variant="ghost"
@@ -158,8 +177,10 @@
                                         color="cyan"
                                         title="Editar"
                                     />
+                                    @endcan
 
                                     {{-- Botón eliminar --}}
+                                    @can('eliminar-veterinarias')
                                     <flux:button
                                         wire:click="confirmarEliminar({{ $veterinaria->id }})"
                                         variant="ghost"
@@ -168,6 +189,7 @@
                                         color="red"
                                         title="Eliminar"
                                     />
+                                    @endcan
                                 </div>
                             </td>
                         </tr>
@@ -264,11 +286,15 @@
                 />
 
                 {{-- Estado --}}
-                <flux:checkbox 
+                <flux:select 
                     wire:model="estado"
-                    label="Veterinaria activa"
-                    description="Indica si la veterinaria está operativa"
-                />
+                    label="Estado de la Veterinaria"
+                    placeholder="Selecciona el estado"
+                    required
+                >
+                    <option value="1">Activa</option>
+                    <option value="0">Inactiva</option>
+                </flux:select>
             </div>
 
             {{-- Botones del modal --}}
@@ -276,16 +302,19 @@
                 <flux:button 
                     type="button"
                     wire:click="cerrarModal"
-                    variant="ghost"
+                    variant="outline"
+                    class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950"
                 >
                     Cancelar
                 </flux:button>
+                @can('guardar-veterinaria')
                 <flux:button 
                     type="submit"
                     variant="primary"
                 >
                     {{ $modoEdicion ? 'Actualizar' : 'Guardar' }}
                 </flux:button>
+                @endcan
             </div>
         </form>
     </flux:modal>
@@ -293,93 +322,75 @@
     {{-- Modal para ver detalles de veterinaria --}}
     <flux:modal wire:model="modalVer" class="w-full max-w-2xl">
         @if($veterinariaAVer)
-            <div class="space-y-6">
-                {{-- Encabezado --}}
-                <div>
-                    <flux:heading size="lg" class="mb-1">Detalles de la Veterinaria</flux:heading>
-                    <flux:subheading>Información completa de la veterinaria</flux:subheading>
+            @php
+                $estadoBadge = [
+                    true => 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
+                    false => 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
+                ];
+            @endphp
+            <div class="space-y-5">
+                {{-- Encabezado: Nombre veterinaria + Badge estado --}}
+                <div class="pb-4 border-b border-neutral-200 dark:border-neutral-700">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <h2 class="text-xl font-semibold text-neutral-900 dark:text-neutral-100">{{ $veterinariaAVer->nombre }}</h2>
+                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $estadoBadge[$veterinariaAVer->estado] ?? 'bg-neutral-100 text-neutral-800 dark:bg-neutral-900/20 dark:text-neutral-400' }}">
+                                {{ $veterinariaAVer->estado ? 'Activa' : 'Inactiva' }}
+                            </span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1">Registro desde: <span class="font-medium">{{ $veterinariaAVer->created_at->format('d/m/Y') }}</span></p>
                 </div>
 
-                {{-- Contenido --}}
-                <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    {{-- Nombre --}}
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                            Nombre de la Veterinaria
-                        </label>
-                        <p class="text-base text-neutral-900 dark:text-neutral-100">
-                            {{ $veterinariaAVer->nombre }}
-                        </p>
+                {{-- Datos de Contacto --}}
+                <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 divide-y divide-neutral-200 dark:divide-neutral-700 overflow-hidden bg-white dark:bg-neutral-800/50">
+                    <div class="flex items-start gap-3 px-4 py-3.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                        <svg class="w-5 h-5 text-indigo-500 dark:text-indigo-400 mt-0.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" /></svg>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-0.5">Responsable</p>
+                            <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $veterinariaAVer->responsable }}</p>
+                        </div>
                     </div>
-
-                    {{-- Responsable --}}
-                    <div>
-                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                            Responsable
-                        </label>
-                        <p class="text-base text-neutral-900 dark:text-neutral-100">
-                            {{ $veterinariaAVer->responsable }}
-                        </p>
+                    <div class="flex items-start gap-3 px-4 py-3.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                        <svg class="w-5 h-5 text-blue-500 dark:text-blue-400 mt-0.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" /></svg>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-0.5">Email</p>
+                            <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $veterinariaAVer->email }}</p>
+                        </div>
                     </div>
-
-                    {{-- Email --}}
-                    <div>
-                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                            Email
-                        </label>
-                        <p class="text-base text-neutral-900 dark:text-neutral-100">
-                            {{ $veterinariaAVer->email }}
-                        </p>
+                    <div class="flex items-start gap-3 px-4 py-3.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                        <svg class="w-5 h-5 text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" /></svg>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-0.5">Teléfono</p>
+                            <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $veterinariaAVer->telefono }}</p>
+                        </div>
                     </div>
+                </div>
 
-                    {{-- Teléfono --}}
-                    <div>
-                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                            Teléfono
-                        </label>
-                        <p class="text-base text-neutral-900 dark:text-neutral-100">
-                            {{ $veterinariaAVer->telefono }}
-                        </p>
+                {{-- Ubicación --}}
+                <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 divide-y divide-neutral-200 dark:divide-neutral-700 overflow-hidden bg-white dark:bg-neutral-800/50">
+                    <div class="flex items-start gap-3 px-4 py-3.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                        <svg class="w-5 h-5 text-violet-500 dark:text-violet-400 mt-0.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" /></svg>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-0.5">Dirección</p>
+                            <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $veterinariaAVer->direccion }}</p>
+                        </div>
                     </div>
-
-                    {{-- Fecha de creación --}}
-                    <div>
-                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                            Fecha de creación
-                        </label>
-                        <p class="text-base text-neutral-900 dark:text-neutral-100">
-                            {{ $veterinariaAVer->created_at->format('d/m/Y H:i') }}
-                        </p>
-                    </div>
-
-                    {{-- Dirección --}}
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                            Dirección
-                        </label>
-                        <p class="text-base text-neutral-900 dark:text-neutral-100">
-                            {{ $veterinariaAVer->direccion }}
-                        </p>
-                    </div>
-
-                    {{-- Estado --}}
-                    <div>
-                        <label class="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1">
-                            Estado
-                        </label>
-                        <p class="text-base text-neutral-900 dark:text-neutral-100">
-                            {{ $veterinariaAVer->estado ? 'Activa' : 'Inactiva' }}
-                        </p>
+                    <div class="flex items-start gap-3 px-4 py-3.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
+                        <svg class="w-5 h-5 text-amber-500 dark:text-amber-400 mt-0.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-0.5">Fecha de Registro</p>
+                            <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $veterinariaAVer->created_at->format('d/m/Y H:i') }}</p>
+                        </div>
                     </div>
                 </div>
 
                 {{-- Botón cerrar --}}
-                <div class="flex justify-end">
+                <div class="flex justify-end pt-2">
                     <flux:button 
                         type="button"
                         wire:click="cerrarModalVer"
                         variant="primary"
-                        color="cyan"
                     >
                         Cerrar
                     </flux:button>
@@ -413,7 +424,8 @@
                 <flux:button 
                     type="button"
                     wire:click="cancelarEliminar"
-                    variant="ghost"
+                    variant="outline"
+                    class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950"
                 >
                     Cancelar
                 </flux:button>
@@ -476,7 +488,8 @@
                 <flux:button 
                     type="button"
                     wire:click="cancelarCambiarEstado"
-                    variant="ghost"
+                    variant="outline"
+                    class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950"
                 >
                     Cancelar
                 </flux:button>

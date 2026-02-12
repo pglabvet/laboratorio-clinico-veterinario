@@ -14,10 +14,8 @@ return new class extends Migration
         Schema::create('insumos', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
-            $table->foreignId('categoria_id')->constrained('categorias_insumo')->onDelete('cascade');
-            $table->string('unidad');
-            $table->decimal('stock_actual', 10, 2)->default(0);
-            $table->decimal('stock_minimo', 10, 2)->default(0);
+            $table->foreignId('categoria_id')->nullable()->constrained('categorias_insumo')->onDelete('set null');
+            $table->foreignId('unidad_medida_id')->constrained('unidades_medida')->onDelete('restrict');
             $table->boolean('estado')->default(true);
             $table->timestamps();
         });

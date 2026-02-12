@@ -237,9 +237,11 @@ class GestionarVeterinarias extends Component
             }
 
             $veterinaria = Veterinaria::findOrFail($this->veterinariaACambiar);
-            $veterinaria->update(['estado' => !$veterinaria->estado]);
+            $nuevoEstado = !$veterinaria->estado;
+            $veterinaria->estado = $nuevoEstado;
+            $veterinaria->save();
             
-            $mensaje = $veterinaria->estado ? 'Veterinaria activada exitosamente.' : 'Veterinaria desactivada exitosamente.';
+            $mensaje = $nuevoEstado ? 'Veterinaria activada exitosamente.' : 'Veterinaria desactivada exitosamente.';
             session()->flash('mensaje', $mensaje);
 
             $this->modalCambiarEstado = false;
@@ -299,17 +301,26 @@ class GestionarVeterinarias extends Component
     }
 
     /**
+     * Limpiar búsqueda
+     */
+    public function limpiarBuscar()
+    {
+        $this->buscar = '';
+        $this->resetPage();
+    }
+
+    /**
      * Renderizar componente
      */
     public function render()
     {
         $veterinarias = Veterinaria::query()
             ->when($this->buscar, function ($query) {
-                $query->where('nombre', 'like', '%' . $this->buscar . '%')
-                    ->orWhere('responsable', 'like', '%' . $this->buscar . '%')
-                    ->orWhere('email', 'like', '%' . $this->buscar . '%')
-                    ->orWhere('telefono', 'like', '%' . $this->buscar . '%')
-                    ->orWhere('direccion', 'like', '%' . $this->buscar . '%');
+                $query->where('nombre', 'ilike', '%' . $this->buscar . '%')
+                    ->orWhere('responsable', 'ilike', '%' . $this->buscar . '%')
+                    ->orWhere('email', 'ilike', '%' . $this->buscar . '%')
+                    ->orWhere('telefono', 'ilike', '%' . $this->buscar . '%')
+                    ->orWhere('direccion', 'ilike', '%' . $this->buscar . '%');
             })
             ->orderBy($this->sortBy, $this->sortDirection)
             ->paginate(10);
@@ -319,3 +330,4 @@ class GestionarVeterinarias extends Component
         ]);
     }
 }
+ //este es un comentario para saber si los cambios se guardan en esta rama 

@@ -2,24 +2,25 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Resultado extends Model
 {
-    use HasFactory;
+    use Auditable, HasFactory;
 
     protected $fillable = [
         'analisis_id',
-        'parametro_id',
+        'tipo',
         'valor',
         'fuera_rango',
     ];
 
     protected $casts = [
         'fuera_rango' => 'boolean',
+        'valor' => 'array',
     ];
 
     /**
@@ -28,21 +29,5 @@ class Resultado extends Model
     public function analisis(): BelongsTo
     {
         return $this->belongsTo(Analisis::class);
-    }
-
-    /**
-     * Relación con parámetro
-     */
-    public function parametro(): BelongsTo
-    {
-        return $this->belongsTo(ParametroAnalisis::class, 'parametro_id');
-    }
-
-    /**
-     * Relación con historial de resultados
-     */
-    public function historial(): HasMany
-    {
-        return $this->hasMany(HistorialResultado::class);
     }
 }

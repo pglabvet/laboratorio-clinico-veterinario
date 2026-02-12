@@ -2,14 +2,15 @@
 
 namespace App\Models;
 
+use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TipoAnalisis extends Model
 {
-    use HasFactory;
+    use Auditable, HasFactory;
 
     protected $table = 'tipos_analisis';
 
@@ -22,14 +23,6 @@ class TipoAnalisis extends Model
     protected $casts = [
         'estado' => 'boolean',
     ];
-
-    /**
-     * Relación con parámetros de análisis
-     */
-    public function parametros(): HasMany
-    {
-        return $this->hasMany(ParametroAnalisis::class);
-    }
 
     /**
      * Relación con análisis
@@ -47,5 +40,13 @@ class TipoAnalisis extends Model
         return $this->belongsToMany(Insumo::class, 'tipo_analisis_insumos')
             ->withPivot('cantidad_requerida')
             ->withTimestamps();
+    }
+
+    /**
+     * Relación con plantillas de formulario
+     */
+    public function plantillas(): HasMany
+    {
+        return $this->hasMany(PlantillaFormulario::class);
     }
 }

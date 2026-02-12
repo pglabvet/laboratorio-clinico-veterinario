@@ -32,7 +32,7 @@
     </div>
 
     {{-- Tabla de permisos --}}
-    <div class="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow dark:border-neutral-700 dark:bg-neutral-800">
+    <div class="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-md ring-1 ring-neutral-200/50 dark:border-neutral-700 dark:bg-neutral-800 dark:ring-neutral-700/50">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
                 <thead class="bg-neutral-50 dark:bg-neutral-900">
@@ -87,6 +87,7 @@
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
                                 <div class="flex items-center gap-2">
                                     {{-- Botón ver --}}
+                                    @can('mostrar-detalle-permiso')
                                     <flux:button
                                         wire:click="ver({{ $permiso->id }})"
                                         variant="ghost"
@@ -95,6 +96,7 @@
                                         color="neutral"
                                         title="Ver detalles"
                                     />
+                                    @endcan
 
                                     {{-- Botón editar --}}
                                     <flux:button
@@ -186,16 +188,19 @@
                 <flux:button 
                     type="button"
                     wire:click="cerrarModal"
-                    variant="ghost"
+                    variant="outline"
+                    class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950"
                 >
                     Cancelar
                 </flux:button>
+                @can('guardar-permiso')
                 <flux:button 
                     type="submit"
                     variant="primary"
                 >
                     {{ $modoEdicion ? 'Actualizar' : 'Guardar' }}
                 </flux:button>
+                @endcan
             </div>
         </form>
     </flux:modal>
@@ -303,7 +308,8 @@
                 <flux:button 
                     type="button"
                     wire:click="cancelarEliminar"
-                    variant="ghost"
+                    variant="outline"
+                    class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950"
                 >
                     Cancelar
                 </flux:button>
