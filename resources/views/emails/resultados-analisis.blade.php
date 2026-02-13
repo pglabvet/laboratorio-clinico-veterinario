@@ -16,18 +16,12 @@
                     <!-- Header con gradiente -->
                     <tr>
                         <td style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5f8a 50%, #3b82b8 100%); padding: 35px 40px; text-align: center;">
-                            {{-- Logo placeholder - reemplazar cuando tengan el logo --}}
+                            {{-- Logo de PG LabVet (embebido como CID para compatibilidad con email) --}}
                             <div style="margin-bottom: 15px;">
-                                <table role="presentation" cellspacing="0" cellpadding="0" align="center">
-                                    <tr>
-                                        <td style="background-color: rgba(255,255,255,0.15); border-radius: 50%; padding: 12px; display: inline-block;">
-                                            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNOS43NSA5Ljc1bC40MS0uNDFhMi4xIDIuMSAwIDAxMi45NyAwbC44MyA4My44MyAwIDAxMi45NyAwbC40MS0uNDFNOS43NSA5Ljc1YzAgLjU0LS4yIDEuMDYtLjU5IDEuNDRMNy41IDEyLjg1bS41LjVMMjEgMjFsLTUuMzUtNS4zNG0wIDBhMi4xIDIuMSAwIDAwMi45NyAwbDUuMDUgNS4wNU0xMiAyYTEwIDEwIDAgMTAwIDIwIDEwIDEwIDAgMDAwLTIweiIvPjwvc3ZnPg==" alt="Lab" width="40" height="40" style="display: block;" />
-                                        </td>
-                                    </tr>
-                                </table>
+                                <img src="{{ $message->embed(public_path('images/LOGO_LIGHT.png')) }}" alt="PG LabVet" width="80" height="80" style="display: block; margin: 0 auto;" />
                             </div>
                             <h1 style="color: #ffffff; font-size: 22px; font-weight: 700; margin: 0 0 5px 0; letter-spacing: 0.5px;">
-                                LABORATORIO CLÍNICO VETERINARIO
+                                PG LABVET LABORATORIO CLÍNICO VETERINARIO
                             </h1>
                             <p style="color: rgba(255,255,255,0.75); font-size: 13px; margin: 0; letter-spacing: 1px;">
                                 RESULTADOS DE ANÁLISIS
@@ -195,7 +189,7 @@
                         <td style="padding: 25px 40px 30px 40px; text-align: center;">
                             <p style="color: #9ca3af; font-size: 12px; line-height: 1.5; margin: 0 0 8px 0;">
                                 Este correo ha sido enviado automáticamente por el sistema del<br>
-                                <strong style="color: #6b7280;">Laboratorio Clínico Veterinario</strong>
+                                <strong style="color: #6b7280;">PG LabVet — Laboratorio Clínico Veterinario</strong>
                             </p>
                             <p style="color: #d1d5db; font-size: 11px; margin: 0;">
                                 {{ now()->format('d/m/Y H:i') }} — {{ $sucursal->nombre ?? 'Sucursal Principal' }}
