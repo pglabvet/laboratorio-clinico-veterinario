@@ -149,9 +149,12 @@ class EnvioResultadosService
             $pdf = $resultado['modelo'];
         }
 
+        // Refrescar la relación de PDFs para asegurar que el recién creado esté disponible
+        $analisis->load('pdfs');
+
         $muestra = $analisis->muestra->load(['veterinaria', 'sucursal', 'especie']);
 
-        Mail::to($email)->send(
+        Mail::to($email)->sendNow(
             new ResultadosAnalisisMail($muestra, [$analisis->id], true)
         );
 
@@ -198,7 +201,7 @@ class EnvioResultadosService
             $analisis->update(['estado' => Analisis::ESTADO_ENVIADO]);
         }
 
-        Mail::to($email)->send(
+        Mail::to($email)->sendNow(
             new ResultadosAnalisisMail($muestra, $analisisIds, true)
         );
 
@@ -262,7 +265,7 @@ class EnvioResultadosService
         $muestra = $analisis->muestra;
         $sucursal = $muestra->sucursal->nombre ?? 'N/A';
 
-        return "*PGLABVET LABORATORIO CLINICO VETERINARIO*\n" .
+        return "*PG LABVET LABORATORIO CLINICO VETERINARIO*\n" .
             "_{$sucursal}_\n" .
             "------------------------------------\n\n" .
             "*Paciente:* {$muestra->paciente_nombre}\n" .

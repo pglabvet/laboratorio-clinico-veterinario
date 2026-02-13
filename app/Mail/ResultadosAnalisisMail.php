@@ -4,7 +4,6 @@ namespace App\Mail;
 
 use App\Models\Analisis;
 use App\Models\Muestra;
-use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
@@ -14,7 +13,7 @@ use Illuminate\Support\Facades\Storage;
 
 class ResultadosAnalisisMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use SerializesModels;
 
     public Muestra $muestra;
     public array $analisisIds;
