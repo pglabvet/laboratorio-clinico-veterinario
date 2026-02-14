@@ -4,6 +4,26 @@
     $diferenciales = $resultado['diferenciales'] ?? [];
     $indices = $resultado['indices'] ?? [];
     $maxRows = max(count($parametros), count($diferenciales));
+
+    // Obtener valor de leucocitos para cálculo automático de valor absoluto
+    $leucocitosValor = 0;
+    foreach ($parametros as $param) {
+        if (str_contains(strtolower($param['nombre'] ?? ''), 'leucocito')) {
+            $leucocitosValor = floatval(str_replace(',', '', $param['resultado'] ?? '0'));
+            break;
+        }
+    }
+
+    // Recalcular valores absolutos: leucocitos × valor_rel / 100
+    foreach ($diferenciales as &$dif) {
+        $valorRel = floatval($dif['valor_rel'] ?? 0);
+        if ($leucocitosValor > 0 && $valorRel > 0) {
+            $dif['valor_abs'] = (string) round($leucocitosValor * $valorRel / 100);
+        } elseif ($dif['valor_rel'] !== '' && $valorRel === 0.0) {
+            $dif['valor_abs'] = '0';
+        }
+    }
+    unset($dif);
 @endphp
 
 @if(isset($componente['propiedades']['titulo']))

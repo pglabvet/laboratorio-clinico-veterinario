@@ -1,8 +1,19 @@
 {{-- Componente de edición: Tabla Hematológica --}}
+@php
+    // Determinar el índice del parámetro "Leucocitos" en parametros_principales
+    $indiceLeucocitos = null;
+    foreach (($componente['propiedades']['parametros_principales'] ?? []) as $idx => $p) {
+        if (str_contains(strtolower($p['nombre'] ?? ''), 'leucocito')) {
+            $indiceLeucocitos = $idx;
+            break;
+        }
+    }
+@endphp
 <div 
     wire:ignore
     x-data="{
         datosExistentes: @js($componentesData[$index]['data'] ?? null),
+        indiceLeucocitos: {{ $indiceLeucocitos !== null ? $indiceLeucocitos : 'null' }},
         parametros: {
             @foreach($componente['propiedades']['parametros_principales'] ?? [] as $i => $param)
             {{ $i }}: { nombre: '{{ addslashes($param["nombre"]) }}', resultado: '', unidad: '{{ addslashes($param["unidad"]) }}' }{{ $loop->last ? '' : ',' }}
@@ -18,6 +29,25 @@
             {{ $i }}: { nombre: '{{ addslashes($indice["nombre"]) }}', resultado: '', unidad: '{{ addslashes($indice["unidad"]) }}' }{{ $loop->last ? '' : ',' }}
             @endforeach
         },
+        getLeucocitos() {
+            if (this.indiceLeucocitos === null) return 0;
+            const val = this.parametros[this.indiceLeucocitos]?.resultado;
+            if (!val || val === '') return 0;
+            return parseFloat(String(val).replace(/,/g, '')) || 0;
+        },
+        calcularValoresAbsolutos() {
+            const leucocitos = this.getLeucocitos();
+            Object.keys(this.diferenciales).forEach(key => {
+                const valorRel = parseFloat(this.diferenciales[key].valor_rel) || 0;
+                if (leucocitos > 0 && valorRel > 0) {
+                    this.diferenciales[key].valor_abs = Math.round(leucocitos * valorRel / 100).toString();
+                } else if (valorRel === 0 && this.diferenciales[key].valor_rel !== '') {
+                    this.diferenciales[key].valor_abs = '0';
+                } else {
+                    this.diferenciales[key].valor_abs = '';
+                }
+            });
+        },
         init() {
             // Cargar datos existentes si existen
             if (this.datosExistentes && typeof this.datosExistentes === 'object') {
@@ -32,7 +62,6 @@
                     this.datosExistentes.diferenciales.forEach((dif, i) => {
                         if (this.diferenciales[i]) {
                             this.diferenciales[i].valor_rel = dif.valor_rel || '';
-                            this.diferenciales[i].valor_abs = dif.valor_abs || '';
                         }
                     });
                 }
@@ -44,6 +73,27 @@
                     });
                 }
             }
+
+            // Calcular valores absolutos iniciales
+            this.calcularValoresAbsolutos();
+
+            // Observar cambios en leucocitos y valores relativos para recalcular
+            this.$watch('parametros', () => {
+                this.calcularValoresAbsolutos();
+            }, { deep: true });
+
+            this.$watch('diferenciales', (newVal, oldVal) => {
+                // Solo recalcular si cambió un valor_rel (no valor_abs para evitar loop)
+                let relChanged = false;
+                Object.keys(newVal).forEach(key => {
+                    if (newVal[key]?.valor_rel !== oldVal[key]?.valor_rel) {
+                        relChanged = true;
+                    }
+                });
+                if (relChanged) {
+                    this.calcularValoresAbsolutos();
+                }
+            }, { deep: true });
             
             // Sincronizar antes de cualquier acción de Livewire
             window.addEventListener('livewire:initialized', () => {
@@ -51,6 +101,14 @@
                     this.sincronizarConLivewire();
                 });
             });
+        },
+        onParametroChange() {
+            this.calcularValoresAbsolutos();
+            this.sincronizarConLivewire();
+        },
+        onValorRelChange() {
+            this.calcularValoresAbsolutos();
+            this.sincronizarConLivewire();
         },
         sincronizarConLivewire() {
             $wire.set('componentesData.{{ $index }}.data', {
@@ -98,7 +156,7 @@
                             {{ $param['nombre'] }}
                         </td>
                         <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1">
-                            <input type="text" x-model="parametros[{{ $i }}].resultado" @change="sincronizarConLivewire()" @blur="sincronizarConLivewire()" class="w-full px-1 py-0.5 text-xs border-0 focus:ring-1 focus:ring-blue-500 rounded bg-transparent text-gray-900 dark:text-zinc-100" />
+                            <input type="text" x-model="parametros[{{ $i }}].resultado" @change="onParametroChange()" @blur="onParametroChange()" class="w-full px-1 py-0.5 text-xs border-0 focus:ring-1 focus:ring-blue-500 rounded bg-transparent text-gray-900 dark:text-zinc-100" />
                         </td>
                         <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1 text-center text-xs text-gray-900 dark:text-zinc-100">
                             {{ $param['unidad'] }}
@@ -120,14 +178,14 @@
                             {{ $dif['nombre'] }}
                         </td>
                         <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1">
-                            <input type="text" x-model="diferenciales[{{ $i }}].valor_rel" @change="sincronizarConLivewire()" @blur="sincronizarConLivewire()" class="w-full px-1 py-0.5 text-xs border-0 focus:ring-1 focus:ring-blue-500 rounded bg-transparent text-gray-900 dark:text-zinc-100" />
+                            <input type="text" x-model="diferenciales[{{ $i }}].valor_rel" @change="onValorRelChange()" @blur="onValorRelChange()" class="w-full px-1 py-0.5 text-xs border-0 focus:ring-1 focus:ring-blue-500 rounded bg-transparent text-gray-900 dark:text-zinc-100" />
                         </td>
                         <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1 text-center text-xs text-gray-900 dark:text-zinc-100">%</td>
                         <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1 text-center text-xs text-gray-500 dark:text-zinc-400">
                             {{ $dif['ref_rel_min'] }}-{{ $dif['ref_rel_max'] }}
                         </td>
                         <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1">
-                            <input type="text" x-model="diferenciales[{{ $i }}].valor_abs" @change="sincronizarConLivewire()" @blur="sincronizarConLivewire()" class="w-full px-1 py-0.5 text-xs border-0 focus:ring-1 focus:ring-blue-500 rounded bg-transparent text-gray-900 dark:text-zinc-100" />
+                            <span x-text="diferenciales[{{ $i }}].valor_abs" class="block w-full px-1 py-0.5 text-xs text-center text-green-600 dark:text-green-400 font-semibold"></span>
                         </td>
                         <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1 text-center text-xs text-gray-900 dark:text-zinc-100">mm³</td>
                         <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1 text-center text-xs text-gray-500 dark:text-zinc-400">
@@ -169,6 +227,6 @@
     {{-- Ayuda visual --}}
     <div class="mt-3 p-2 bg-gray-50 dark:bg-zinc-800 rounded text-xs text-gray-600 dark:text-zinc-400">
         <i class="fas fa-info-circle mr-1"></i>
-        Complete los valores en cada campo. Los rangos de referencia se muestran como guía.
+        Complete los valores en cada campo. El <strong>valor absoluto</strong> se calcula automáticamente (Leucocitos × Valor Relativo / 100).
     </div>
 </div>
