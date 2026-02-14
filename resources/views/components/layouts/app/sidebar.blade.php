@@ -110,6 +110,15 @@
             @endcan
         </flux:sidebar.group>
         @endcanany
+
+        {{-- Guía del Sistema - solo con permiso ver-ayuda --}}
+        @can('ver-ayuda')
+        <flux:sidebar.group :heading="__('Ayuda')" class="grid">
+            <flux:sidebar.item icon="information-circle" :href="route('guia.index')" :current="request()->routeIs('guia.*')" wire:navigate>
+                {{ __('Guía del Sistema') }}
+            </flux:sidebar.item>
+        </flux:sidebar.group>
+        @endcan
     </flux:sidebar.nav>
 
     <flux:spacer />

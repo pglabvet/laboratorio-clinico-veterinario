@@ -152,6 +152,9 @@ class RolesAndPermissionsSeeder extends Seeder
             // Auditorías
             'ver-auditorias',
 
+            // Ayuda / Guía del Sistema
+            'ver-ayuda',
+
             // Roles y Permisos
             'ver-roles',
             'crear-roles',

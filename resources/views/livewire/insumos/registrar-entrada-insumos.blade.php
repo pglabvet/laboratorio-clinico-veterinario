@@ -33,7 +33,6 @@
                     placeholder="Seleccione..."
                     :error="$errors->first('sucursal_id')"
                 >
-                    <option value="">Seleccione...</option>
                     @foreach($this->sucursales as $sucursal)
                         <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
                     @endforeach
@@ -43,7 +42,6 @@
                 <flux:select 
                     wire:model.live="filtro_categoria"
                     label="Categoría de Insumo"
-                    placeholder="Todas las categorías"
                 >
                     <option value="">Todas las categorías</option>
                     @foreach($this->categorias as $categoria)
@@ -58,7 +56,6 @@
                     placeholder="Seleccione..."
                     :error="$errors->first('insumo_id')"
                 >
-                    <option value="">Seleccione...</option>
                     @if($insumos->isEmpty())
                         <option disabled>
                             {{ $filtro_categoria ? 'No hay insumos en esta categoría' : 'No hay insumos disponibles' }}
@@ -88,7 +85,6 @@
                     placeholder="Seleccione..."
                     :error="$errors->first('motivo')"
                 >
-                    <option value="">Seleccione...</option>
                     @foreach($motivosDisponibles as $key => $label)
                         <option value="{{ $key }}">{{ $label }}</option>
                     @endforeach

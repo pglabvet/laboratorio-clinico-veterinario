@@ -148,6 +148,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/auditorias', \App\Livewire\Auditorias\ListarAuditorias::class)
             ->middleware('can:ver-auditorias')
             ->name('auditorias.index');
+
+        // Guía del Sistema (accesible para todos los usuarios autenticados)
+        Route::get('/guia-del-sistema', \App\Livewire\GuiaDelSistema::class)
+            ->name('guia.index');
     });
 
 require __DIR__ . '/settings.php';
