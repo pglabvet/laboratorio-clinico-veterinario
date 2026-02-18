@@ -202,20 +202,6 @@
                 <thead class="bg-neutral-50 dark:bg-neutral-900">
                     <tr>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-                            <button wire:click="ordenar('id')" class="flex items-center gap-1 hover:text-neutral-900 dark:hover:text-neutral-100">
-                                <span>ID</span>
-                                @if($ordenarPor === 'id')
-                                    <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                                        @if($ordenDireccion === 'asc')
-                                            <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd"/>
-                                        @else
-                                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                                        @endif
-                                    </svg>
-                                @endif
-                            </button>
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
                             Código Muestra
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
@@ -252,9 +238,7 @@
                 <tbody class="divide-y divide-neutral-200 bg-white dark:divide-neutral-700 dark:bg-neutral-800">
                     @forelse ($analisis as $item)
                         <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50" wire:key="analisis-{{ $item->id }}">
-                            <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                                #{{ $item->id }}
-                            </td>
+
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
                                 <span class="font-semibold text-cyan-600 dark:text-cyan-400">
                                     {{ $item->muestra->codigo_muestra }}
@@ -340,7 +324,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-6 py-12 text-center">
+                            <td colspan="7" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center justify-center">
                                     <flux:icon.clipboard-document-list class="mb-3 h-12 w-12 text-neutral-400 dark:text-neutral-600" />
                                     <flux:heading size="lg" class="mb-1">No se encontraron análisis</flux:heading>
