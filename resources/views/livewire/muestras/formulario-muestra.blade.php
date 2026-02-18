@@ -29,7 +29,7 @@
                     Información del Paciente
                 </h3>
                 
-                <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <div class="grid grid-cols-1 items-start gap-6 md:grid-cols-2 lg:grid-cols-3">
                     <flux:input 
                         wire:model="paciente_nombre"
                         label="Nombre del Paciente "
@@ -40,9 +40,9 @@
                     <flux:select 
                         wire:model="especie_id"
                         label="Especie "
-                        placeholder="Seleccione una especie"
                         :error="$errors->first('especie_id')"
                     >
+                        <option value="">Seleccione una especie</option>
                         @foreach($this->especies as $especie)
                             <option value="{{ $especie->id }}">{{ $especie->nombre }}</option>
                         @endforeach
@@ -103,7 +103,7 @@
                     Información del Propietario
                 </h3>
                 
-                <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div class="grid grid-cols-1 items-start gap-6 md:grid-cols-2">
                     <flux:input 
                         wire:model="propietario_nombre"
                         label="Nombre del Propietario "
@@ -114,9 +114,9 @@
                     <flux:select 
                         wire:model="veterinaria_id"
                         label="Veterinaria "
-                        placeholder="Seleccione una veterinaria"
                         :error="$errors->first('veterinaria_id')"
                     >
+                        <option value="">Seleccione una veterinaria</option>
                         @foreach($this->veterinarias as $veterinaria)
                             <option value="{{ $veterinaria->id }}">{{ $veterinaria->nombre }}</option>
                         @endforeach
@@ -130,7 +130,7 @@
                     Información de la Muestra
                 </h3>
                 
-                <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <div class="grid grid-cols-1 items-start gap-6 md:grid-cols-2 lg:grid-cols-3">
                     <flux:input 
                         wire:model="codigo_muestra"
                         label="Código de Muestra"
