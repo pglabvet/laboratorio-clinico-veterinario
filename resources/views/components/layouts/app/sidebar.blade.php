@@ -6,32 +6,18 @@
     </flux:sidebar.header>
 
     <flux:sidebar.nav>
-        <flux:sidebar.group :heading="__('Platform')" class="grid">
+        {{-- Principal --}}
+        <flux:sidebar.group :heading="__('Principal')" class="grid">
             @can('ver-dashboard')
             <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')" wire:navigate>
                 {{ __('Dashboard') }}
             </flux:sidebar.item>
             @endcan
-            @can('ver-sucursales')
-            <flux:sidebar.item icon="building-office-2" :href="route('sucursales.index')" :current="request()->routeIs('sucursales.*')" wire:navigate>
-                {{ __('Sucursales') }}
-            </flux:sidebar.item>
-            @endcan
-            @can('ver-especies')
-            <flux:sidebar.item icon="rectangle-group" :href="route('especies.index')" :current="request()->routeIs('especies.*')" wire:navigate>
-                {{ __('Especies') }}
-            </flux:sidebar.item>
-            @endcan
-            @can('ver-tipos-analisis')
-            <flux:sidebar.item icon="clipboard-document-list" :href="route('tipos-analisis.index')" :current="request()->routeIs('tipos-analisis.*')" wire:navigate>
-                {{ __('Tipos de Análisis') }}
-            </flux:sidebar.item>
-            @endcan
-            @can('ver-veterinarias')
-            <flux:sidebar.item icon="building-storefront" :href="route('veterinarias.index')" :current="request()->routeIs('veterinarias.*')" wire:navigate>
-                {{ __('Veterinarias') }}
-            </flux:sidebar.item>
-            @endcan
+        </flux:sidebar.group>
+
+        {{-- Laboratorio: flujo de trabajo diario --}}
+        @canany(['ver-muestras', 'escanear-muestras', 'ver-analisis'])
+        <flux:sidebar.group :heading="__('Laboratorio')" class="grid">
             @can('ver-muestras')
             <flux:sidebar.item icon="beaker" :href="route('muestras.index')" :current="request()->routeIs('muestras.index')" wire:navigate>
                 {{ __('Muestras') }}
@@ -42,20 +28,52 @@
                 {{ __('Escanear Muestra') }}
             </flux:sidebar.item>
             @endcan
-            @can('ver-plantillas')
-            <flux:sidebar.item icon="document-text" :href="route('plantillas.index')" :current="request()->routeIs('plantillas.*')" wire:navigate>
-                {{ __('Plantillas') }}
-            </flux:sidebar.item>
-            @endcan
             @can('ver-analisis')
             <flux:sidebar.item icon="clipboard-document-check" :href="route('analisis.revisar')" :current="request()->routeIs('analisis.revisar') || request()->routeIs('analisis.ver')" wire:navigate>
                 {{ __('Revisar Análisis') }}
             </flux:sidebar.item>
             @endcan
         </flux:sidebar.group>
+        @endcanany
+
+        {{-- Configuración: se configura una vez --}}
+        @canany(['ver-sucursales', 'ver-especies', 'ver-veterinarias', 'ver-tipos-analisis', 'ver-plantillas'])
+        <flux:sidebar.group :heading="__('Catálogos')" class="grid">
+            @can('ver-sucursales')
+            <flux:sidebar.item icon="building-office-2" :href="route('sucursales.index')" :current="request()->routeIs('sucursales.*')" wire:navigate>
+                {{ __('Sucursales') }}
+            </flux:sidebar.item>
+            @endcan
+            @can('ver-especies')
+            <flux:sidebar.item icon="rectangle-group" :href="route('especies.index')" :current="request()->routeIs('especies.*')" wire:navigate>
+                {{ __('Especies') }}
+            </flux:sidebar.item>
+            @endcan
+            @can('ver-veterinarias')
+            <flux:sidebar.item icon="building-storefront" :href="route('veterinarias.index')" :current="request()->routeIs('veterinarias.*')" wire:navigate>
+                {{ __('Veterinarias') }}
+            </flux:sidebar.item>
+            @endcan
+            @can('ver-tipos-analisis')
+            <flux:sidebar.item icon="clipboard-document-list" :href="route('tipos-analisis.index')" :current="request()->routeIs('tipos-analisis.*')" wire:navigate>
+                {{ __('Tipos de Análisis') }}
+            </flux:sidebar.item>
+            @endcan
+            @can('ver-plantillas')
+            <flux:sidebar.item icon="document-text" :href="route('plantillas.index')" :current="request()->routeIs('plantillas.*')" wire:navigate>
+                {{ __('Plantillas') }}
+            </flux:sidebar.item>
+            @endcan
+        </flux:sidebar.group>
+        @endcanany
 
         @canany(['ver-unidades-medida', 'ver-insumos', 'ver-categorias-insumo', 'ver-historial-inventario', 'ver-registrar-entrada', 'ver-salidas-manuales'])
         <flux:sidebar.group :heading="__('Inventario')" class="grid">
+            @can('ver-categorias-insumo')
+            <flux:sidebar.item icon="tag" :href="route('categorias-insumo.index')" :current="request()->routeIs('categorias-insumo.*')" wire:navigate>
+                {{ __('Categorías de Insumos') }}
+            </flux:sidebar.item>
+            @endcan
             @can('ver-unidades-medida')
             <flux:sidebar.item icon="scale" :href="route('unidades-medida.index')" :current="request()->routeIs('unidades-medida.*')" wire:navigate>
                 {{ __('Unidades de Medida') }}
@@ -64,11 +82,6 @@
             @can('ver-insumos')
             <flux:sidebar.item icon="cube" :href="route('insumos.index')" :current="request()->routeIs('insumos.*')" wire:navigate>
                 {{ __('Insumos') }}
-            </flux:sidebar.item>
-            @endcan
-            @can('ver-categorias-insumo')
-            <flux:sidebar.item icon="tag" :href="route('categorias-insumo.index')" :current="request()->routeIs('categorias-insumo.*')" wire:navigate>
-                {{ __('Categorías de Insumos') }}
             </flux:sidebar.item>
             @endcan
             @can('ver-registrar-entrada')

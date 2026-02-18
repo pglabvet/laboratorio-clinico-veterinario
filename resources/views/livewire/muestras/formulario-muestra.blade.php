@@ -6,18 +6,16 @@
 
     {{-- Header --}}
     <div class="mb-6">
-        <div class="flex items-center gap-4 mb-2">
-            <flux:button 
-                wire:click="cancelar"
-                variant="outline"
-                icon="arrow-left"
-                size="sm"
-                class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950"
-            >
-                Volver
-            </flux:button>
-            <flux:heading size="xl">{{ $muestra_id ? 'Editar Muestra' : 'Registrar Nueva Muestra' }}</flux:heading>
-        </div>
+        <flux:button 
+            wire:click="cancelar"
+            variant="outline"
+            icon="arrow-left"
+            size="sm"
+            class="mb-3 border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950"
+        >
+            Volver
+        </flux:button>
+        <flux:heading size="xl" class="mb-1">{{ $muestra_id ? 'Editar Muestra' : 'Registrar Nueva Muestra' }}</flux:heading>
         <flux:subheading>Complete el formulario con los datos del paciente y la muestra</flux:subheading>
     </div>
 
@@ -56,12 +54,31 @@
                         placeholder="Ej: Golden Retriever"
                     />
 
-                    <flux:input 
-                        wire:model="edad"
-                        label="Edad "
-                        placeholder="Ej: 3 años, 6 meses"
-                        :error="$errors->first('edad')"
-                    />
+                    <div>
+                        <flux:label>Edad <span class="text-red-500">*</span></flux:label>
+                        <div class="mt-1 flex gap-2">
+                            <div class="w-24">
+                                <flux:input 
+                                    wire:model="edadCantidad"
+                                    type="number"
+                                    min="0"
+                                    max="999"
+                                    placeholder="Ej: 3"
+                                    :error="$errors->first('edadCantidad')"
+                                />
+                            </div>
+                            <div class="flex-1">
+                                <flux:select 
+                                    wire:model="edadUnidad"
+                                    :error="$errors->first('edadUnidad')"
+                                >
+                                    <option value="años">Año(s)</option>
+                                    <option value="meses">Mes(es)</option>
+                                    <option value="días">Día(s)</option>
+                                </flux:select>
+                            </div>
+                        </div>
+                    </div>
 
                     <flux:select 
                         wire:model="sexo"
