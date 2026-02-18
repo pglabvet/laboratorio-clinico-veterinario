@@ -1,12 +1,7 @@
 <div x-data="formularioConstructor()" x-init="init()" class="min-h-screen bg-gray-50 dark:bg-zinc-800">
-    <div class="px-2">
-        <!-- Título y Botón Volver -->
+    <div class="px-4">
+        <!-- Título -->
         <div class="mb-6">
-            <div class="mb-4">
-                <flux:button href="{{ route('plantillas.index') }}" variant="outline" icon="arrow-left" class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950">
-                    Volver
-                </flux:button>
-            </div>
             <h1 class="text-2xl font-bold text-gray-800 dark:text-zinc-100">
                 @if($plantillaId)
                     Editar Plantilla
@@ -38,14 +33,21 @@
             </div>
         @endif
 
-        @error('nombreFormulario')
-            <div class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2 text-red-800 dark:text-red-300">
-                <i class="fas fa-exclamation-circle"></i>
-                <span>{{ $message }}</span>
+        @if($errors->any())
+            <div class="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-800 dark:text-red-300">
+                <div class="flex items-center gap-2 mb-2 font-semibold">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Faltan datos por completar:</span>
+                </div>
+                <ul class="list-disc list-inside text-sm space-y-1">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
             </div>
-        @enderror
+        @endif
 
-        <!-- Formulario -->
+        <!-- Formulario de Datos de la Plantilla -->
         <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-md p-6 mb-6">
             <h2 class="text-lg font-semibold text-gray-800 dark:text-zinc-100 mb-4">Datos de la Plantilla</h2>
             
@@ -233,20 +235,11 @@
                         </div>
                     @endif
                 </div>
-
-                <div>
-                    <flux:button 
-                        wire:click="guardarFormulario"
-                        variant="primary"
-                        icon="check">
-                        {{ $plantillaId ? 'Actualizar' : 'Guardar' }} Plantilla
-                    </flux:button>
-                </div>
             </div>
         </div>
 
         <!-- Layout de 3 columnas -->
-        <div class="grid grid-cols-12 gap-6">
+        <div class="grid grid-cols-12 gap-6 pb-20">
             
             <!-- Panel Izquierdo: Componentes Disponibles -->
             <div class="col-span-2">
@@ -353,6 +346,24 @@
         </div>
     </div>
 
+    <!-- Barra Sticky inferior: Botón Guardar -->
+    <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-700 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] px-6 py-3 z-50">
+        <div class="flex items-center justify-between max-w-full">
+            <div class="flex items-center gap-3 text-sm text-zinc-500 dark:text-zinc-400">
+                <span>{{ count($componentes) }} componente(s)</span>
+                <span>·</span>
+                <span>{{ count($insumos) }} insumo(s)</span>
+            </div>
+            <flux:button 
+                wire:click="guardarFormulario"
+                variant="primary"
+                icon="check"
+                size="sm">
+                {{ $plantillaId ? 'Actualizar' : 'Guardar' }} Plantilla
+            </flux:button>
+        </div>
+    </div>
+
     <script>
         function formularioConstructor() {
             return {
@@ -383,4 +394,5 @@
             }
         }
     </script>
+
 </div>

@@ -486,6 +486,6 @@ class GestionarPlantillas extends Component
             'tiposAnalisis' => $tiposAnalisis,
             'insumosDisponibles' => $insumosDisponibles,
             'categoriasInsumos' => $categoriasInsumos,
-        ]);
+        ])->layout('components.layouts.app-fullscreen');
     }
 }
