@@ -62,7 +62,6 @@
             wire:model.live="fechaDesde"
             type="date"
             size="sm"
-            label=""
             placeholder="Desde"
         />
 
@@ -71,7 +70,6 @@
             wire:model.live="fechaHasta"
             type="date"
             size="sm"
-            label=""
             placeholder="Hasta"
         />
     </div>

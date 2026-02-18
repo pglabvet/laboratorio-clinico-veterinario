@@ -29,7 +29,8 @@ class FormularioMuestra extends Component
     public $paciente_nombre;
     public $especie_id;
     public $raza;
-    public $edad;
+    public $edadCantidad;
+    public $edadUnidad = 'años';
     public $sexo = 'M';
     public $color;
     public $propietario_nombre;
@@ -53,7 +54,8 @@ class FormularioMuestra extends Component
             'paciente_nombre' => 'required|string|max:255',
             'especie_id' => 'required|exists:especies,id',
             'raza' => 'nullable|string|max:100',
-            'edad' => 'required|string|max:50',
+            'edadCantidad' => 'required|numeric|min:0|max:999',
+            'edadUnidad' => 'required|in:años,meses,días',
             'sexo' => 'required|in:M,H',
             'color' => 'nullable|string|max:100',
             'propietario_nombre' => 'required|string|max:255',
@@ -69,7 +71,9 @@ class FormularioMuestra extends Component
     protected $messages = [
         'paciente_nombre.required' => 'El nombre del paciente es obligatorio.',
         'especie_id.required' => 'Debe seleccionar una especie.',
-        'edad.required' => 'La edad del paciente es obligatoria.',
+        'edadCantidad.required' => 'La edad del paciente es obligatoria.',
+        'edadCantidad.numeric' => 'La edad debe ser un número.',
+        'edadUnidad.required' => 'Debe seleccionar la unidad de edad.',
         'sexo.required' => 'El sexo del paciente es obligatorio.',
         'propietario_nombre.required' => 'El nombre del propietario es obligatorio.',
         'veterinaria_id.required' => 'Debe seleccionar una veterinaria.',
@@ -104,7 +108,8 @@ class FormularioMuestra extends Component
         $this->paciente_nombre = $muestra->paciente_nombre;
         $this->especie_id = $muestra->especie_id;
         $this->raza = $muestra->raza;
-        $this->edad = $muestra->edad;
+        // Parsear la edad almacenada (ej: "3 años" -> cantidad=3, unidad=años)
+        $this->parsearEdad($muestra->edad);
         $this->sexo = $muestra->sexo;
         $this->color = $muestra->color;
         $this->propietario_nombre = $muestra->propietario_nombre;
@@ -308,7 +313,7 @@ class FormularioMuestra extends Component
                     'paciente_nombre' => $this->paciente_nombre,
                     'especie_id' => $this->especie_id,
                     'raza' => $this->raza,
-                    'edad' => $this->edad,
+                    'edad' => $this->edadCantidad . ' ' . $this->edadUnidad,
                     'sexo' => $this->sexo,
                     'color' => $this->color,
                     'propietario_nombre' => $this->propietario_nombre,
@@ -353,6 +358,44 @@ class FormularioMuestra extends Component
         } catch (\Exception $e) {
             DB::rollBack();
             session()->flash('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * Parsear string de edad a cantidad y unidad
+     * Ej: "3 años" -> cantidad=3, unidad="años"
+     */
+    private function parsearEdad(?string $edad): void
+    {
+        if (!$edad) {
+            $this->edadCantidad = null;
+            $this->edadUnidad = 'años';
+            return;
+        }
+
+        // Intentar parsear formato "N unidad" (ej: "3 años", "6 meses", "15 días")
+        if (preg_match('/^(\d+)\s*(años?|meses?|días?|dias?)$/i', trim($edad), $matches)) {
+            $this->edadCantidad = (int) $matches[1];
+            $unidad = mb_strtolower($matches[2]);
+            
+            // Normalizar unidades
+            if (str_starts_with($unidad, 'año') || str_starts_with($unidad, 'ano')) {
+                $this->edadUnidad = 'años';
+            } elseif (str_starts_with($unidad, 'mes')) {
+                $this->edadUnidad = 'meses';
+            } elseif (str_starts_with($unidad, 'día') || str_starts_with($unidad, 'dia')) {
+                $this->edadUnidad = 'días';
+            }
+        } else {
+            // Fallback: si es solo un número, asume años
+            if (is_numeric(trim($edad))) {
+                $this->edadCantidad = (int) trim($edad);
+                $this->edadUnidad = 'años';
+            } else {
+                // Legacy: texto libre, poner todo como cantidad vacía
+                $this->edadCantidad = null;
+                $this->edadUnidad = 'años';
+            }
         }
     }
 
