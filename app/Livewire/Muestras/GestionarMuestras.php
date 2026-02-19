@@ -279,7 +279,6 @@ class GestionarMuestras extends Component
             $mensaje = $service->enviarEmailMasivo($this->muestraAnalisis);
 
             $this->muestraAnalisis->load('analisis.tipoAnalisis');
-            $this->cerrarModalAnalisis();
 
             session()->flash('mensaje', $mensaje);
         } catch (\Exception $e) {
