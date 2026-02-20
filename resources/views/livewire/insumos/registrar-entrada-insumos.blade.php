@@ -30,9 +30,9 @@
                 <flux:select 
                     wire:model.live="sucursal_id"
                     label="Sucursal"
-                    placeholder="Seleccione..."
                     :error="$errors->first('sucursal_id')"
                 >
+                    <option value="">Seleccione...</option>
                     @foreach($this->sucursales as $sucursal)
                         <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
                     @endforeach
@@ -53,9 +53,9 @@
                 <flux:select 
                     wire:model.live="insumo_id"
                     label="Insumo"
-                    placeholder="Seleccione..."
                     :error="$errors->first('insumo_id')"
                 >
+                    <option value="">Seleccione...</option>
                     @if($insumos->isEmpty())
                         <option disabled>
                             {{ $filtro_categoria ? 'No hay insumos en esta categoría' : 'No hay insumos disponibles' }}
@@ -78,13 +78,48 @@
                     :error="$errors->first('cantidad')"
                 />
 
+                {{-- Costo Unitario --}}
+                <flux:input 
+                    wire:model="costo_unitario"
+                    label="Costo Unitario (Bs)"
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    placeholder="0.00"
+                    :error="$errors->first('costo_unitario')"
+                />
+
+                {{-- Opcionales: Lote y Vencimiento --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:col-span-2 bg-neutral-50 dark:bg-neutral-800/50 p-4 rounded-lg border border-neutral-100 dark:border-neutral-700/50">
+                    <div class="md:col-span-2 mb-2">
+                        <flux:heading size="sm" class="text-neutral-500">Datos de Lote (Opcional)</flux:heading>
+                    </div>
+
+                    {{-- Código de Lote --}}
+                    <flux:input 
+                        wire:model="codigo_lote"
+                        label="Código de Lote / Serie"
+                        placeholder="Ej. B4022"
+                        :error="$errors->first('codigo_lote')"
+                    />
+
+                    {{-- Fecha de Vencimiento --}}
+                    <flux:input 
+                        wire:model="fecha_vencimiento"
+                        label="Fecha de Vencimiento"
+                        type="date"
+                        min="{{ date('Y-m-d') }}"
+                        :error="$errors->first('fecha_vencimiento')"
+                    />
+                </div>
+
                 {{-- Motivo --}}
                 <flux:select 
                     wire:model="motivo"
                     label="Motivo de Entrada"
-                    placeholder="Seleccione..."
                     :error="$errors->first('motivo')"
                 >
+                    <option value="">Seleccione...</option>
                     @foreach($motivosDisponibles as $key => $label)
                         <option value="{{ $key }}">{{ $label }}</option>
                     @endforeach
@@ -215,6 +250,12 @@
                             Cantidad
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
+                            Costo Unit.
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
+                            Costo Total
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
                             Motivo
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
@@ -240,6 +281,12 @@
                                     {{ $entrada->insumo->unidadMedida->abreviatura ?? '' }}
                                 </span>
                             </td>
+                            <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-900 dark:text-neutral-100">
+                                Bs {{ number_format($entrada->costo_unitario, 2) }}
+                            </td>
+                            <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                                Bs {{ number_format($entrada->costo_total, 2) }}
+                            </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
                                 <flux:badge 
                                     :color="match($entrada->motivo) {
@@ -260,7 +307,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-12 text-center">
+                            <td colspan="8" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center justify-center text-neutral-500 dark:text-neutral-400">
                                     <flux:icon.arrow-up-tray class="mb-3 size-12" />
                                     <p class="text-sm">No hay entradas registradas</p>

@@ -7,10 +7,12 @@ use App\Models\Sucursal;
 use App\Models\InventarioSucursal;
 use App\Models\MovimientoInventario;
 use App\Models\CategoriaInsumo;
+use App\Services\PepsInventarioService;
 use Livewire\Component;
 use Livewire\Attributes\Computed;
 use Livewire\WithPagination;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class RegistrarSalida extends Component
 {
@@ -30,10 +32,14 @@ class RegistrarSalida extends Component
     public $insumoNombre = '';
     public $sucursalNombre = '';
 
-    // Control del modal de confirmación
+    // PEPS cost preview
+    public $costoEstimado = null;
+    public $detalleLotes = [];
+
+    // Control del modal de confirmacion
     public $modalConfirmacion = false;
 
-    // Búsqueda y filtros
+    // Busqueda y filtros
     public $buscar = '';
     public $filtroSucursal = '';
     public $filtroPeriodo = '';
@@ -46,7 +52,7 @@ class RegistrarSalida extends Component
         'OTRO' => 'Otro',
     ];
 
-    // Reglas de validación
+    // Reglas de validacion
     protected function rules()
     {
         return [
@@ -71,39 +77,59 @@ class RegistrarSalida extends Component
         'sucursal_id.required' => 'Debe seleccionar una sucursal.',
         'insumo_id.required' => 'Debe seleccionar un insumo.',
         'cantidad.required' => 'La cantidad es obligatoria.',
-        'cantidad.numeric' => 'La cantidad debe ser un número.',
+        'cantidad.numeric' => 'La cantidad debe ser un numero.',
         'cantidad.gt' => 'La cantidad debe ser mayor a 0.',
         'motivo.required' => 'Debe seleccionar un motivo.',
-        'observacion.required' => 'La observación es obligatoria.',
-        'observacion.min' => 'La observación debe tener al menos 10 caracteres.',
-        'observacion.max' => 'La observación no puede exceder 1000 caracteres.',
+        'observacion.required' => 'La observacion es obligatoria.',
+        'observacion.min' => 'La observacion debe tener al menos 10 caracteres.',
+        'observacion.max' => 'La observacion no puede exceder 1000 caracteres.',
     ];
 
-    /**
-     * Resetear insumo cuando cambia la categoría
-     */
     public function updatedFiltroCategoria()
     {
         $this->reset(['insumo_id', 'stockActual', 'unidadMedida', 'insumoNombre']);
     }
 
-    /**
-     * Actualizar stock actual cuando cambia el insumo o sucursal
-     */
     public function updated($propertyName)
     {
         if (in_array($propertyName, ['insumo_id', 'sucursal_id'])) {
             $this->cargarStockActual();
+            $this->costoEstimado = null;
+            $this->detalleLotes = [];
         }
 
         if ($propertyName === 'cantidad') {
             $this->validateOnly('cantidad');
+            $this->calcularCostoPeps();
         }
     }
 
-    /**
-     * Cargar stock actual del insumo en la sucursal seleccionada
-     */
+    public function calcularCostoPeps()
+    {
+        $this->costoEstimado = null;
+        $this->detalleLotes = [];
+
+        if (!$this->insumo_id || !$this->sucursal_id || !$this->cantidad || $this->cantidad <= 0) {
+            return;
+        }
+
+        try {
+            $service = app(PepsInventarioService::class);
+            $resultado = $service->calcularCostoPeps(
+                (int) $this->insumo_id,
+                (int) $this->sucursal_id,
+                (float) $this->cantidad
+            );
+
+            if ($resultado['stock_suficiente']) {
+                $this->costoEstimado = $resultado;
+                $this->detalleLotes = $resultado['detalle_lotes'];
+            }
+        } catch (\Exception $e) {
+            // Silently fail for preview
+        }
+    }
+
     public function cargarStockActual()
     {
         $this->stockActual = null;
@@ -118,9 +144,8 @@ class RegistrarSalida extends Component
                 ->first();
 
             if ($inventario) {
-                // Verificar que el insumo esté activo
                 if (!$inventario->insumo->estado) {
-                    $this->addError('insumo_id', 'El insumo seleccionado está inactivo.');
+                    $this->addError('insumo_id', 'El insumo seleccionado esta inactivo.');
                     return;
                 }
 
@@ -134,88 +159,60 @@ class RegistrarSalida extends Component
         }
     }
 
-    /**
-     * Abrir modal de confirmación
-     */
     public function abrirConfirmacion()
     {
         $this->validate();
-
         $this->modalConfirmacion = true;
     }
 
-    /**
-     * Cerrar modal de confirmación
-     */
     public function cerrarConfirmacion()
     {
         $this->modalConfirmacion = false;
     }
 
-    /**
-     * Registrar la salida manual
-     */
     public function registrarSalida()
     {
         $this->validate();
 
         try {
-            DB::beginTransaction();
+            $service = app(PepsInventarioService::class);
 
-            // 1. Actualizar inventario por sucursal (descontar stock)
+            $movimiento = $service->registrarSalida(
+                insumoId: (int) $this->insumo_id,
+                sucursalId: (int) $this->sucursal_id,
+                cantidad: (float) $this->cantidad,
+                motivo: $this->motivo,
+                observacion: $this->observacion,
+                usuarioId: Auth::id(),
+            );
+
             $inventario = InventarioSucursal::where('insumo_id', $this->insumo_id)
                 ->where('sucursal_id', $this->sucursal_id)
-                ->lockForUpdate()
                 ->first();
 
-            if (!$inventario) {
-                throw new \Exception('Inventario no encontrado.');
-            }
+            $costoInfo = $movimiento->costo_total > 0
+                ? " Costo PEPS: Bs " . number_format($movimiento->costo_total, 2)
+                : '';
 
-            // Validación adicional de stock
-            if ($inventario->stock_actual < $this->cantidad) {
-                throw new \Exception('Stock insuficiente. Stock actual: ' . $inventario->stock_actual);
-            }
+            $mensaje = 'Salida registrada exitosamente.' . $costoInfo;
+            $tipo = 'success';
 
-            // Descontar stock
-            $inventario->stock_actual -= $this->cantidad;
-            $inventario->save();
-
-            // 2. Registrar movimiento de inventario
-            MovimientoInventario::create([
-                'insumo_id' => $this->insumo_id,
-                'sucursal_id' => $this->sucursal_id,
-                'tipo_movimiento' => 'SALIDA_MANUAL',
-                'cantidad' => -$this->cantidad, // Negativo para salidas
-                'motivo' => $this->motivo,
-                'observacion' => $this->observacion,
-                'usuario_id' => auth()->id(),
-                'fecha' => now(),
-            ]);
-
-            DB::commit();
-
-            // Verificar si quedó por debajo del stock mínimo
-            $mensaje = 'Salida registrada exitosamente.';
-            if ($inventario->stock_actual < $inventario->stock_minimo) {
-                $mensaje .= '  ALERTA: El stock quedó por debajo del mínimo (' . $inventario->stock_minimo . ' ' . $this->unidadMedida . ').';
+            if ($inventario && $inventario->stock_actual < $inventario->stock_minimo) {
+                $mensaje .= ' ALERTA: Stock por debajo del minimo (' . $inventario->stock_minimo . ' ' . $this->unidadMedida . ').';
+                $tipo = 'warning';
             }
 
             session()->flash('mensaje', $mensaje);
-            session()->flash('tipo', $inventario->stock_actual < $inventario->stock_minimo ? 'warning' : 'success');
+            session()->flash('tipo', $tipo);
 
             $this->resetearFormulario();
             $this->cerrarConfirmacion();
 
         } catch (\Exception $e) {
-            DB::rollBack();
             session()->flash('error', 'Error al registrar la salida: ' . $e->getMessage());
         }
     }
 
-    /**
-     * Resetear el formulario
-     */
     public function resetearFormulario()
     {
         $this->reset([
@@ -228,13 +225,12 @@ class RegistrarSalida extends Component
             'unidadMedida',
             'insumoNombre',
             'sucursalNombre',
+            'costoEstimado',
+            'detalleLotes',
         ]);
         $this->resetValidation();
     }
 
-    /**
-     * Cancelar y volver al historial
-     */
     public function cancelar()
     {
         return $this->redirect(route('inventario.historial'), navigate: true);
@@ -252,26 +248,21 @@ class RegistrarSalida extends Component
         return CategoriaInsumo::where('estado', true)->orderBy('nombre')->get();
     }
 
-    /**
-     * Render del componente
-     */
     public function render()
     {
-        // Obtener insumos activos con su inventario (filtrados por categoría si está seleccionada)
         $insumosQuery = Insumo::with(['unidadMedida', 'inventarios.sucursal'])
             ->where('estado', true);
 
         if ($this->buscar) {
             $insumosQuery->where('nombre', 'ilike', '%' . $this->buscar . '%');
         }
-        
+
         if ($this->filtro_categoria) {
             $insumosQuery->where('categoria_id', $this->filtro_categoria);
         }
 
         $insumos = $insumosQuery->orderBy('nombre')->get();
 
-        // Obtener historial reciente de movimientos
         $movimientosQuery = MovimientoInventario::with(['insumo.unidadMedida', 'sucursal', 'usuario'])
             ->where('tipo_movimiento', 'SALIDA_MANUAL')
             ->orderBy('fecha', 'desc');
@@ -280,10 +271,9 @@ class RegistrarSalida extends Component
             $movimientosQuery->where('sucursal_id', $this->filtroSucursal);
         }
 
-        // Aplicar filtro de período
         if ($this->filtroPeriodo) {
             $now = now();
-            
+
             switch ($this->filtroPeriodo) {
                 case 'hoy':
                     $movimientosQuery->whereDate('fecha', $now->toDateString());
@@ -304,7 +294,7 @@ class RegistrarSalida extends Component
                     $movimientosQuery->whereMonth('fecha', $now->month)
                                       ->whereYear('fecha', $now->year);
                     break;
-                case 'este_año':
+                case 'este_anio':
                     $movimientosQuery->whereYear('fecha', $now->year);
                     break;
             }

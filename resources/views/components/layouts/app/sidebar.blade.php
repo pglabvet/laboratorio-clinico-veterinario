@@ -99,6 +99,11 @@
                 {{ __('Historial') }}
             </flux:sidebar.item>
             @endcan
+            @can('ver-historial-inventario')
+            <flux:sidebar.item icon="document-chart-bar" :href="route('inventario.kardex')" :current="request()->routeIs('inventario.kardex')" wire:navigate>
+                {{ __('Kardex PEPS') }}
+            </flux:sidebar.item>
+            @endcan
         </flux:sidebar.group>
         @endcanany
 
