@@ -29,7 +29,7 @@ class Insumo extends Model
      */
     public function unidadMedida(): BelongsTo
     {
-        return $this->belongsTo(UnidadMedida::class, 'unidad_medida_id');
+        return $this->belongsTo(UnidadMedida::class , 'unidad_medida_id');
     }
 
     /**
@@ -37,7 +37,7 @@ class Insumo extends Model
      */
     public function categoria(): BelongsTo
     {
-        return $this->belongsTo(CategoriaInsumo::class, 'categoria_id');
+        return $this->belongsTo(CategoriaInsumo::class , 'categoria_id');
     }
 
     /**
@@ -57,11 +57,19 @@ class Insumo extends Model
     }
 
     /**
+     * Relación con lotes de inventario (PEPS)
+     */
+    public function lotes(): HasMany
+    {
+        return $this->hasMany(LoteInventario::class);
+    }
+
+    /**
      * Relación muchos a muchos con tipos de análisis
      */
     public function tiposAnalisis(): BelongsToMany
     {
-        return $this->belongsToMany(TipoAnalisis::class, 'tipo_analisis_insumos')
+        return $this->belongsToMany(TipoAnalisis::class , 'tipo_analisis_insumos')
             ->withPivot('cantidad_requerida')
             ->withTimestamps();
     }
@@ -71,7 +79,7 @@ class Insumo extends Model
      */
     public function analisis(): BelongsToMany
     {
-        return $this->belongsToMany(Analisis::class, 'analisis_insumos')
+        return $this->belongsToMany(Analisis::class , 'analisis_insumos')
             ->withPivot('cantidad_usada')
             ->withTimestamps();
     }

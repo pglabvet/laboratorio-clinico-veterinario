@@ -172,6 +172,12 @@
                             Cantidad
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
+                            Costo Unit.
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
+                            Costo Total
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
                             Motivo
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
@@ -217,6 +223,20 @@
                                     {{ $movimiento->insumo->unidadMedida->abreviatura ?? '' }}
                                 </span>
                             </td>
+                            <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-900 dark:text-neutral-100">
+                                @if($movimiento->costo_unitario > 0)
+                                    Bs {{ number_format($movimiento->costo_unitario, 2) }}
+                                @else
+                                    <span class="text-neutral-400">—</span>
+                                @endif
+                            </td>
+                            <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                                @if($movimiento->costo_total > 0)
+                                    Bs {{ number_format($movimiento->costo_total, 2) }}
+                                @else
+                                    <span class="text-neutral-400">—</span>
+                                @endif
+                            </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
                                 <flux:badge 
                                     :color="match($movimiento->motivo) {
@@ -244,7 +264,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="px-6 py-12 text-center">
+                            <td colspan="10" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center justify-center text-neutral-500 dark:text-neutral-400">
                                     <flux:icon.clipboard-document-list class="mb-3 size-12" />
                                     <p class="text-sm">No hay movimientos registrados con los filtros seleccionados</p>

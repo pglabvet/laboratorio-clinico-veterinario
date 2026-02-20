@@ -10,6 +10,7 @@ use App\Models\TipoAnalisis;
 use App\Models\PlantillaFormulario;
 use App\Models\Analisis;
 use App\Services\MuestraService;
+use App\Services\PepsInventarioService;
 use Livewire\Component;
 use Livewire\Attributes\Computed;
 use Illuminate\Support\Facades\DB;
@@ -331,15 +332,38 @@ class FormularioMuestra extends Component
                 $muestra->analisis()->delete();
             }
 
-            // Crear análisis
+            // Crear análisis y descontar insumos
+            $pepsService = app(PepsInventarioService::class);
+
             foreach ($this->analisisSeleccionados as $analisisData) {
-                Analisis::create([
+                $analisis = Analisis::create([
                     'muestra_id' => $muestra->id,
                     'tipo_analisis_id' => $analisisData['tipo_analisis_id'],
                     'plantilla_formulario_id' => $analisisData['plantilla_id'],
                     'bioquimico_id' => auth()->id(),
                     'estado' => 'Pendiente',
                 ]);
+
+                // Descontar insumos asociados a la plantilla (solo para nuevas muestras)
+                if (!$this->muestra_id) {
+                    $plantilla = PlantillaFormulario::with('insumos')->find($analisisData['plantilla_id']);
+
+                    if ($plantilla && $plantilla->insumos->isNotEmpty()) {
+                        foreach ($plantilla->insumos as $insumo) {
+                            $cantidadRequerida = $insumo->pivot->cantidad_requerida;
+
+                            if ($cantidadRequerida > 0) {
+                                $pepsService->registrarConsumoAnalisis(
+                                    insumoId: $insumo->id,
+                                    sucursalId: (int) $this->sucursal_id,
+                                    cantidad: (float) $cantidadRequerida,
+                                    usuarioId: auth()->id(),
+                                    observacion: "Consumo automático - Muestra: {$muestra->codigo_muestra}, Análisis: {$analisisData['tipo_nombre']}"
+                                );
+                            }
+                        }
+                    }
+                }
             }
 
             DB::commit();

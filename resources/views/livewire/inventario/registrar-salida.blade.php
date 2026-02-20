@@ -99,6 +99,35 @@
                 :disabled="!$insumo_id || !$sucursal_id"
             />
 
+            {{-- Preview de costo PEPS --}}
+            @if($costoEstimado)
+                <div class="md:col-span-2">
+                    <div class="rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-blue-800 dark:text-blue-300">Costo estimado PEPS</p>
+                                <p class="text-2xl font-bold text-blue-900 dark:text-blue-100">Bs {{ number_format($costoEstimado['costo_total'], 2) }}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs text-blue-600 dark:text-blue-400">Costo unit. promedio</p>
+                                <p class="text-sm font-semibold text-blue-800 dark:text-blue-200">Bs {{ number_format($costoEstimado['costo_unitario_promedio'], 2) }}/ud</p>
+                            </div>
+                        </div>
+                        @if(count($detalleLotes) > 1)
+                            <div class="mt-3 border-t border-blue-200 pt-3 dark:border-blue-700">
+                                <p class="text-xs font-medium text-blue-700 dark:text-blue-400 mb-2">Desglose por lotes (PEPS):</p>
+                                @foreach($detalleLotes as $lote)
+                                    <div class="flex justify-between text-xs text-blue-600 dark:text-blue-300">
+                                        <span>Lote {{ $lote['fecha_entrada'] }} — {{ number_format($lote['cantidad_consumida'], 2) }} uds × Bs {{ number_format($lote['costo_unitario'], 2) }}</span>
+                                        <span class="font-medium">Bs {{ number_format($lote['costo_subtotal'], 2) }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
             {{-- Motivo --}}
             <flux:select 
                 wire:model="motivo"
@@ -241,6 +270,9 @@
                             Cantidad
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
+                            Costo PEPS
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
                             Motivo
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
@@ -266,6 +298,13 @@
                                     {{ $movimiento->insumo->unidadMedida->abreviatura ?? '' }}
                                 </span>
                             </td>
+                            <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                                @if($movimiento->costo_total > 0)
+                                    Bs {{ number_format($movimiento->costo_total, 2) }}
+                                @else
+                                    <span class="text-neutral-400">—</span>
+                                @endif
+                            </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
                                 <flux:badge 
                                     :color="match($movimiento->motivo) {
@@ -287,7 +326,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-12 text-center">
+                            <td colspan="7" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center justify-center text-neutral-500 dark:text-neutral-400">
                                     <flux:icon.arrow-down-tray class="mb-3 size-12" />
                                     <p class="text-sm">No hay salidas registradas</p>
@@ -347,6 +386,26 @@
                         {{ $motivosDisponibles[$motivo] ?? $motivo }}
                     </span>
                 </div>
+
+                @if($costoEstimado)
+                    <div class="border-t border-neutral-200 pt-3 dark:border-neutral-600">
+                        <div class="flex justify-between">
+                            <span class="text-sm font-bold text-blue-700 dark:text-blue-300">Costo PEPS total:</span>
+                            <span class="text-sm font-bold text-blue-700 dark:text-blue-300">Bs {{ number_format($costoEstimado['costo_total'], 2) }}</span>
+                        </div>
+                        @if(count($detalleLotes) > 0)
+                            <div class="mt-2 space-y-1">
+                                <p class="text-xs font-medium text-neutral-500 dark:text-neutral-400">Lotes a consumir:</p>
+                                @foreach($detalleLotes as $lote)
+                                    <div class="flex justify-between text-xs text-neutral-600 dark:text-neutral-300">
+                                        <span>Lote {{ $lote['fecha_entrada'] }}: {{ number_format($lote['cantidad_consumida'], 2) }} × Bs {{ number_format($lote['costo_unitario'], 2) }}</span>
+                                        <span>Bs {{ number_format($lote['costo_subtotal'], 2) }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                @endif
             </div>
 
             @if($stockActual !== null && $cantidad && ((float) $stockActual - (float) $cantidad < 0))

@@ -22,6 +22,9 @@ class RegistrarEntradaInsumos extends Component
     public $filtro_categoria = '';
     public $insumo_id = '';
     public $cantidad = '';
+    public $costo_unitario = '';
+    public $codigo_lote = '';
+    public $fecha_vencimiento = '';
     public $motivo = '';
     public $observacion = '';
 
@@ -47,6 +50,9 @@ class RegistrarEntradaInsumos extends Component
             'sucursal_id' => 'required|exists:sucursales,id',
             'insumo_id' => 'required|exists:insumos,id',
             'cantidad' => 'required|numeric|min:0.01',
+            'costo_unitario' => 'required|numeric|min:0.01',
+            'codigo_lote' => 'nullable|string|max:50',
+            'fecha_vencimiento' => 'nullable|date|after:today',
             'motivo' => 'required|in:COMPRA,DEVOLUCION,AJUSTE_INVENTARIO,OTRO',
             'observacion' => 'nullable|string|max:1000',
         ];
@@ -61,6 +67,12 @@ class RegistrarEntradaInsumos extends Component
         'cantidad.required' => 'La cantidad es obligatoria.',
         'cantidad.numeric' => 'La cantidad debe ser un número.',
         'cantidad.min' => 'La cantidad debe ser mayor a 0.',
+        'costo_unitario.required' => 'El costo unitario es obligatorio.',
+        'costo_unitario.numeric' => 'El costo unitario debe ser un número.',
+        'costo_unitario.min' => 'El costo unitario debe ser mayor a 0.',
+        'codigo_lote.max' => 'El código de lote no puede exceder 50 caracteres.',
+        'fecha_vencimiento.date' => 'La fecha de vencimiento no es válida.',
+        'fecha_vencimiento.after' => 'La fecha de vencimiento debe ser posterior a hoy.',
         'motivo.required' => 'Debe seleccionar un motivo.',
         'motivo.in' => 'El motivo seleccionado no es válido.',
         'observacion.max' => 'La observación no puede exceder 1000 caracteres.',
@@ -96,49 +108,31 @@ class RegistrarEntradaInsumos extends Component
         $this->validate();
 
         try {
-            DB::beginTransaction();
+            // Usar el servicio PEPS para registrar la entrada
+            $service = app(\App\Services\PepsInventarioService::class);
 
-            // Buscar o crear registro en inventario_sucursal
-            $inventario = InventarioSucursal::firstOrCreate(
-                [
-                    'insumo_id' => $this->insumo_id,
-                    'sucursal_id' => $this->sucursal_id,
-                ],
-                [
-                    'stock_actual' => 0,
-                    'stock_minimo' => 0,
-                ]
+            $service->registrarEntrada(
+                insumoId: (int) $this->insumo_id,
+                sucursalId: (int) $this->sucursal_id,
+                cantidad: (float) $this->cantidad,
+                costoUnitario: (float) $this->costo_unitario,
+                motivo: $this->motivo,
+                observacion: $this->observacion,
+                usuarioId: Auth::id(),
+                codigoLote: $this->codigo_lote ?: null,
+                fechaVencimiento: $this->fecha_vencimiento ?: null
             );
-
-            // Actualizar stock actual (sumar la cantidad)
-            $inventario->stock_actual += $this->cantidad;
-            $inventario->save();
-
-            // Registrar movimiento en el historial
-            MovimientoInventario::create([
-                'insumo_id' => $this->insumo_id,
-                'sucursal_id' => $this->sucursal_id,
-                'tipo_movimiento' => 'ENTRADA',
-                'cantidad' => $this->cantidad,
-                'motivo' => $this->motivo,
-                'observacion' => $this->observacion,
-                'usuario_id' => Auth::id(),
-                'fecha' => now(),
-            ]);
-
-            DB::commit();
 
             // Mensaje de éxito
             $insumo = Insumo::find($this->insumo_id);
             $sucursal = Sucursal::find($this->sucursal_id);
-            
+
             session()->flash('mensaje', "Entrada registrada exitosamente: {$this->cantidad} {$insumo->unidadMedida->abreviatura} de {$insumo->nombre} en {$sucursal->nombre}.");
 
             // Limpiar formulario
-            $this->reset(['sucursal_id', 'filtro_categoria', 'insumo_id', 'cantidad', 'motivo', 'observacion', 'insumoSeleccionado']);
+            $this->reset(['sucursal_id', 'filtro_categoria', 'insumo_id', 'cantidad', 'costo_unitario', 'codigo_lote', 'fecha_vencimiento', 'motivo', 'observacion', 'insumoSeleccionado']);
 
         } catch (\Exception $e) {
-            DB::rollBack();
             session()->flash('error', 'Error al registrar la entrada: ' . $e->getMessage());
         }
     }
@@ -184,11 +178,11 @@ class RegistrarEntradaInsumos extends Component
         // Obtener insumos activos (filtrados por categoría si está seleccionada)
         $insumosQuery = Insumo::with('unidadMedida', 'categoria')
             ->where('estado', true);
-        
+
         if ($this->filtro_categoria) {
             $insumosQuery->where('categoria_id', $this->filtro_categoria);
         }
-        
+
         $insumos = $insumosQuery->orderBy('nombre')->get();
 
         // Obtener entradas recientes
@@ -204,7 +198,7 @@ class RegistrarEntradaInsumos extends Component
         // Aplicar filtro de período
         if ($this->filtroFechaEntradas) {
             $now = now();
-            
+
             switch ($this->filtroFechaEntradas) {
                 case 'hoy':
                     $entradasQuery->whereDate('fecha', $now->toDateString());

@@ -42,6 +42,8 @@ class MovimientoInventario extends Model
         'sucursal_id',
         'tipo_movimiento',
         'cantidad',
+        'costo_unitario',
+        'costo_total',
         'motivo',
         'observacion',
         'usuario_id',
@@ -50,6 +52,8 @@ class MovimientoInventario extends Model
 
     protected $casts = [
         'cantidad' => 'decimal:2',
+        'costo_unitario' => 'decimal:4',
+        'costo_total' => 'decimal:4',
         'fecha' => 'datetime',
     ];
 
@@ -75,5 +79,13 @@ class MovimientoInventario extends Model
     public function sucursal(): BelongsTo
     {
         return $this->belongsTo(Sucursal::class);
+    }
+
+    /**
+     * Relación con lote de inventario (para movimientos de entrada)
+     */
+    public function lote(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(LoteInventario::class , 'movimiento_entrada_id');
     }
 }
