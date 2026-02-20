@@ -74,6 +74,7 @@
                                 >
                                     <option value="años">Año(s)</option>
                                     <option value="meses">Mes(es)</option>
+                                    <option value="semanas">Semana(s)</option>
                                     <option value="días">Día(s)</option>
                                 </flux:select>
                             </div>
