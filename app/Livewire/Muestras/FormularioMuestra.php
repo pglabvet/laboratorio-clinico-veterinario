@@ -56,7 +56,7 @@ class FormularioMuestra extends Component
             'especie_id' => 'required|exists:especies,id',
             'raza' => 'nullable|string|max:100',
             'edadCantidad' => 'required|numeric|min:0|max:999',
-            'edadUnidad' => 'required|in:años,meses,días',
+            'edadUnidad' => 'required|in:años,meses,semanas,días',
             'sexo' => 'required|in:M,H',
             'color' => 'nullable|string|max:100',
             'propietario_nombre' => 'required|string|max:255',
@@ -398,7 +398,7 @@ class FormularioMuestra extends Component
         }
 
         // Intentar parsear formato "N unidad" (ej: "3 años", "6 meses", "15 días")
-        if (preg_match('/^(\d+)\s*(años?|meses?|días?|dias?)$/i', trim($edad), $matches)) {
+        if (preg_match('/^(\d+)\s*(años?|meses?|semanas?|días?|dias?)$/i', trim($edad), $matches)) {
             $this->edadCantidad = (int) $matches[1];
             $unidad = mb_strtolower($matches[2]);
             
@@ -407,6 +407,8 @@ class FormularioMuestra extends Component
                 $this->edadUnidad = 'años';
             } elseif (str_starts_with($unidad, 'mes')) {
                 $this->edadUnidad = 'meses';
+            } elseif (str_starts_with($unidad, 'semana')) {
+                $this->edadUnidad = 'semanas';
             } elseif (str_starts_with($unidad, 'día') || str_starts_with($unidad, 'dia')) {
                 $this->edadUnidad = 'días';
             }
