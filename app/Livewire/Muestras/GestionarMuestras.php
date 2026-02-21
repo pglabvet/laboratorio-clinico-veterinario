@@ -8,7 +8,11 @@ use App\Models\Veterinaria;
 use App\Models\Sucursal;
 use App\Models\TipoAnalisis;
 use App\Models\Analisis;
+use App\Models\InventarioSucursal;
 use App\Services\MuestraService;
+use App\Services\PepsInventarioService;
+use App\Models\MovimientoInventario;
+use App\Models\PlantillaFormulario;
 use App\Services\EnvioResultadosService;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -403,6 +407,8 @@ class GestionarMuestras extends Component
                 return;
             }
 
+            DB::beginTransaction();
+
             $muestra = Muestra::findOrFail($this->muestraAEliminar);
 
             // Verificar si tiene análisis en proceso o completados
@@ -410,18 +416,46 @@ class GestionarMuestras extends Component
                 session()->flash('error', 'No se puede eliminar la muestra porque tiene análisis en revisión, aprobados o enviados.');
                 $this->modalEliminar = false;
                 $this->muestraAEliminar = null;
+                DB::rollBack();
                 return;
+            }
+
+            // Revertir insumos consumidos por esta muestra
+            $pepsService = app(PepsInventarioService::class);
+            $movimientosConsumo = MovimientoInventario::where('tipo_movimiento', 'CONSUMO_ANALISIS')
+                ->where('sucursal_id', $muestra->sucursal_id)
+                ->where('observacion', 'like', "%Muestra: {$muestra->codigo_muestra}%")
+                ->get();
+
+            foreach ($movimientosConsumo as $movimiento) {
+                $pepsService->revertirConsumoAnalisis(
+                    insumoId: $movimiento->insumo_id,
+                    sucursalId: $movimiento->sucursal_id,
+                    cantidad: abs($movimiento->cantidad),
+                    costoUnitario: $movimiento->costo_unitario,
+                    usuarioId: auth()->id(),
+                    observacion: "Devolución automática - Eliminación de muestra: {$muestra->codigo_muestra}"
+                );
             }
 
             // Eliminar análisis pendientes
             $muestra->analisis()->where('estado', 'Pendiente')->delete();
 
             $muestra->delete();
-            session()->flash('mensaje', 'Muestra eliminada exitosamente.');
+
+            DB::commit();
+
+            $insumosRevertidos = $movimientosConsumo->count();
+            $mensaje = 'Muestra eliminada exitosamente.';
+            if ($insumosRevertidos > 0) {
+                $mensaje .= " Se revirtieron {$insumosRevertidos} consumo(s) de insumos al inventario.";
+            }
+            session()->flash('mensaje', $mensaje);
 
             $this->modalEliminar = false;
             $this->muestraAEliminar = null;
         } catch (\Exception $e) {
+            DB::rollBack();
             session()->flash('error', 'Error al eliminar la muestra: ' . $e->getMessage());
             $this->modalEliminar = false;
             $this->muestraAEliminar = null;

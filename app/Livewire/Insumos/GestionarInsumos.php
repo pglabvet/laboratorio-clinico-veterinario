@@ -149,6 +149,16 @@ class GestionarInsumos extends Component
 
         $this->validate();
 
+        // Verificar si ya existe un insumo con el mismo nombre
+        $existe = Insumo::where('nombre', $this->nombre)
+            ->when($this->insumo_id, fn($q) => $q->where('id', '!=', $this->insumo_id))
+            ->exists();
+
+        if ($existe) {
+            session()->flash('error', 'Ya existe un insumo con el nombre "' . $this->nombre . '". Por favor, usa un nombre diferente.');
+            return;
+        }
+
         DB::beginTransaction();
         try {
             if ($this->modoEdicion) {

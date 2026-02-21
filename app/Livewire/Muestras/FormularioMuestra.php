@@ -10,6 +10,7 @@ use App\Models\TipoAnalisis;
 use App\Models\PlantillaFormulario;
 use App\Models\Analisis;
 use App\Services\MuestraService;
+use App\Services\PepsInventarioService;
 use Livewire\Component;
 use Livewire\Attributes\Computed;
 use Illuminate\Support\Facades\DB;
@@ -55,7 +56,7 @@ class FormularioMuestra extends Component
             'especie_id' => 'required|exists:especies,id',
             'raza' => 'nullable|string|max:100',
             'edadCantidad' => 'required|numeric|min:0|max:999',
-            'edadUnidad' => 'required|in:años,meses,días',
+            'edadUnidad' => 'required|in:años,meses,semanas,días',
             'sexo' => 'required|in:M,H',
             'color' => 'nullable|string|max:100',
             'propietario_nombre' => 'required|string|max:255',
@@ -331,15 +332,38 @@ class FormularioMuestra extends Component
                 $muestra->analisis()->delete();
             }
 
-            // Crear análisis
+            // Crear análisis y descontar insumos
+            $pepsService = app(PepsInventarioService::class);
+
             foreach ($this->analisisSeleccionados as $analisisData) {
-                Analisis::create([
+                $analisis = Analisis::create([
                     'muestra_id' => $muestra->id,
                     'tipo_analisis_id' => $analisisData['tipo_analisis_id'],
                     'plantilla_formulario_id' => $analisisData['plantilla_id'],
                     'bioquimico_id' => auth()->id(),
                     'estado' => 'Pendiente',
                 ]);
+
+                // Descontar insumos asociados a la plantilla (solo para nuevas muestras)
+                if (!$this->muestra_id) {
+                    $plantilla = PlantillaFormulario::with('insumos')->find($analisisData['plantilla_id']);
+
+                    if ($plantilla && $plantilla->insumos->isNotEmpty()) {
+                        foreach ($plantilla->insumos as $insumo) {
+                            $cantidadRequerida = $insumo->pivot->cantidad_requerida;
+
+                            if ($cantidadRequerida > 0) {
+                                $pepsService->registrarConsumoAnalisis(
+                                    insumoId: $insumo->id,
+                                    sucursalId: (int) $this->sucursal_id,
+                                    cantidad: (float) $cantidadRequerida,
+                                    usuarioId: auth()->id(),
+                                    observacion: "Consumo automático - Muestra: {$muestra->codigo_muestra}, Análisis: {$analisisData['tipo_nombre']}"
+                                );
+                            }
+                        }
+                    }
+                }
             }
 
             DB::commit();
@@ -374,7 +398,7 @@ class FormularioMuestra extends Component
         }
 
         // Intentar parsear formato "N unidad" (ej: "3 años", "6 meses", "15 días")
-        if (preg_match('/^(\d+)\s*(años?|meses?|días?|dias?)$/i', trim($edad), $matches)) {
+        if (preg_match('/^(\d+)\s*(años?|meses?|semanas?|días?|dias?)$/i', trim($edad), $matches)) {
             $this->edadCantidad = (int) $matches[1];
             $unidad = mb_strtolower($matches[2]);
             
@@ -383,6 +407,8 @@ class FormularioMuestra extends Component
                 $this->edadUnidad = 'años';
             } elseif (str_starts_with($unidad, 'mes')) {
                 $this->edadUnidad = 'meses';
+            } elseif (str_starts_with($unidad, 'semana')) {
+                $this->edadUnidad = 'semanas';
             } elseif (str_starts_with($unidad, 'día') || str_starts_with($unidad, 'dia')) {
                 $this->edadUnidad = 'días';
             }

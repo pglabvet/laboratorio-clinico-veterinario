@@ -41,7 +41,6 @@ class HistorialMovimientos extends Component
         'CONSUMO_ANALISIS' => 'Consumo Análisis',
         'AJUSTE_INVENTARIO' => 'Ajuste Inventario',
         'COMPRA' => 'Compra',
-        'DONACION' => 'Donación',
         'OTRO' => 'Otro',
     ];
 

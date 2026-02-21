@@ -15,17 +15,17 @@ class DatabaseSeeder extends Seeder
     {
         // Llamar al seeder de roles y permisos
         $this->call([
-            RolesAndPermissionsSeeder::class,
-            UsersSeeder::class,
-           SucursalesSeeder::class,
-           EspeciesSeeder::class,
-           VeterinariasSeeder::class,
-           UnidadesMedidaSeeder::class,
-           TiposAnalisisSeeder::class,
-           CategoriasInsumoSeeder::class,
-           InsumosSeeder::class,
-           EntradasInventarioSeeder::class,
-        //    MuestrasSeeder::class,
+            RolesAndPermissionsSeeder::class ,
+            UsersSeeder::class ,
+            SucursalesSeeder::class ,
+            EspeciesSeeder::class ,
+            VeterinariasSeeder::class ,
+            //UnidadesMedidaSeeder::class,
+            //TiposAnalisisSeeder::class ,
+            //CategoriasInsumoSeeder::class,
+            //InsumosSeeder::class,
+            //EntradasInventarioSeeder::class,
+            //    MuestrasSeeder::class,
         ]);
     }
 }

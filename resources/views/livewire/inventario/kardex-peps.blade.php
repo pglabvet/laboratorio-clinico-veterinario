@@ -1,0 +1,364 @@
+<div class="space-y-6">
+    {{-- Encabezado --}}
+    <div>
+        <div class="flex items-center gap-4 mb-2">
+            <flux:heading size="xl">Kardex PEPS</flux:heading>
+        </div>
+        <flux:subheading>Reporte valorizado del inventario por método PEPS (Primero en Entrar, Primero en Salir)</flux:subheading>
+    </div>
+
+    {{-- Mensajes --}}
+    <x-toast type="danger" :message="session('error')" />
+
+    {{-- Filtros --}}
+    <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
+        <flux:heading size="lg" class="mb-4">Filtros</flux:heading>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {{-- Sucursal --}}
+            <flux:select 
+                wire:model.live="sucursal_id"
+                label="Sucursal"
+                placeholder="Seleccione..."
+            >
+                <option value="">Seleccione...</option>
+                @foreach($this->sucursales as $sucursal)
+                    <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
+                @endforeach
+            </flux:select>
+
+            {{-- Categoría de Insumo (Filtro) --}}
+            <flux:select 
+                wire:model.live="filtro_categoria"
+                label="Categoría de Insumo"
+            >
+                <option value="">Todas las categorías</option>
+                @foreach($this->categorias as $categoria)
+                    <option value="{{ $categoria->id }}">{{ $categoria->nombre }}</option>
+                @endforeach
+            </flux:select>
+            {{-- Insumo --}}
+            <flux:select 
+                wire:model.live="insumo_id"
+                label="Insumo"
+                placeholder="Seleccione..."
+            >
+                <option value="">Seleccione...</option>
+                @foreach($this->insumos as $insumo)
+                    <option value="{{ $insumo->id }}">{{ $insumo->nombre }}</option>
+                @endforeach
+            </flux:select>
+
+            {{-- Fecha Desde --}}
+            <flux:input 
+                wire:model.live="fecha_desde"
+                label="Fecha Desde"
+                type="date"
+            />
+
+            {{-- Fecha Hasta --}}
+            <flux:input 
+                wire:model.live="fecha_hasta"
+                label="Fecha Hasta"
+                type="date"
+            />
+        </div>
+
+        <div class="mt-4 flex gap-3">
+            <flux:button 
+                wire:click="limpiarFiltros"
+                variant="outline"
+                icon="arrow-path"
+            >
+                Limpiar
+            </flux:button>
+        </div>
+    </div>
+
+    {{-- Tabla Kardex --}}
+    @if($kardexData)
+        <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700">
+            <div class="p-6 border-b border-neutral-200 dark:border-neutral-700">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <flux:heading size="lg">
+                            {{ $this->tituloKardex }}
+                        </flux:heading>
+                        <flux:subheading>
+                            {{ $this->sucursales->firstWhere('id', $sucursal_id)?->nombre }}
+                            @if($fecha_desde || $fecha_hasta)
+                                — {{ $fecha_desde ? \Carbon\Carbon::parse($fecha_desde)->format('d/m/Y') : 'Inicio' }} 
+                                al {{ $fecha_hasta ? \Carbon\Carbon::parse($fecha_hasta)->format('d/m/Y') : 'Hoy' }}
+                            @endif
+                        </flux:subheading>
+                    </div>
+                    <div class="text-right flex flex-col items-end gap-3">
+                        <div>
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400">Saldo Final</p>
+                            <p class="text-lg font-bold text-neutral-900 dark:text-neutral-100">
+                                {{ number_format($kardexData['saldo_final_cantidad'], 2) }} uds
+                            </p>
+                            <p class="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                                Bs {{ number_format($kardexData['saldo_final_costo'], 2) }}
+                            </p>
+                        </div>
+                        {{-- Botones de exportación --}}
+                        <div class="flex gap-2">
+                            <a 
+                                href="{{ $this->urlExcel }}"
+                                target="_blank"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg border border-emerald-500 text-emerald-700 dark:text-emerald-400 dark:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
+                            >
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                Excel
+                            </a>
+                            <a 
+                                href="{{ $this->urlPdf }}"
+                                target="_blank"
+                                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg border border-red-400 text-red-700 dark:text-red-400 dark:border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                            >
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                                PDF
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
+                    <thead class="bg-neutral-50 dark:bg-neutral-900">
+                        <tr>
+                            <th rowspan="2" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300 border-b border-neutral-200 dark:border-neutral-700">
+                                Fecha
+                            </th>
+                            <th rowspan="2" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300 border-b border-neutral-200 dark:border-neutral-700">
+                                Detalle
+                            </th>
+                            <th rowspan="2" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300 border-b border-neutral-200 dark:border-neutral-700">
+                                Insumo
+                            </th>
+                            <th colspan="4" class="px-4 py-2 text-center text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400 border-b border-neutral-200 dark:border-neutral-700 bg-emerald-50 dark:bg-emerald-900/20">
+                                Cantidades
+                            </th>
+                            <th colspan="4" class="px-4 py-2 text-center text-xs font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400 border-b border-neutral-200 dark:border-neutral-700 bg-blue-50 dark:bg-blue-900/20">
+                                Costos (Bs)
+                            </th>
+                        </tr>
+                        <tr>
+                            <th class="px-3 py-2 text-center text-xs font-medium uppercase tracking-wider text-neutral-600 dark:text-neutral-400 bg-emerald-50/50 dark:bg-emerald-900/10">
+                                Inicio
+                            </th>
+                            <th class="px-3 py-2 text-center text-xs font-medium uppercase tracking-wider text-green-700 dark:text-green-400 bg-emerald-50/50 dark:bg-emerald-900/10">
+                                Entrada
+                            </th>
+                            <th class="px-3 py-2 text-center text-xs font-medium uppercase tracking-wider text-red-700 dark:text-red-400 bg-emerald-50/50 dark:bg-emerald-900/10">
+                                Salida
+                            </th>
+                            <th class="px-3 py-2 text-center text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300 bg-emerald-50/50 dark:bg-emerald-900/10 font-bold">
+                                Saldo
+                            </th>
+                            <th class="px-3 py-2 text-center text-xs font-medium uppercase tracking-wider text-neutral-600 dark:text-neutral-400 bg-blue-50/50 dark:bg-blue-900/10">
+                                Inicio
+                            </th>
+                            <th class="px-3 py-2 text-center text-xs font-medium uppercase tracking-wider text-green-700 dark:text-green-400 bg-blue-50/50 dark:bg-blue-900/10">
+                                Entrada
+                            </th>
+                            <th class="px-3 py-2 text-center text-xs font-medium uppercase tracking-wider text-red-700 dark:text-red-400 bg-blue-50/50 dark:bg-blue-900/10">
+                                Salida
+                            </th>
+                            <th class="px-3 py-2 text-center text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300 bg-blue-50/50 dark:bg-blue-900/10 font-bold">
+                                Saldo
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-neutral-200 bg-white dark:divide-neutral-700 dark:bg-neutral-800">
+                        @forelse($this->registrosPaginados as $registro)
+                            <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50">
+                                {{-- Fecha --}}
+                                <td class="whitespace-nowrap px-4 py-3 text-sm text-neutral-900 dark:text-neutral-100">
+                                    {{ $registro['fecha'] }}
+                                </td>
+                                {{-- Detalle --}}
+                                <td class="whitespace-nowrap px-4 py-3 text-sm text-neutral-900 dark:text-neutral-100">
+                                    {{ $registro['detalle'] }}
+                                </td>
+                                {{-- Insumo --}}
+                                <td class="whitespace-nowrap px-4 py-3 text-sm text-neutral-900 dark:text-neutral-100">
+                                    {{ $registro['insumo_nombre'] ?? '' }}
+                                </td>
+
+                                {{-- CANTIDADES --}}
+                                <td class="whitespace-nowrap px-3 py-3 text-center text-sm text-neutral-500 dark:text-neutral-400">
+                                    {{ number_format($registro['inicio_cantidad'], 2) }}
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-3 text-center text-sm">
+                                    @if($registro['entrada_cantidad'] !== null)
+                                        <span class="font-medium text-green-600 dark:text-green-400">
+                                            {{ number_format($registro['entrada_cantidad'], 2) }}
+                                        </span>
+                                    @else
+                                        <span class="text-neutral-300 dark:text-neutral-600">—</span>
+                                    @endif
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-3 text-center text-sm">
+                                    @if($registro['salida_cantidad'] !== null)
+                                        <span class="font-medium text-red-600 dark:text-red-400">
+                                            {{ number_format($registro['salida_cantidad'], 2) }}
+                                        </span>
+                                    @else
+                                        <span class="text-neutral-300 dark:text-neutral-600">—</span>
+                                    @endif
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-3 text-center text-sm font-bold text-neutral-900 dark:text-neutral-100">
+                                    {{ number_format($registro['saldo_cantidad'], 2) }}
+                                </td>
+
+                                {{-- COSTOS --}}
+                                <td class="whitespace-nowrap px-3 py-3 text-center text-sm text-neutral-500 dark:text-neutral-400 bg-blue-50/30 dark:bg-blue-900/5">
+                                    {{ number_format($registro['inicio_costo'], 2) }}
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-3 text-center text-sm bg-blue-50/30 dark:bg-blue-900/5">
+                                    @if($registro['entrada_costo'] !== null)
+                                        <span class="font-medium text-green-600 dark:text-green-400">
+                                            {{ number_format($registro['entrada_costo'], 2) }}
+                                        </span>
+                                    @else
+                                        <span class="text-neutral-300 dark:text-neutral-600">—</span>
+                                    @endif
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-3 text-center text-sm bg-blue-50/30 dark:bg-blue-900/5">
+                                    @if($registro['salida_costo'] !== null)
+                                        <span class="font-medium text-red-600 dark:text-red-400">
+                                            {{ number_format($registro['salida_costo'], 2) }}
+                                        </span>
+                                    @else
+                                        <span class="text-neutral-300 dark:text-neutral-600">—</span>
+                                    @endif
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-3 text-center text-sm font-bold text-blue-700 dark:text-blue-300 bg-blue-50/30 dark:bg-blue-900/5">
+                                    {{ number_format($registro['saldo_costo'], 2) }}
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="11" class="px-6 py-12 text-center">
+                                    <div class="flex flex-col items-center justify-center text-neutral-500 dark:text-neutral-400">
+                                        <flux:icon.document-text class="mb-3 size-12" />
+                                        <p class="text-sm">No hay movimientos registrados para este período</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+
+                    {{-- Pie de tabla con totales --}}
+                    @if($this->totalRegistros > 0)
+                    <tfoot>
+                        <tr class="bg-neutral-100 dark:bg-neutral-700">
+                            <td colspan="3" class="px-4 py-3 text-sm font-bold text-neutral-900 dark:text-neutral-100">
+                                Totales Finales
+                            </td>
+                            <td colspan="3"></td>
+                            <td class="px-3 py-3 text-center text-sm font-bold text-neutral-900 dark:text-neutral-100">
+                                {{ number_format($kardexData['saldo_final_cantidad'], 2) }}
+                            </td>
+                            <td colspan="3"></td>
+                            <td class="px-3 py-3 text-center text-sm font-bold text-blue-700 dark:text-blue-300 bg-blue-100/50 dark:bg-blue-900/20">
+                                Bs {{ number_format($kardexData['saldo_final_costo'], 2) }}
+                            </td>
+                        </tr>
+                    </tfoot>
+                    @endif
+                </table>
+            </div>
+
+            {{-- Paginación --}}
+            @if($this->totalPaginas > 1)
+                <div class="px-6 py-4 border-t border-neutral-200 dark:border-neutral-700">
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <p class="text-sm text-neutral-600 dark:text-neutral-400">
+                            Mostrando 
+                            <span class="font-medium">{{ (($paginaActual - 1) * $porPagina) + 1 }}</span>
+                            a 
+                            <span class="font-medium">{{ min($paginaActual * $porPagina, $this->totalRegistros) }}</span>
+                            de 
+                            <span class="font-medium">{{ $this->totalRegistros }}</span>
+                            movimientos
+                        </p>
+                        
+                        <div class="flex items-center gap-2">
+                            <flux:button 
+                                wire:click="paginaAnterior"
+                                variant="outline"
+                                size="sm"
+                                icon="chevron-left"
+                                :disabled="$paginaActual <= 1"
+                            >
+                                Anterior
+                            </flux:button>
+
+                            @php
+                                $totalPags = $this->totalPaginas;
+                                $current = $paginaActual;
+                                $pages = [];
+                                
+                                if ($totalPags <= 7) {
+                                    $pages = range(1, $totalPags);
+                                } else {
+                                    $pages = [1];
+                                    if ($current > 3) $pages[] = '...';
+                                    for ($i = max(2, $current - 1); $i <= min($totalPags - 1, $current + 1); $i++) {
+                                        $pages[] = $i;
+                                    }
+                                    if ($current < $totalPags - 2) $pages[] = '...';
+                                    $pages[] = $totalPags;
+                                }
+                            @endphp
+
+                            @foreach($pages as $page)
+                                @if($page === '...')
+                                    <span class="px-2 text-neutral-400 dark:text-neutral-500">…</span>
+                                @else
+                                    <flux:button 
+                                        wire:click="irAPagina({{ $page }})"
+                                        variant="{{ $page == $paginaActual ? 'primary' : 'outline' }}"
+                                        size="sm"
+                                    >
+                                        {{ $page }}
+                                    </flux:button>
+                                @endif
+                            @endforeach
+
+                            <flux:button 
+                                wire:click="paginaSiguiente"
+                                variant="outline"
+                                size="sm"
+                                icon-trailing="chevron-right"
+                                :disabled="$paginaActual >= $this->totalPaginas"
+                            >
+                                Siguiente
+                            </flux:button>
+                        </div>
+                    </div>
+                </div>
+            @endif
+        </div>
+    @elseif($sucursal_id && ($insumo_id || $filtro_categoria))
+        <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700 p-12 text-center">
+            <div class="flex flex-col items-center justify-center text-neutral-500 dark:text-neutral-400">
+                <flux:icon.document-text class="mb-3 size-16" />
+                <p class="text-lg font-medium">Sin datos disponibles</p>
+                <p class="text-sm mt-1">No se encontraron movimientos para estos filtros</p>
+            </div>
+        </div>
+    @else
+        <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700 p-12 text-center">
+            <div class="flex flex-col items-center justify-center text-neutral-500 dark:text-neutral-400">
+                <flux:icon.funnel class="mb-3 size-16" />
+                <p class="text-lg font-medium">Seleccione los filtros</p>
+                <p class="text-sm mt-1">Escoja una sucursal y un insumo (o categoría) para generar el Kardex PEPS</p>
+            </div>
+        </div>
+    @endif
+</div>

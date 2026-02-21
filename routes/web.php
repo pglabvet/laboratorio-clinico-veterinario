@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\KardexExportController;
 use App\Http\Controllers\PdfController;
 use Illuminate\Support\Facades\Route;
 
@@ -87,6 +88,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/inventario/historial', \App\Livewire\Inventario\HistorialMovimientos::class)
             ->middleware('can:ver-historial-inventario')
             ->name('inventario.historial');
+
+        Route::view('/inventario/kardex', 'inventario.kardex')
+            ->middleware('can:ver-kardex-peps')
+            ->name('inventario.kardex');
+
+        Route::get('/inventario/kardex/exportar/excel', [KardexExportController::class , 'exportarExcel'])
+            ->middleware('can:ver-kardex-peps')
+            ->name('inventario.kardex.excel');
+
+        Route::get('/inventario/kardex/exportar/pdf', [KardexExportController::class , 'exportarPdf'])
+            ->middleware('can:ver-kardex-peps')
+            ->name('inventario.kardex.pdf');
 
         Route::get('/usuarios', \App\Livewire\Usuarios\GestionarUsuarios::class)
             ->middleware('can:ver-usuarios')
