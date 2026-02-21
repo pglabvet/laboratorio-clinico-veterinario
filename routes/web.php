@@ -90,15 +90,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
             ->name('inventario.historial');
 
         Route::view('/inventario/kardex', 'inventario.kardex')
-            ->middleware('can:ver-historial-inventario')
+            ->middleware('can:ver-kardex-peps')
             ->name('inventario.kardex');
 
         Route::get('/inventario/kardex/exportar/excel', [KardexExportController::class , 'exportarExcel'])
-            ->middleware('can:ver-historial-inventario')
+            ->middleware('can:ver-kardex-peps')
             ->name('inventario.kardex.excel');
 
         Route::get('/inventario/kardex/exportar/pdf', [KardexExportController::class , 'exportarPdf'])
-            ->middleware('can:ver-historial-inventario')
+            ->middleware('can:ver-kardex-peps')
             ->name('inventario.kardex.pdf');
 
         Route::get('/usuarios', \App\Livewire\Usuarios\GestionarUsuarios::class)

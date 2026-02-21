@@ -264,6 +264,7 @@
                             'ver-registrar-entrada' => 'inventario',
                             'ver-salidas-manuales' => 'inventario',
                             'ver-historial-inventario' => 'inventario',
+                            'ver-kardex-peps' => 'inventario',
                             'escanear-muestras' => 'muestras',
                             'enviar-resultados-muestra' => 'muestras',
                             'ver-codigo-barras-muestra' => 'muestras',
