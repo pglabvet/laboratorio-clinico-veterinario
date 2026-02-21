@@ -97,6 +97,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'ver-historial-inventario',
             'ver-registrar-entrada',
             'ver-salidas-manuales',
+            'ver-kardex-peps',
 
             // Especies
             'ver-especies',
@@ -207,6 +208,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'ver-historial-inventario',
             'ver-registrar-entrada',
             'ver-salidas-manuales',
+            'ver-kardex-peps',
             // Análisis extra
             'aprobar-analisis',
             'rechazar-analisis',

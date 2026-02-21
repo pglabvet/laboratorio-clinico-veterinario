@@ -67,7 +67,7 @@
         </flux:sidebar.group>
         @endcanany
 
-        @canany(['ver-unidades-medida', 'ver-insumos', 'ver-categorias-insumo', 'ver-historial-inventario', 'ver-registrar-entrada', 'ver-salidas-manuales'])
+        @canany(['ver-unidades-medida', 'ver-insumos', 'ver-categorias-insumo', 'ver-historial-inventario', 'ver-registrar-entrada', 'ver-salidas-manuales', 'ver-kardex-peps'])
         <flux:sidebar.group :heading="__('Inventario')" class="grid">
             @can('ver-categorias-insumo')
             <flux:sidebar.item icon="tag" :href="route('categorias-insumo.index')" :current="request()->routeIs('categorias-insumo.*')" wire:navigate>
@@ -99,7 +99,7 @@
                 {{ __('Historial') }}
             </flux:sidebar.item>
             @endcan
-            @can('ver-historial-inventario')
+            @can('ver-kardex-peps')
             <flux:sidebar.item icon="document-chart-bar" :href="route('inventario.kardex')" :current="request()->routeIs('inventario.kardex')" wire:navigate>
                 {{ __('Kardex PEPS') }}
             </flux:sidebar.item>
