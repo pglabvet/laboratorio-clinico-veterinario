@@ -37,6 +37,6 @@ class UsersSeeder extends Seeder
 
         $this->command->info('Usuarios creados exitosamente:');
         $this->command->info('- Administrador: admin@gmail.com / mpm210214503');
-        $this->command->info('- Bioquímico: bioquimico@gmail.com / bioquimico2025');
+        $this->command->info('- Bioquímico: bioquimico@labvet.com / bioquimico2025');
     }
 }

@@ -130,11 +130,20 @@ class RegistrarEntradaInsumos extends Component
             session()->flash('mensaje', "Entrada registrada exitosamente: {$this->cantidad} {$insumo->unidadMedida->abreviatura} de {$insumo->nombre} en {$sucursal->nombre}.");
 
             // Limpiar formulario
-            $this->reset(['sucursal_id', 'filtro_categoria', 'insumo_id', 'cantidad', 'costo_unitario', 'codigo_lote', 'fecha_vencimiento', 'motivo', 'observacion', 'insumoSeleccionado']);
+            $this->limpiarFormulario();
 
         } catch (\Exception $e) {
             session()->flash('error', 'Error al registrar la entrada: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Limpiar formulario de entrada
+     */
+    public function limpiarFormulario()
+    {
+        $this->reset(['sucursal_id', 'filtro_categoria', 'insumo_id', 'cantidad', 'costo_unitario', 'codigo_lote', 'fecha_vencimiento', 'motivo', 'observacion', 'insumoSeleccionado']);
+        $this->resetValidation();
     }
 
     /**
@@ -204,15 +213,15 @@ class RegistrarEntradaInsumos extends Component
                     $entradasQuery->whereDate('fecha', $now->toDateString());
                     break;
                 case 'ayer':
-                    $entradasQuery->whereDate('fecha', $now->subDay()->toDateString());
+                    $entradasQuery->whereDate('fecha', $now->copy()->subDay()->toDateString());
                     break;
                 case 'ultimos_7_dias':
-                    $entradasQuery->where('fecha', '>=', $now->subDays(7)->startOfDay());
+                    $entradasQuery->where('fecha', '>=', $now->copy()->subDays(7)->startOfDay());
                     break;
                 case 'esta_semana':
                     $entradasQuery->whereBetween('fecha', [
-                        $now->startOfWeek()->startOfDay(),
-                        $now->endOfWeek()->endOfDay()
+                        $now->copy()->startOfWeek()->startOfDay(),
+                        $now->copy()->endOfWeek()->endOfDay()
                     ]);
                     break;
                 case 'este_mes':

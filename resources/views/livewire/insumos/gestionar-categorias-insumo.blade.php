@@ -224,7 +224,7 @@
 
         <div class="mb-4 rounded-lg bg-red-50 p-3 dark:bg-red-900/20">
             <p class="text-sm text-red-800 dark:text-red-200">
-                <strong>Advertencia:</strong> Esta acción no se puede deshacer. Si hay insumos usando esta categoría, no se podrá eliminar.
+                <strong>Advertencia:</strong> Esta acción no se puede deshacer. Los insumos que usen esta categoría quedarán sin categoría asignada.
             </p>
         </div>
 

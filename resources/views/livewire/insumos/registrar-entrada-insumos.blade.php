@@ -152,7 +152,7 @@
                 
                 <flux:button 
                     type="button"
-                    wire:click="cancelar"
+                    wire:click="limpiarFormulario"
                     variant="outline"
                     icon="arrow-path"
                 >

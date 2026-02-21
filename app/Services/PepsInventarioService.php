@@ -425,7 +425,6 @@ class PepsInventarioService
             'AJUSTE_INVENTARIO' => 'Ajuste Inventario',
             'COMPRA' => 'Compra',
             'DEVOLUCION' => 'Devolución',
-            'DONACION' => 'Donación',
             'OTRO' => 'Otro',
         ];
 
