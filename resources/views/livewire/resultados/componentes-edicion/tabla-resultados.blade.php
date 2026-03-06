@@ -2,6 +2,48 @@
 @php
     $filas = array_values($componente['propiedades']['filas'] ?? []);
     $columnas = array_values($componente['propiedades']['columnas'] ?? []);
+
+    $col1Displays = [];
+    foreach ($filas as $idx => $a) {
+        if (!is_array($a)) { $col1Displays[$idx] = ''; continue; }
+        $tipo = $a['rango_tipo'] ?? '';
+        if ($tipo === 'min-max') {
+            $min = $a['rango_min'] ?? ''; $max = $a['rango_max'] ?? '';
+            $col1Displays[$idx] = ($min !== '' && $max !== '') ? "$min - $max" : '';
+        } elseif ($tipo === 'menor') {
+            $v = $a['rango_valor'] ?? ''; $col1Displays[$idx] = $v !== '' ? "< $v" : '';
+        } elseif ($tipo === 'menor-igual') {
+            $v = $a['rango_valor'] ?? ''; $col1Displays[$idx] = $v !== '' ? "<= $v" : '';
+        } elseif ($tipo === 'mayor') {
+            $v = $a['rango_valor'] ?? ''; $col1Displays[$idx] = $v !== '' ? "> $v" : '';
+        } elseif ($tipo === 'mayor-igual') {
+            $v = $a['rango_valor'] ?? ''; $col1Displays[$idx] = $v !== '' ? ">= $v" : '';
+        } elseif ($tipo === 'multiple') {
+            $rangos = $a['rangos'] ?? [];
+            $unidadR = $a['unidad'] ?? '';
+            if (!empty($rangos)) {
+                $lines = [];
+                foreach ($rangos as $re) {
+                    $t = $re['tipo'] ?? 'min-max';
+                    $str = match($t) {
+                        'min-max' => ($re['min'] ?? '') . ' - ' . ($re['max'] ?? ''),
+                        'menor' => '< ' . ($re['valor'] ?? ''),
+                        'menor-igual' => '<= ' . ($re['valor'] ?? ''),
+                        'mayor' => '> ' . ($re['valor'] ?? ''),
+                        'mayor-igual' => '>= ' . ($re['valor'] ?? ''),
+                        default => '',
+                    };
+                    $parts = array_filter([$str, $unidadR, $re['etiqueta'] ?? '']);
+                    $lines[] = implode(' ', $parts);
+                }
+                $col1Displays[$idx] = implode("\n", $lines);
+            } else {
+                $col1Displays[$idx] = $a['rango_ref'] ?? '';
+            }
+        } else {
+            $col1Displays[$idx] = $a['rango_ref'] ?? '';
+        }
+    }
 @endphp
 
 <div 
@@ -15,7 +57,7 @@
                 {{ $rowIndex }}: {
                     nombre: '{{ addslashes(is_array($analisis) ? ($analisis['nombre'] ?? '') : $analisis) }}',
                     col_0: '',
-                    col_1: '{{ addslashes(is_array($analisis) ? ($analisis['rango_ref'] ?? '') : '') }}',
+                    col_1: '{!! str_replace(["\r\n", "\n", "\r"], "\\n", addslashes($col1Displays[$rowIndex] ?? '')) !!}',
                     unidad: '{{ addslashes(is_array($analisis) ? ($analisis['unidad'] ?? '') : '') }}'
                 }{{ $loop->last ? '' : ',' }}
             @endforeach
@@ -96,13 +138,26 @@
                         @else
                             {{-- Segunda columna y siguientes: RANGOS DE REFERENCIA (solo lectura - texto estático) --}}
                             @php
-                                $rangoRef = is_array($analisis) ? ($analisis['rango_ref'] ?? '') : '';
+                                $col1Val = $col1Displays[$rowIndex] ?? '';
                                 $unidadRef = is_array($analisis) ? ($analisis['unidad'] ?? '') : '';
+                                $rangosRefEdit = is_string($col1Val) ? array_filter(explode("\n", $col1Val), fn($r) => trim($r) !== '') : [];
+                                $esSingleRef = count($rangosRefEdit) <= 1;
+                                $singleDisplay = $esSingleRef && count($rangosRefEdit) === 1 ? trim($rangosRefEdit[0]) : '';
                             @endphp
                             <div class="px-3 py-2 text-gray-600 dark:text-zinc-400 text-center">
-                                {{ $rangoRef ?: '...' }}
-                                @if($unidadRef)
-                                    <span class="text-gray-500 dark:text-zinc-500 ml-2">{{ $unidadRef }}</span>
+                                @if(!$esSingleRef)
+                                    <div class="inline-block text-left">
+                                    @foreach($rangosRefEdit as $r)
+                                        <div class="text-xs leading-relaxed">{{ trim($r) }}</div>
+                                    @endforeach
+                                    </div>
+                                @elseif($singleDisplay)
+                                    {{ $singleDisplay }}
+                                    @if($unidadRef)
+                                        <span class="text-gray-500 dark:text-zinc-500 ml-2">{{ $unidadRef }}</span>
+                                    @endif
+                                @else
+                                    ...
                                 @endif
                             </div>
                         @endif

@@ -22,19 +22,21 @@
     datosExistentes: @js($componentesData[$index]['data'] ?? []),
     datos: @js($todosCampos),
     init() {
-        // Cargar datos existentes si existen
-        if (Array.isArray(this.datosExistentes) && this.datosExistentes.length > 0) {
-            let dataIndex = 0;
-            @foreach($componente['propiedades']['secciones'] ?? [] as $seccionIndex => $seccion)
-                @foreach($seccion['campos'] ?? [] as $campoIndex => $campo)
-                    @if($campo)
-                    if (this.datosExistentes[dataIndex] && this.datos['{{ $seccionIndex }}_{{ $campoIndex }}']) {
-                        this.datos['{{ $seccionIndex }}_{{ $campoIndex }}'].valor = this.datosExistentes[dataIndex].valor || '';
-                    }
-                    dataIndex++;
-                    @endif
-                @endforeach
-            @endforeach
+        // Convertir a array si es objeto (ocurre cuando PHP array_filter preserva keys no secuenciales)
+        let existentes = this.datosExistentes;
+        if (existentes && !Array.isArray(existentes)) {
+            existentes = Object.values(existentes);
+        }
+
+        // Cargar datos existentes buscando por nombre de campo
+        if (Array.isArray(existentes) && existentes.length > 0) {
+            Object.keys(this.datos).forEach(key => {
+                const campoName = this.datos[key].campo;
+                const match = existentes.find(item => item && item.campo === campoName);
+                if (match) {
+                    this.datos[key].valor = match.valor || '';
+                }
+            });
         }
         
         // Escuchar evento de guardado para forzar sincronización

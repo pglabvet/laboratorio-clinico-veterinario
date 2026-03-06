@@ -51,24 +51,36 @@
         init() {
             // Cargar datos existentes si existen
             if (this.datosExistentes && typeof this.datosExistentes === 'object') {
-                if (Array.isArray(this.datosExistentes.parametros)) {
-                    this.datosExistentes.parametros.forEach((param, i) => {
-                        if (this.parametros[i]) {
-                            this.parametros[i].resultado = param.resultado || '';
+                // Convertir a array si es objeto (ocurre cuando PHP array_filter preserva keys no secuenciales)
+                let params = this.datosExistentes.parametros;
+                if (params && !Array.isArray(params)) params = Object.values(params);
+                if (Array.isArray(params)) {
+                    params.forEach(param => {
+                        const match = Object.keys(this.parametros).find(k => this.parametros[k].nombre === param.nombre);
+                        if (match !== undefined) {
+                            this.parametros[match].resultado = param.resultado || '';
                         }
                     });
                 }
-                if (Array.isArray(this.datosExistentes.diferenciales)) {
-                    this.datosExistentes.diferenciales.forEach((dif, i) => {
-                        if (this.diferenciales[i]) {
-                            this.diferenciales[i].valor_rel = dif.valor_rel || '';
+
+                let difs = this.datosExistentes.diferenciales;
+                if (difs && !Array.isArray(difs)) difs = Object.values(difs);
+                if (Array.isArray(difs)) {
+                    difs.forEach(dif => {
+                        const match = Object.keys(this.diferenciales).find(k => this.diferenciales[k].nombre === dif.nombre);
+                        if (match !== undefined) {
+                            this.diferenciales[match].valor_rel = dif.valor_rel || '';
                         }
                     });
                 }
-                if (Array.isArray(this.datosExistentes.indices)) {
-                    this.datosExistentes.indices.forEach((ind, i) => {
-                        if (this.indices[i]) {
-                            this.indices[i].resultado = ind.resultado || '';
+
+                let inds = this.datosExistentes.indices;
+                if (inds && !Array.isArray(inds)) inds = Object.values(inds);
+                if (Array.isArray(inds)) {
+                    inds.forEach(ind => {
+                        const match = Object.keys(this.indices).find(k => this.indices[k].nombre === ind.nombre);
+                        if (match !== undefined) {
+                            this.indices[match].resultado = ind.resultado || '';
                         }
                     });
                 }

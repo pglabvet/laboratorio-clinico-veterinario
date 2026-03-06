@@ -11,11 +11,19 @@
             @endforeach
         },
         init() {
-            // Cargar datos existentes si existen
-            if (Array.isArray(this.datosExistentes) && this.datosExistentes.length > 0) {
-                this.datosExistentes.forEach((item, i) => {
-                    if (this.campos[i]) {
-                        this.campos[i].valor = item.valor || '';
+            // Convertir a array si es objeto (ocurre cuando PHP preserva keys no secuenciales)
+            let existentes = this.datosExistentes;
+            if (existentes && !Array.isArray(existentes)) {
+                existentes = Object.values(existentes);
+            }
+
+            // Cargar datos existentes buscando por nombre
+            if (Array.isArray(existentes) && existentes.length > 0) {
+                Object.keys(this.campos).forEach(key => {
+                    const nombre = this.campos[key].nombre;
+                    const match = existentes.find(item => item && item.nombre === nombre);
+                    if (match) {
+                        this.campos[key].valor = match.valor || '';
                     }
                 });
             }
