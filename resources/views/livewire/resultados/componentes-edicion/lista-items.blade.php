@@ -22,7 +22,11 @@
                 }
             }
             
-            // Sincronizar antes de cualquier acción de Livewire
+            // Sincronizar antes de guardar
+            window.addEventListener('antes-de-guardar', () => {
+                this.sincronizarConLivewire();
+            });
+
             window.addEventListener('livewire:initialized', () => {
                 Livewire.hook('morph.updating', () => {
                     this.sincronizarConLivewire();
@@ -50,6 +54,8 @@
             const itemsFiltrados = this.items
                 .filter(item => item.texto.trim() !== '')
                 .map(item => item.texto);
+            window.__labvetData = window.__labvetData || {};
+            window.__labvetData['{{ $index }}'] = itemsFiltrados;
             $wire.set('componentesData.{{ $index }}.data', itemsFiltrados);
         }
     }"

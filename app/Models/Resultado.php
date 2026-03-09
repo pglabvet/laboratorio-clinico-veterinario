@@ -14,6 +14,7 @@ class Resultado extends Model
     protected $fillable = [
         'analisis_id',
         'tipo',
+        'indice',
         'valor',
         'fuera_rango',
     ];

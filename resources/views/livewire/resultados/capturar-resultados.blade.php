@@ -174,7 +174,7 @@
                             @can('actualizar-datos-analisis')
                             <div x-data="{ loading: false }">
                                 <flux:button 
-                                    @click="loading = true; window.dispatchEvent(new Event('antes-de-guardar')); setTimeout(() => { $wire.actualizarDatosRevision().then(() => loading = false).catch(() => loading = false) }, 100)"
+                                    @click="loading = true; window.__labvetData = {}; window.dispatchEvent(new Event('antes-de-guardar')); $wire.actualizarDatosRevision(window.__labvetData).then(() => loading = false).catch(() => loading = false)"
                                     variant="outline"
                                     class="min-w-[130px] justify-center"
                                     x-bind:disabled="loading">
@@ -196,7 +196,7 @@
                             @endcan
                             @can('aprobar-analisis')
                             <flux:button 
-                                wire:click="aprobarAnalisis"
+                                @click="window.__labvetData = {}; window.dispatchEvent(new Event('antes-de-guardar')); $wire.aprobarAnalisis(window.__labvetData)"
                                 variant="primary" 
                                 icon="check-circle">
                                 Aprobar
@@ -209,7 +209,7 @@
                     <div class="flex gap-3">
                         @can('guardar-borrador-resultados')
                         <flux:button 
-                            @click="window.dispatchEvent(new Event('antes-de-guardar')); setTimeout(() => $wire.guardarBorrador(), 100)"
+                            @click="window.__labvetData = {}; window.dispatchEvent(new Event('antes-de-guardar')); $wire.guardarBorrador(window.__labvetData)"
                             variant="outline" 
                             icon="document">
                             Guardar Borrador
@@ -217,7 +217,7 @@
                         @endcan
                         @can('registrar-resultados')
                         <flux:button 
-                            @click="window.dispatchEvent(new Event('antes-de-guardar')); setTimeout(() => $wire.finalizarYEnviar(), 100)"
+                            @click="window.__labvetData = {}; window.dispatchEvent(new Event('antes-de-guardar')); $wire.finalizarYEnviar(window.__labvetData)"
                             variant="primary" 
                             icon="check">
                             Finalizar y Enviar

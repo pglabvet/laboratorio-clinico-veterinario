@@ -2,31 +2,39 @@
 
 namespace App\Livewire\Plantillas;
 
-use Livewire\Component;
+use App\Models\CategoriaInsumo;
+use App\Models\Insumo;
 use App\Models\PlantillaFormulario;
 use App\Models\TipoAnalisis;
-use App\Models\Insumo;
-use App\Models\CategoriaInsumo;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Component;
 
 class GestionarPlantillas extends Component
 {
     public $plantillaId = null;
+
     public $nombreFormulario = '';
+
     public $descripcionFormulario = '';
+
     public $tipo_analisis_id = null;
+
     public $componentes = [];
+
     public $componenteSeleccionado = null;
-    
+
     // Insumos requeridos
     public $insumos = []; // Array de insumos agregados
+
     public $categoriaInsumoFiltro = [];
-    
+
     // Campos temporales para agregar nuevo insumo
     public $nuevaCategoria = '';
+
     public $nuevoInsumo = '';
+
     public $nuevaCantidad = 1;
-    
+
     // Tipos de componentes disponibles
     // Nota: tabla-info no está aquí porque se incluye automáticamente en todos los análisis
     public $tiposComponentes = [
@@ -34,6 +42,7 @@ class GestionarPlantillas extends Component
         'antibiograma' => 'Antibiograma',
         'tabla-hematologica' => 'Tabla Hematologica',
         'tabla-dos-columnas' => 'Tabla de Dos Columnas',
+        'serologia' => 'Serología',
         'tabla-temporal' => 'Tabla Temporal con Gráfica',
         'carga-viral' => 'Carga Viral qPCR',
         'campos-etiquetados' => 'Lista de Campos Etiquetados',
@@ -42,6 +51,7 @@ class GestionarPlantillas extends Component
         'subtitulo' => 'Subtitulo',
         // 'campo-imagenes' => 'Campo de Imagenes', // TODO: Deshabilitado temporalmente - Fase 2
         'campo-texto' => 'Campo de Texto Simple',
+        'examen-microscopico' => 'Examen Microscópico',
     ];
 
     public function mount($plantilla = null)
@@ -53,22 +63,22 @@ class GestionarPlantillas extends Component
         // Si existe el parÃƒÂ¡metro 'duplicar', cargar datos de esa plantilla
         elseif (request()->has('duplicar')) {
             $plantillaOriginal = PlantillaFormulario::with('insumos')->findOrFail(request('duplicar'));
-            $this->nombreFormulario = $plantillaOriginal->nombre . ' (Copia)';
+            $this->nombreFormulario = $plantillaOriginal->nombre.' (Copia)';
             $this->descripcionFormulario = $plantillaOriginal->descripcion;
             $this->tipo_analisis_id = $plantillaOriginal->tipo_analisis_id;
-            
+
             // Cargar insumos asociados
-            $this->insumos = $plantillaOriginal->insumos->map(function($insumo) {
+            $this->insumos = $plantillaOriginal->insumos->map(function ($insumo) {
                 return [
                     'insumo_id' => $insumo->id,
                     'cantidad_requerida' => $insumo->pivot->cantidad_requerida,
                 ];
             })->toArray();
-            
+
             // Asegurar que todos los componentes tengan ID
             $componentes = $plantillaOriginal->componentes ?? [];
             foreach ($componentes as &$componente) {
-                if (!isset($componente['id'])) {
+                if (! isset($componente['id'])) {
                     $componente['id'] = uniqid('comp_', true);
                 }
             }
@@ -86,19 +96,19 @@ class GestionarPlantillas extends Component
         $this->nombreFormulario = $plantilla->nombre;
         $this->descripcionFormulario = $plantilla->descripcion ?? '';
         $this->tipo_analisis_id = $plantilla->tipo_analisis_id;
-        
+
         // Cargar insumos asociados
-        $this->insumos = $plantilla->insumos->map(function($insumo) {
+        $this->insumos = $plantilla->insumos->map(function ($insumo) {
             return [
                 'insumo_id' => $insumo->id,
                 'cantidad_requerida' => $insumo->pivot->cantidad_requerida,
             ];
         })->toArray();
-        
+
         // Asegurar que todos los componentes tengan ID
         $componentes = $plantilla->componentes ?? [];
         foreach ($componentes as &$componente) {
-            if (!isset($componente['id'])) {
+            if (! isset($componente['id'])) {
                 $componente['id'] = uniqid('comp_', true);
             }
         }
@@ -113,7 +123,7 @@ class GestionarPlantillas extends Component
             'tipo' => $tipo,
             'propiedades' => $this->propiedadesPorDefecto($tipo),
         ];
-        
+
         $this->componentes[] = $componente;
         // Re-indexar para asegurar que los ÃƒÂ­ndices sean estables
         $this->componentes = array_values($this->componentes);
@@ -122,9 +132,9 @@ class GestionarPlantillas extends Component
     public function eliminarComponente($id)
     {
         $this->componentes = array_values(
-            array_filter($this->componentes, fn($c) => $c['id'] !== $id)
+            array_filter($this->componentes, fn ($c) => $c['id'] !== $id)
         );
-        
+
         if ($this->componenteSeleccionado === $id) {
             $this->componenteSeleccionado = null;
         }
@@ -137,7 +147,7 @@ class GestionarPlantillas extends Component
 
     public function actualizarPropiedadComponente($componenteId, $path, $valor)
     {
-        $index = collect($this->componentes)->search(fn($c) => $c['id'] === $componenteId);
+        $index = collect($this->componentes)->search(fn ($c) => $c['id'] === $componenteId);
         if ($index !== false) {
             data_set($this->componentes[$index]['propiedades'], $path, $valor);
         }
@@ -156,13 +166,14 @@ class GestionarPlantillas extends Component
 
     public function getComponenteIndexPorId($id)
     {
-        $index = collect($this->componentes)->search(fn($c) => $c['id'] === $id);
+        $index = collect($this->componentes)->search(fn ($c) => $c['id'] === $id);
+
         return $index !== false ? $index : null;
     }
 
     private function propiedadesPorDefecto($tipo)
     {
-        return match($tipo) {
+        return match ($tipo) {
             'tabla-info' => [
                 'titulo' => 'INFORMACION DEL PACIENTE',
                 'filas' => [
@@ -220,6 +231,16 @@ class GestionarPlantillas extends Component
                         'subtitulo' => 'EXAMEN MICROSCOPICO',
                         'campos' => ['LEVADURAS', 'PARASITOS'],
                     ],
+                ],
+            ],
+            'serologia' => [
+                'titulo' => 'SEROLOGIA',
+                'descripcion' => '',
+                'campos' => [
+                    'Dirofilaria Immitis',
+                    'Erlichia Canis',
+                    'Leishmania infantum',
+                    'Anaplacia Phagocytophilum/Anaplacia Platys',
                 ],
             ],
             'campos-etiquetados' => [
@@ -307,6 +328,19 @@ class GestionarPlantillas extends Component
                 ],
                 'mostrar_grafica' => true,
             ],
+            'examen-microscopico' => [
+                'titulo' => 'EXAMEN MICROSCOPICO',
+                'columna_parametro' => 'PARÁMETRO',
+                'columna_resultado' => 'RESULTADO',
+                'columna_rango' => 'RANGO REF.',
+                'filas' => [
+                    ['parametro' => 'LEUCOCITOS', 'rango_referencia' => ''],
+                    ['parametro' => 'CEL EPITELIALES', 'rango_referencia' => ''],
+                    ['parametro' => 'HEMATIES', 'rango_referencia' => ''],
+                    ['parametro' => 'FLORA BACTERIANA', 'rango_referencia' => ''],
+                    ['parametro' => 'OTROS', 'rango_referencia' => ''],
+                ],
+            ],
             default => [],
         };
     }
@@ -323,19 +357,20 @@ class GestionarPlantillas extends Component
             'nuevaCantidad.numeric' => 'La cantidad debe ser un número',
             'nuevaCantidad.min' => 'La cantidad debe ser mayor a 0',
         ]);
-        
+
         // Verificar que no esté duplicado
         $existe = collect($this->insumos)->contains('insumo_id', $this->nuevoInsumo);
         if ($existe) {
             session()->flash('error', 'Este insumo ya ha sido agregado');
+
             return;
         }
-        
+
         $this->insumos[] = [
             'insumo_id' => $this->nuevoInsumo,
             'cantidad_requerida' => $this->nuevaCantidad,
         ];
-        
+
         // Limpiar campos
         $this->nuevaCategoria = '';
         $this->nuevoInsumo = '';
@@ -347,7 +382,7 @@ class GestionarPlantillas extends Component
         unset($this->insumos[$index]);
         $this->insumos = array_values($this->insumos);
     }
-    
+
     public function updatedNuevaCategoria($value)
     {
         // Limpiar el insumo seleccionado cuando cambia la categoría
@@ -377,18 +412,18 @@ class GestionarPlantillas extends Component
             if ($this->plantillaId) {
                 // Actualizar plantilla existente
                 $plantillaOriginal = PlantillaFormulario::findOrFail($this->plantillaId);
-                
+
                 // Verificar si la plantilla está en uso
                 if ($plantillaOriginal->estaEnUso()) {
                     // CREAR NUEVA VERSIÓN en lugar de modificar
                     $nuevaVersion = $plantillaOriginal->version + 1;
-                    
+
                     // Desactivar la plantilla anterior
                     $plantillaOriginal->update(['activo' => false]);
-                    
+
                     // Determinar el ID base (la primera versión de la cadena)
                     $plantillaBaseId = $plantillaOriginal->plantilla_base_id ?? $plantillaOriginal->id;
-                    
+
                     // Crear nueva versión
                     $plantilla = PlantillaFormulario::create([
                         'nombre' => $this->nombreFormulario,
@@ -400,10 +435,10 @@ class GestionarPlantillas extends Component
                         'version' => $nuevaVersion,
                         'plantilla_base_id' => $plantillaBaseId,
                     ]);
-                    
+
                     // Sincronizar insumos en la nueva versión
                     $this->sincronizarInsumos($plantilla);
-                    
+
                     $mensaje = "Se ha creado la versión {$nuevaVersion} de la plantilla. Los análisis anteriores mantienen la versión anterior.";
                 } else {
                     // Plantilla sin uso - actualizar normalmente
@@ -413,10 +448,10 @@ class GestionarPlantillas extends Component
                         'tipo_analisis_id' => $this->tipo_analisis_id ?: null,
                         'componentes' => $this->componentes,
                     ]);
-                    
+
                     // Sincronizar insumos
                     $this->sincronizarInsumos($plantillaOriginal);
-                    
+
                     $mensaje = 'Plantilla actualizada correctamente';
                 }
             } else {
@@ -431,19 +466,19 @@ class GestionarPlantillas extends Component
                     'version' => 1,
                     'plantilla_base_id' => null,
                 ]);
-                
+
                 // Sincronizar insumos
                 $this->sincronizarInsumos($plantilla);
-                
+
                 $mensaje = 'Plantilla creada correctamente';
             }
 
             session()->flash('success', $mensaje);
-            
+
             return redirect()->route('plantillas.index');
-            
+
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al guardar: ' . $e->getMessage());
+            session()->flash('error', 'Error al guardar: '.$e->getMessage());
         }
     }
 
@@ -451,15 +486,15 @@ class GestionarPlantillas extends Component
     {
         // Filtrar insumos válidos (que tengan insumo_id y cantidad)
         $insumosValidos = collect($this->insumos)
-            ->filter(function($insumo) {
-                return !empty($insumo['insumo_id']) && !empty($insumo['cantidad_requerida']);
+            ->filter(function ($insumo) {
+                return ! empty($insumo['insumo_id']) && ! empty($insumo['cantidad_requerida']);
             });
 
         // Preparar array para sync
         $syncData = [];
         foreach ($insumosValidos as $insumo) {
             $syncData[$insumo['insumo_id']] = [
-                'cantidad_requerida' => $insumo['cantidad_requerida']
+                'cantidad_requerida' => $insumo['cantidad_requerida'],
             ];
         }
 

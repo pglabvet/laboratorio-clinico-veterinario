@@ -126,13 +126,21 @@
         <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-md p-6">
             <h3 class="font-bold text-lg text-gray-800 dark:text-zinc-100 mb-4">Resultados Capturados</h3>
 
-            @forelse($resultadosAgrupados as $tipo => $resultados)
+            @php
+                $plantilla = $analisis->tipoAnalisis->plantillas->first();
+                $componentesPlantilla = $plantilla?->componentes ?? [];
+            @endphp
+
+            @forelse($resultadosAgrupados as $indice => $resultado)
+                @php
+                    $tipo = $resultado->tipo;
+                    $propiedadesComponente = $componentesPlantilla[$indice]['propiedades'] ?? [];
+                @endphp
                 <div class="mb-6 last:mb-0">
                     <h4 class="font-semibold text-gray-700 dark:text-zinc-300 mb-3 text-uppercase">
                         {{ str_replace('-', ' ', str_replace('_', ' ', $tipo)) }}
                     </h4>
 
-                    @foreach($resultados as $resultado)
                         <div class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 mb-3">
                             @if($tipo === 'antibiograma')
                                 {{-- Antibiograma --}}
@@ -180,7 +188,7 @@
                                     @endif
                                 </div>
 
-                            @elseif($tipo === 'tabla-resultados' || $tipo === 'tabla-dos-columnas' || $tipo === 'campos-etiquetados')
+                            @elseif($tipo === 'tabla-resultados' || $tipo === 'tabla-dos-columnas' || $tipo === 'campos-etiquetados' || $tipo === 'serologia')
                                 {{-- Tablas --}}
                                 <table class="w-full text-sm">
                                     <tbody>
@@ -196,6 +204,34 @@
                                                     @endif
                                                 @endforeach
                                             </td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+
+                            @elseif($tipo === 'examen-microscopico')
+                                {{-- Examen Microscópico --}}
+                                @php
+                                    $tieneRangos = collect($resultado->valor)->contains(fn($f) => !empty($f['rango_referencia']));
+                                @endphp
+                                <table class="w-full text-sm">
+                                    <thead>
+                                        <tr class="bg-gray-50 dark:bg-zinc-800">
+                                            <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-left">{{ $propiedadesComponente['columna_parametro'] ?? 'PARÁMETRO' }}</th>
+                                            <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-center">{{ $propiedadesComponente['columna_resultado'] ?? 'RESULTADO' }}</th>
+                                            @if($tieneRangos)
+                                            <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-center">{{ $propiedadesComponente['columna_rango'] ?? 'RANGO REF.' }}</th>
+                                            @endif
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($resultado->valor as $fila)
+                                        <tr>
+                                            <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 font-semibold">{{ $fila['parametro'] ?? '' }}</td>
+                                            <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-center">{{ $fila['resultado'] ?? '' }}</td>
+                                            @if($tieneRangos)
+                                            <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-center text-xs text-gray-500 dark:text-zinc-400">{{ $fila['rango_referencia'] ?? '' }}</td>
+                                            @endif
                                         </tr>
                                         @endforeach
                                     </tbody>
@@ -224,7 +260,6 @@
                                 <pre class="text-sm text-gray-900 dark:text-zinc-100 whitespace-pre-wrap">{{ json_encode($resultado->valor, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>
                             @endif
                         </div>
-                    @endforeach
                 </div>
             @empty
                 <p class="text-gray-500 dark:text-zinc-400 text-center py-8">

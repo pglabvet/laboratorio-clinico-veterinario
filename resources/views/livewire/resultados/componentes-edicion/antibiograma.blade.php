@@ -68,7 +68,8 @@
                 intermedio: f.intermedio,
                 resistente: f.resistente
             }));
-            
+            window.__labvetData = window.__labvetData || {};
+            window.__labvetData['{{ $index }}'] = datosLimpios;
             $wire.set('componentesData.{{ $index }}.data', datosLimpios);
         }
     }"

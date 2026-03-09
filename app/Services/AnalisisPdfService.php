@@ -17,7 +17,7 @@ class AnalisisPdfService
     {
         // Validar que el análisis esté aprobado o enviado
         $estadosValidos = [Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO];
-        if (!in_array($analisis->estado, $estadosValidos)) {
+        if (! in_array($analisis->estado, $estadosValidos)) {
             throw new \Exception('Solo se pueden generar PDFs de análisis aprobados o enviados.');
         }
 
@@ -29,7 +29,7 @@ class AnalisisPdfService
             'tipoAnalisis.plantillas',
             'bioquimico',
             'aprobador',
-            'resultados'
+            'resultados',
         ]);
 
         // Primero intentar usar la plantilla específica asignada al análisis
@@ -37,16 +37,16 @@ class AnalisisPdfService
         if ($analisis->plantilla_formulario_id) {
             $plantilla = PlantillaFormulario::find($analisis->plantilla_formulario_id);
         }
-        
+
         // Si no hay plantilla asignada, buscar una plantilla activa del tipo de análisis (fallback)
-        if (!$plantilla) {
+        if (! $plantilla) {
             $plantilla = $analisis->tipoAnalisis
                 ->plantillas()
                 ->where('activo', true)
                 ->first();
         }
 
-        if (!$plantilla) {
+        if (! $plantilla) {
             throw new \Exception('No se encontró una plantilla activa para este tipo de análisis.');
         }
 
@@ -55,7 +55,7 @@ class AnalisisPdfService
 
         // Generar el PDF
         $pdf = DomPDF::loadView('pdf.analisis', $datos);
-        
+
         // Configurar PDF
         $pdf->setPaper('letter', 'portrait');
         $pdf->setOptions([
@@ -66,9 +66,9 @@ class AnalisisPdfService
 
         // Generar nombre único
         $nombreArchivo = $this->generarNombreArchivo($analisis);
-        
+
         // Guardar en storage
-        $rutaRelativa = 'pdfs/' . date('Y/m') . '/' . $nombreArchivo;
+        $rutaRelativa = 'pdfs/'.date('Y/m').'/'.$nombreArchivo;
         Storage::disk('public')->put($rutaRelativa, $pdf->output());
 
         // Registrar en base de datos
@@ -92,22 +92,29 @@ class AnalisisPdfService
      */
     private function prepararDatos(Analisis $analisis, PlantillaFormulario $plantilla): array
     {
-        // Agrupar resultados por tipo para fácil acceso
-        $resultadosPorTipo = $analisis->resultados->groupBy('tipo');
+        // Indexar resultados por indice para acceso directo
+        $resultadosPorIndice = $analisis->resultados->keyBy('indice');
 
         // Preparar datos de componentes con resultados
         $componentesConDatos = [];
         foreach ($plantilla->componentes as $index => $componente) {
             $tipo = $componente['tipo'];
-            $resultado = $resultadosPorTipo->get($tipo)?->first();
-            
+            $resultado = $resultadosPorIndice->get($index);
+
+            $valorResultado = $resultado?->valor ?? [];
+
+            // Omitir componentes sin resultados
+            if (! $this->componenteTieneResultados($tipo, $valorResultado)) {
+                continue;
+            }
+
             // Buscar si hay gráfica guardada para este componente (nueva estructura año/mes)
             $chartPattern = storage_path("app/public/charts/*/*/{$analisis->id}_{$index}.png");
             $chartFiles = glob($chartPattern);
             $chartPath = $chartFiles[0] ?? null;
 
             // Fallback: buscar en la estructura antigua (plana)
-            if (!$chartPath) {
+            if (! $chartPath) {
                 $oldPath = storage_path("app/public/charts/{$analisis->id}_{$index}.png");
                 if (file_exists($oldPath)) {
                     $chartPath = $oldPath;
@@ -116,7 +123,7 @@ class AnalisisPdfService
 
             $chartBase64 = null;
             if ($chartPath && file_exists($chartPath)) {
-                $chartBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($chartPath));
+                $chartBase64 = 'data:image/png;base64,'.base64_encode(file_get_contents($chartPath));
             }
 
             $componentesConDatos[$index] = [
@@ -131,14 +138,14 @@ class AnalisisPdfService
         $fondoHojaPath = public_path('images/FONDO-HOJA.png');
         $fondoHojaBase64 = null;
         if (file_exists($fondoHojaPath)) {
-            $fondoHojaBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($fondoHojaPath));
+            $fondoHojaBase64 = 'data:image/png;base64,'.base64_encode(file_get_contents($fondoHojaPath));
         }
 
         // Ruta de la firma (sin fondo para transparencia)
         $firmaPath = public_path('images/firma-sin_fondo.png');
         $firmaBase64 = null;
         if (file_exists($firmaPath)) {
-            $firmaBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($firmaPath));
+            $firmaBase64 = 'data:image/png;base64,'.base64_encode(file_get_contents($firmaPath));
         }
 
         return [
@@ -160,8 +167,35 @@ class AnalisisPdfService
         $paciente = preg_replace('/[^A-Za-z0-9]/', '_', $analisis->muestra->paciente_nombre ?? 'SinNombre');
         $tipoAnalisis = preg_replace('/[^A-Za-z0-9]/', '_', $analisis->tipoAnalisis->nombre ?? 'Analisis');
         $fecha = now()->format('Ymd_His');
-        
+
         return strtoupper("{$paciente}_{$tipoAnalisis}_{$fecha}.pdf");
+    }
+
+    /**
+     * Verifica si un componente tiene resultados ingresados
+     */
+    private function componenteTieneResultados(string $tipo, mixed $valor): bool
+    {
+        if (empty($valor)) {
+            return false;
+        }
+
+        if (! is_array($valor)) {
+            return true;
+        }
+
+        return match ($tipo) {
+            'tabla-hematologica' => ! empty($valor['parametros'])
+                || ! empty($valor['diferenciales'])
+                || ! empty($valor['indices']),
+
+            'campo-texto', 'texto-libre' => ! empty($valor['valor'])
+                || ! empty($valor['contenido']),
+
+            'campo-imagenes' => collect($valor)->contains(fn ($img) => ! empty($img)),
+
+            default => count($valor) > 0,
+        };
     }
 
     /**
@@ -170,6 +204,7 @@ class AnalisisPdfService
     public function descargarDirecto(Analisis $analisis)
     {
         $resultado = $this->generar($analisis);
+
         return $resultado['pdf']->download($resultado['nombre']);
     }
 }

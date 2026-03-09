@@ -36,7 +36,7 @@ class UsersSeeder extends Seeder
         $bioquimico->assignRole('Bioquímico');
 
         $this->command->info('Usuarios creados exitosamente:');
-        $this->command->info('- Administrador: admin@gmail.com / mpm210214503');
+        $this->command->info('- Administrador: admin@labvet.com / mpm210214503');
         $this->command->info('- Bioquímico: bioquimico@labvet.com / bioquimico2025');
     }
 }
