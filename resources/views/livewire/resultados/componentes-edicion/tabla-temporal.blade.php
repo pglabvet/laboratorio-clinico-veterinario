@@ -68,7 +68,10 @@
     },
     
     enviarDatos() {
-        $wire.set('componentesData.{{ $index }}.data', Object.values(this.filas));
+        const data = Object.values(this.filas);
+        window.__labvetData = window.__labvetData || {};
+        window.__labvetData['{{ $index }}'] = data;
+        $wire.set('componentesData.{{ $index }}.data', data);
     },
     
     // Guardar la gráfica automáticamente al servidor con reintentos

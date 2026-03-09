@@ -52,7 +52,10 @@
         });
     },
     sincronizarConLivewire() {
-        $wire.set('componentesData.{{ $index }}.data', Object.values(this.datos));
+        const data = Object.values(this.datos);
+        window.__labvetData = window.__labvetData || {};
+        window.__labvetData['{{ $index }}'] = data;
+        $wire.set('componentesData.{{ $index }}.data', data);
     }
 }"
 class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:bg-zinc-900">

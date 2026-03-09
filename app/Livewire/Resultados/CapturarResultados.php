@@ -108,13 +108,14 @@ class CapturarResultados extends Component
      */
     private function cargarResultadosExistentes()
     {
-        $resultadosAgrupados = $this->analisis->resultados->groupBy('tipo');
+        // Indexar resultados por indice para acceso directo
+        $resultadosPorIndice = $this->analisis->resultados->keyBy('indice');
 
         foreach ($this->plantilla->componentes as $index => $componente) {
             $tipo = $componente['tipo'];
 
-            if (isset($resultadosAgrupados[$tipo])) {
-                $resultado = $resultadosAgrupados[$tipo]->first();
+            if (isset($resultadosPorIndice[$index])) {
+                $resultado = $resultadosPorIndice[$index];
                 $this->componentesData[$index]['data'] = $resultado->valor;
 
                 // Si es campo-imagenes, marcar que tiene imágenes guardadas
@@ -158,8 +159,12 @@ class CapturarResultados extends Component
         }
     }
 
-    public function guardarBorrador()
+    public function guardarBorrador($datosJS = [])
     {
+        if (! empty($datosJS)) {
+            $this->aplicarDatosDesdeJS($datosJS);
+        }
+
         try {
             DB::beginTransaction();
 
@@ -223,6 +228,7 @@ class CapturarResultados extends Component
                         Resultado::create([
                             'analisis_id' => $this->analisis->id,
                             'tipo' => 'campo-imagenes',
+                            'indice' => $index,
                             'valor' => $imagenesGuardadas,
                             'fuera_rango' => false,
                         ]);
@@ -242,6 +248,7 @@ class CapturarResultados extends Component
                         Resultado::create([
                             'analisis_id' => $this->analisis->id,
                             'tipo' => $componenteData['tipo'],
+                            'indice' => $index,
                             'valor' => $datosParaGuardar,
                             'fuera_rango' => false,
                         ]);
@@ -272,8 +279,12 @@ class CapturarResultados extends Component
         }
     }
 
-    public function finalizarYEnviar()
+    public function finalizarYEnviar($datosJS = [])
     {
+        if (! empty($datosJS)) {
+            $this->aplicarDatosDesdeJS($datosJS);
+        }
+
         try {
             DB::beginTransaction();
 
@@ -340,6 +351,7 @@ class CapturarResultados extends Component
                         Resultado::create([
                             'analisis_id' => $this->analisis->id,
                             'tipo' => 'campo-imagenes',
+                            'indice' => $index,
                             'valor' => $imagenesGuardadas,
                             'fuera_rango' => false,
                         ]);
@@ -359,6 +371,7 @@ class CapturarResultados extends Component
                         Resultado::create([
                             'analisis_id' => $this->analisis->id,
                             'tipo' => $componenteData['tipo'],
+                            'indice' => $index,
                             'valor' => $datosParaGuardar,
                             'fuera_rango' => false,
                         ]);
@@ -432,6 +445,7 @@ class CapturarResultados extends Component
                 }));
 
             case 'tabla-dos-columnas':
+            case 'serologia':
             case 'campos-etiquetados':
                 // Filtrar campos con valor vacío y re-indexar para mantener array JSON válido
                 return array_values(array_filter($data, function ($item) {
@@ -440,6 +454,12 @@ class CapturarResultados extends Component
                     }
 
                     return ! empty($item);
+                }));
+
+            case 'examen-microscopico':
+                // Filtrar filas que tengan resultado ingresado
+                return array_values(array_filter($data, function ($fila) {
+                    return isset($fila['resultado']) && $fila['resultado'] !== '' && $fila['resultado'] !== null;
                 }));
 
             case 'tabla-temporal':
@@ -488,8 +508,12 @@ class CapturarResultados extends Component
         }
     }
 
-    public function aprobarAnalisis()
+    public function aprobarAnalisis($datosJS = [])
     {
+        if (! empty($datosJS)) {
+            $this->aplicarDatosDesdeJS($datosJS);
+        }
+
         try {
             DB::beginTransaction();
 
@@ -514,6 +538,20 @@ class CapturarResultados extends Component
         } catch (\Exception $e) {
             DB::rollBack();
             session()->flash('error', 'Error al aprobar el análisis: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Aplica los datos recolectados desde JavaScript directamente a componentesData.
+     * Esto garantiza que los datos lleguen incluso si $wire.set() no se procesó.
+     */
+    private function aplicarDatosDesdeJS(array $datosJS): void
+    {
+        foreach ($datosJS as $index => $data) {
+            $index = (int) $index;
+            if (isset($this->componentesData[$index])) {
+                $this->componentesData[$index]['data'] = $data;
+            }
         }
     }
 
@@ -575,6 +613,7 @@ class CapturarResultados extends Component
                     Resultado::create([
                         'analisis_id' => $this->analisis->id,
                         'tipo' => 'campo-imagenes',
+                        'indice' => $index,
                         'valor' => $imagenesGuardadas,
                         'fuera_rango' => false,
                     ]);
@@ -591,6 +630,7 @@ class CapturarResultados extends Component
                     Resultado::create([
                         'analisis_id' => $this->analisis->id,
                         'tipo' => $componenteData['tipo'],
+                        'indice' => $index,
                         'valor' => $datosParaGuardar,
                         'fuera_rango' => false,
                     ]);
@@ -602,8 +642,12 @@ class CapturarResultados extends Component
     /**
      * Actualizar datos en modo revisión sin cambiar estado
      */
-    public function actualizarDatosRevision()
+    public function actualizarDatosRevision($datosJS = [])
     {
+        if (! empty($datosJS)) {
+            $this->aplicarDatosDesdeJS($datosJS);
+        }
+
         try {
             DB::beginTransaction();
 

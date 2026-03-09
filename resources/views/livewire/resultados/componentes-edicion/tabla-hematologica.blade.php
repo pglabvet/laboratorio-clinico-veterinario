@@ -107,7 +107,11 @@
                 }
             }, { deep: true });
             
-            // Sincronizar antes de cualquier acción de Livewire
+            // Sincronizar antes de guardar
+            window.addEventListener('antes-de-guardar', () => {
+                this.sincronizarConLivewire();
+            });
+
             window.addEventListener('livewire:initialized', () => {
                 Livewire.hook('morph.updating', () => {
                     this.sincronizarConLivewire();
@@ -123,11 +127,14 @@
             this.sincronizarConLivewire();
         },
         sincronizarConLivewire() {
-            $wire.set('componentesData.{{ $index }}.data', {
+            const data = {
                 parametros: Object.values(this.parametros),
                 diferenciales: Object.values(this.diferenciales),
                 indices: Object.values(this.indices)
-            });
+            };
+            window.__labvetData = window.__labvetData || {};
+            window.__labvetData['{{ $index }}'] = data;
+            $wire.set('componentesData.{{ $index }}.data', data);
         }
     }"
     class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:bg-zinc-900">
