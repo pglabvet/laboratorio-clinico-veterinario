@@ -52,16 +52,12 @@
         filas: @js($filas),
         columnas: @js($columnas),
         datosExistentes: @js($componentesData[$index]['data'] ?? []),
-        datos: {
-            @foreach($filas as $rowIndex => $analisis)
-                {{ $rowIndex }}: {
-                    nombre: '{{ addslashes(is_array($analisis) ? ($analisis['nombre'] ?? '') : $analisis) }}',
-                    col_0: '',
-                    col_1: '{!! str_replace(["\r\n", "\n", "\r"], "\\n", addslashes($col1Displays[$rowIndex] ?? '')) !!}',
-                    unidad: '{{ addslashes(is_array($analisis) ? ($analisis['unidad'] ?? '') : '') }}'
-                }{{ $loop->last ? '' : ',' }}
-            @endforeach
-        },
+        datos: @js(collect($filas)->mapWithKeys(fn($analisis, $rowIndex) => [$rowIndex => [
+            'nombre' => is_array($analisis) ? ($analisis['nombre'] ?? '') : $analisis,
+            'col_0' => '',
+            'col_1' => $col1Displays[$rowIndex] ?? '',
+            'unidad' => is_array($analisis) ? ($analisis['unidad'] ?? '') : '',
+        ]])),
         init() {
             // Cargar datos existentes si existen (sobrescribe los valores por defecto)
             if (Array.isArray(this.datosExistentes) && this.datosExistentes.length > 0) {

@@ -8,13 +8,7 @@
     wire:ignore
     x-data="{
         datosExistentes: @js($componentesData[$index]['data'] ?? []),
-        filas: {
-            @foreach($filas as $i => $fila)
-                @if(!empty($fila['parametro']))
-                {{ $i }}: { parametro: '{{ addslashes($fila["parametro"]) }}', resultado: '', rango_referencia: '{{ addslashes($fila["rango_referencia"] ?? "") }}' }{{ $loop->last ? '' : ',' }}
-                @endif
-            @endforeach
-        },
+        filas: @js(collect($filas)->filter(fn($f) => !empty($f['parametro']))->mapWithKeys(fn($f, $i) => [$i => ['parametro' => $f['parametro'], 'resultado' => '', 'rango_referencia' => $f['rango_referencia'] ?? '']])),
         init() {
             // Convertir a array si es objeto
             let existentes = this.datosExistentes;

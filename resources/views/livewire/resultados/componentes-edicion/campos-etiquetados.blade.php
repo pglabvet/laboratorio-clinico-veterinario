@@ -3,13 +3,7 @@
     wire:ignore
     x-data="{
         datosExistentes: @js($componentesData[$index]['data'] ?? []),
-        campos: {
-            @foreach($componente['propiedades']['campos'] ?? [] as $i => $campo)
-                @if($campo)
-                {{ $i }}: { nombre: '{{ addslashes($campo) }}', valor: '' }{{ $loop->last ? '' : ',' }}
-                @endif
-            @endforeach
-        },
+        campos: @js(collect($componente['propiedades']['campos'] ?? [])->filter()->mapWithKeys(fn($campo, $i) => [$i => ['nombre' => $campo, 'valor' => '']])),
         init() {
             // Convertir a array si es objeto (ocurre cuando PHP preserva keys no secuenciales)
             let existentes = this.datosExistentes;

@@ -14,21 +14,9 @@
     x-data="{
         datosExistentes: @js($componentesData[$index]['data'] ?? null),
         indiceLeucocitos: {{ $indiceLeucocitos !== null ? $indiceLeucocitos : 'null' }},
-        parametros: {
-            @foreach($componente['propiedades']['parametros_principales'] ?? [] as $i => $param)
-            {{ $i }}: { nombre: '{{ addslashes($param["nombre"]) }}', resultado: '', unidad: '{{ addslashes($param["unidad"]) }}' }{{ $loop->last ? '' : ',' }}
-            @endforeach
-        },
-        diferenciales: {
-            @foreach($componente['propiedades']['diferenciales'] ?? [] as $i => $dif)
-            {{ $i }}: { nombre: '{{ addslashes($dif["nombre"]) }}', valor_rel: '', valor_abs: '' }{{ $loop->last ? '' : ',' }}
-            @endforeach
-        },
-        indices: {
-            @foreach($componente['propiedades']['indices'] ?? [] as $i => $indice)
-            {{ $i }}: { nombre: '{{ addslashes($indice["nombre"]) }}', resultado: '', unidad: '{{ addslashes($indice["unidad"]) }}' }{{ $loop->last ? '' : ',' }}
-            @endforeach
-        },
+        parametros: @js(collect($componente['propiedades']['parametros_principales'] ?? [])->mapWithKeys(fn($p, $i) => [$i => ['nombre' => $p['nombre'], 'resultado' => '', 'unidad' => $p['unidad']]])),
+        diferenciales: @js(collect($componente['propiedades']['diferenciales'] ?? [])->mapWithKeys(fn($d, $i) => [$i => ['nombre' => $d['nombre'], 'valor_rel' => '', 'valor_abs' => '']])),
+        indices: @js(collect($componente['propiedades']['indices'] ?? [])->mapWithKeys(fn($ind, $i) => [$i => ['nombre' => $ind['nombre'], 'resultado' => '', 'unidad' => $ind['unidad']]])),
         getLeucocitos() {
             if (this.indiceLeucocitos === null) return 0;
             const val = this.parametros[this.indiceLeucocitos]?.resultado;

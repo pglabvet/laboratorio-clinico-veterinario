@@ -127,7 +127,14 @@
             <h3 class="font-bold text-lg text-gray-800 dark:text-zinc-100 mb-4">Resultados Capturados</h3>
 
             @php
-                $plantilla = $analisis->tipoAnalisis->plantillas->first();
+                $plantilla = null;
+                if ($analisis->plantilla_formulario_id) {
+                    $plantilla = \App\Models\PlantillaFormulario::find($analisis->plantilla_formulario_id);
+                }
+                if (!$plantilla) {
+                    $plantilla = $analisis->tipoAnalisis->plantillas->firstWhere('activo', true)
+                        ?? $analisis->tipoAnalisis->plantillas->first();
+                }
                 $componentesPlantilla = $plantilla?->componentes ?? [];
             @endphp
 
