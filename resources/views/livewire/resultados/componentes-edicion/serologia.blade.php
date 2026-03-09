@@ -1,17 +1,17 @@
 {{-- Componente de edición: Serología --}}
 @php
     $campos = array_values(array_filter($componente['propiedades']['campos'] ?? [], fn($c) => !empty($c)));
+    $datosIniciales = [];
+    foreach ($campos as $i => $campo) {
+        $datosIniciales[$i] = ['campo' => $campo, 'valor' => ''];
+    }
 @endphp
 
 <div 
     wire:ignore
     x-data="{
         datosExistentes: @js($componentesData[$index]['data'] ?? []),
-        datos: {
-            @foreach($campos as $i => $campo)
-            {{ $i }}: { campo: '{{ addslashes($campo) }}', valor: '' }{{ $loop->last ? '' : ',' }}
-            @endforeach
-        },
+        datos: @js($datosIniciales),
         init() {
             let existentes = this.datosExistentes;
             if (existentes && !Array.isArray(existentes)) {
