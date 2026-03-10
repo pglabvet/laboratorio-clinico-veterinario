@@ -53,8 +53,9 @@ class AnalisisPdfService
         // Preparar datos para la vista
         $datos = $this->prepararDatos($analisis, $plantilla);
 
-        // Generar el PDF
-        $pdf = DomPDF::loadView('pdf.analisis', $datos);
+        // Generar el PDF (usa la plantilla configurada en .env: PDF_TEMPLATE)
+        $template = config('app.pdf_template', 'pdf');
+        $pdf = DomPDF::loadView($template.'.analisis', $datos);
 
         // Configurar PDF
         $pdf->setPaper('letter', 'portrait');

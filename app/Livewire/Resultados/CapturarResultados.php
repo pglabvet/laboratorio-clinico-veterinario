@@ -457,6 +457,7 @@ class CapturarResultados extends Component
                 }));
 
             case 'examen-microscopico':
+            case 'examen-diferencial':
                 // Filtrar filas que tengan resultado ingresado
                 return array_values(array_filter($data, function ($fila) {
                     return isset($fila['resultado']) && $fila['resultado'] !== '' && $fila['resultado'] !== null;

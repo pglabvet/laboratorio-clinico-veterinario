@@ -262,6 +262,65 @@
                                     </div>
                                 @endif
 
+                            @elseif($tipo === 'examen-diferencial')
+                                {{-- Examen Diferencial --}}
+                                @php
+                                    $filasValor = is_array($resultado->valor) ? $resultado->valor : [];
+                                    $filasPlantillaED = $propiedadesComponente['filas'] ?? [];
+                                    $filasPlantillaByNameED = collect($filasPlantillaED)->keyBy('nombre');
+
+                                    $generarTextoRangoED = function ($fila) {
+                                        $tipo = $fila['rango_tipo'] ?? 'min-max';
+                                        $unidad = $fila['unidad'] ?? '';
+                                        $sufijo = $unidad ? ' ' . $unidad : '';
+                                        return match($tipo) {
+                                            'min-max' => (!empty($fila['rango_min']) || !empty($fila['rango_max']))
+                                                ? ($fila['rango_min'] ?? '') . ' - ' . ($fila['rango_max'] ?? '') . $sufijo
+                                                : '',
+                                            'menor' => !empty($fila['rango_valor']) ? '< ' . $fila['rango_valor'] . $sufijo : '',
+                                            'menor-igual' => !empty($fila['rango_valor']) ? '<= ' . $fila['rango_valor'] . $sufijo : '',
+                                            'mayor' => !empty($fila['rango_valor']) ? '> ' . $fila['rango_valor'] . $sufijo : '',
+                                            'mayor-igual' => !empty($fila['rango_valor']) ? '>= ' . $fila['rango_valor'] . $sufijo : '',
+                                            default => '',
+                                        };
+                                    };
+
+                                    $tieneRangosED = collect($filasPlantillaED)->contains(function ($f) use ($generarTextoRangoED) {
+                                        return ($f['tipo_fila'] ?? '3col') === '3col' && $generarTextoRangoED($f) !== '';
+                                    });
+                                @endphp
+                                <table class="w-full text-sm">
+                                    <thead>
+                                        <tr class="bg-gray-50 dark:bg-zinc-800">
+                                            <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-left">{{ $propiedadesComponente['columna_analisis'] ?? 'ANÁLISIS' }}</th>
+                                            <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-center">{{ $propiedadesComponente['columna_resultado'] ?? 'RESULTADO' }}</th>
+                                            @if($tieneRangosED)
+                                            <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-center">{{ $propiedadesComponente['columna_rango'] ?? 'RANGO REF.' }}</th>
+                                            @endif
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($filasValor as $fila)
+                                        @php
+                                            $tipoFilaED = $fila['tipo_fila'] ?? '3col';
+                                            $filaTemplateED = $filasPlantillaByNameED->get($fila['nombre'] ?? '');
+                                            $rangoTextoED = $filaTemplateED ? $generarTextoRangoED($filaTemplateED) : '';
+                                        @endphp
+                                        <tr>
+                                            <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 font-semibold">{{ $fila['nombre'] ?? '' }}</td>
+                                            @if($tipoFilaED === '2col')
+                                                <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-center" {{ $tieneRangosED ? 'colspan=2' : '' }}>{{ $fila['resultado'] ?? '' }}</td>
+                                            @else
+                                                <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-center">{{ $fila['resultado'] ?? '' }}</td>
+                                                @if($tieneRangosED)
+                                                <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-center text-xs text-gray-500 dark:text-zinc-400">{{ $rangoTextoED }}</td>
+                                                @endif
+                                            @endif
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+
                             @else
                                 {{-- Otros tipos --}}
                                 <pre class="text-sm text-gray-900 dark:text-zinc-100 whitespace-pre-wrap">{{ json_encode($resultado->valor, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</pre>

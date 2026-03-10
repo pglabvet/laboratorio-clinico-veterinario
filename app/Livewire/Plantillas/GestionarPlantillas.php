@@ -52,6 +52,7 @@ class GestionarPlantillas extends Component
         // 'campo-imagenes' => 'Campo de Imagenes', // TODO: Deshabilitado temporalmente - Fase 2
         'campo-texto' => 'Campo de Texto Simple',
         'examen-microscopico' => 'Examen Microscópico',
+        'examen-diferencial' => 'Examen Diferencial',
     ];
 
     public function mount($plantilla = null)
@@ -339,6 +340,18 @@ class GestionarPlantillas extends Component
                     ['parametro' => 'HEMATIES', 'rango_referencia' => ''],
                     ['parametro' => 'FLORA BACTERIANA', 'rango_referencia' => ''],
                     ['parametro' => 'OTROS', 'rango_referencia' => ''],
+                ],
+            ],
+            'examen-diferencial' => [
+                'titulo' => 'EXAMEN DIFERENCIAL CELULAR',
+                'columna_analisis' => 'ANÁLISIS',
+                'columna_resultado' => 'RESULTADO',
+                'columna_rango' => 'RANGO REF.',
+                'filas' => [
+                    ['tipo_fila' => '3col', 'nombre' => 'LEUCOCITOS', 'rango_tipo' => 'menor', 'rango_min' => '', 'rango_max' => '', 'rango_valor' => '2000', 'unidad' => 'cel/mm3', 'opciones' => ''],
+                    ['tipo_fila' => '3col', 'nombre' => 'LEUCOCITOS MONOMORFONUCLEARES', 'rango_tipo' => 'min-max', 'rango_min' => '20', 'rango_max' => '30', 'rango_valor' => '', 'unidad' => '%', 'opciones' => ''],
+                    ['tipo_fila' => '3col', 'nombre' => 'LEUCOCITOS POLIMORFONUCLEARES', 'rango_tipo' => 'min-max', 'rango_min' => '60', 'rango_max' => '70', 'rango_valor' => '', 'unidad' => '%', 'opciones' => ''],
+                    ['tipo_fila' => '2col', 'nombre' => 'ERITROCITOS', 'rango_tipo' => 'min-max', 'rango_min' => '', 'rango_max' => '', 'rango_valor' => '', 'unidad' => '', 'opciones' => 'NINGUNO,ESCASO,MODERADO,ABUNDANTE'],
                 ],
             ],
             default => [],
