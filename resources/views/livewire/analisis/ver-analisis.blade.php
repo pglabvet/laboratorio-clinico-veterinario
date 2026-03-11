@@ -145,7 +145,7 @@
                 @endphp
                 <div class="mb-6 last:mb-0">
                     <h4 class="font-semibold text-gray-700 dark:text-zinc-300 mb-3 text-uppercase">
-                        {{ str_replace('-', ' ', str_replace('_', ' ', $tipo)) }}
+                        {{ $propiedadesComponente['titulo'] ?? str_replace('-', ' ', str_replace('_', ' ', $tipo)) }}
                     </h4>
 
                         <div class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 mb-3">
@@ -195,7 +195,27 @@
                                     @endif
                                 </div>
 
-                            @elseif($tipo === 'tabla-resultados' || $tipo === 'tabla-dos-columnas' || $tipo === 'campos-etiquetados' || $tipo === 'serologia')
+                            @elseif($tipo === 'campos-etiquetados')
+                                {{-- Campos Etiquetados --}}
+                                @php
+                                    $itemsCE = $resultado->valor['campos'] ?? [];
+                                @endphp
+                                <table class="w-full text-sm">
+                                    <tbody>
+                                        @foreach($itemsCE as $item)
+                                        <tr class="border-b border-gray-200 dark:border-zinc-700 last:border-0">
+                                            <td class="py-2 px-3 font-semibold bg-gray-50 dark:bg-zinc-800 w-1/3">
+                                                {{ $item['nombre'] ?? 'Campo' }}
+                                            </td>
+                                            <td class="py-2 px-3">
+                                                {{ $item['valor'] ?? '' }}
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+
+                            @elseif($tipo === 'tabla-resultados' || $tipo === 'tabla-dos-columnas' || $tipo === 'serologia')
                                 {{-- Tablas --}}
                                 <table class="w-full text-sm">
                                     <tbody>
@@ -219,25 +239,48 @@
                             @elseif($tipo === 'examen-microscopico')
                                 {{-- Examen Microscópico --}}
                                 @php
-                                    $tieneRangos = collect($resultado->valor)->contains(fn($f) => !empty($f['rango_referencia']));
+                                    $filasPlantillaEM = $propiedadesComponente['filas'] ?? [];
+                                    $filasPlantillaByNameEM = collect($filasPlantillaEM)->keyBy('parametro');
+
+                                    $generarTextoRangoEM = function ($fila) {
+                                        $tipo = $fila['rango_tipo'] ?? 'min-max';
+                                        $unidad = $fila['unidad'] ?? '';
+                                        $sufijo = $unidad ? ' ' . $unidad : '';
+                                        return match($tipo) {
+                                            'min-max' => (!empty($fila['rango_min']) || !empty($fila['rango_max']))
+                                                ? ($fila['rango_min'] ?? '') . ' - ' . ($fila['rango_max'] ?? '') . $sufijo
+                                                : '',
+                                            'menor' => !empty($fila['rango_valor']) ? '< ' . $fila['rango_valor'] . $sufijo : '',
+                                            'menor-igual' => !empty($fila['rango_valor']) ? '<= ' . $fila['rango_valor'] . $sufijo : '',
+                                            'mayor' => !empty($fila['rango_valor']) ? '> ' . $fila['rango_valor'] . $sufijo : '',
+                                            'mayor-igual' => !empty($fila['rango_valor']) ? '>= ' . $fila['rango_valor'] . $sufijo : '',
+                                            default => '',
+                                        };
+                                    };
+
+                                    $tieneRangosEM = collect($filasPlantillaEM)->contains(fn($f) => $generarTextoRangoEM($f) !== '');
                                 @endphp
                                 <table class="w-full text-sm">
                                     <thead>
                                         <tr class="bg-gray-50 dark:bg-zinc-800">
                                             <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-left">{{ $propiedadesComponente['columna_parametro'] ?? 'PARÁMETRO' }}</th>
                                             <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-center">{{ $propiedadesComponente['columna_resultado'] ?? 'RESULTADO' }}</th>
-                                            @if($tieneRangos)
+                                            @if($tieneRangosEM)
                                             <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-center">{{ $propiedadesComponente['columna_rango'] ?? 'RANGO REF.' }}</th>
                                             @endif
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @foreach($resultado->valor as $fila)
+                                        @php
+                                            $filaTemplateEM = $filasPlantillaByNameEM->get($fila['parametro'] ?? '');
+                                            $rangoTextoEM = $filaTemplateEM ? $generarTextoRangoEM($filaTemplateEM) : '';
+                                        @endphp
                                         <tr>
                                             <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 font-semibold">{{ $fila['parametro'] ?? '' }}</td>
                                             <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-center">{{ $fila['resultado'] ?? '' }}</td>
-                                            @if($tieneRangos)
-                                            <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-center text-xs text-gray-500 dark:text-zinc-400">{{ $fila['rango_referencia'] ?? '' }}</td>
+                                            @if($tieneRangosEM)
+                                            <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-center text-xs text-gray-500 dark:text-zinc-400">{{ $rangoTextoEM }}</td>
                                             @endif
                                         </tr>
                                         @endforeach
@@ -320,6 +363,86 @@
                                         @endforeach
                                     </tbody>
                                 </table>
+
+                            @elseif($tipo === 'coproparasitologia-seriado')
+                                {{-- Coproparasitología Seriado --}}
+                                @php
+                                    $numMuestrasVer = (int) ($propiedadesComponente['num_muestras'] ?? 3);
+                                    $mostrarFechaVer = $propiedadesComponente['mostrar_fecha'] ?? true;
+                                    $ordinalLabelsVer = ['1ra', '2da', '3ra', '4ta', '5ta', '6ta'];
+                                    $camposVer = $resultado->valor['campos'] ?? [];
+                                    $fechasVer = $resultado->valor['fechas'] ?? [];
+                                    if (!is_array($camposVer) || (count($camposVer) > 0 && !isset($camposVer[0]))) {
+                                        $camposVer = array_values($camposVer);
+                                    }
+                                    $camposVerByName = collect($camposVer)->keyBy('campo');
+                                @endphp
+                                <table class="w-full text-sm">
+                                    <thead>
+                                        <tr class="bg-gray-50 dark:bg-zinc-800">
+                                            <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-left"></th>
+                                            @for($mv = 0; $mv < $numMuestrasVer; $mv++)
+                                            <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-center">
+                                                {{ $ordinalLabelsVer[$mv] ?? ($mv + 1) . 'ta' }} MUESTRA
+                                                @if($mostrarFechaVer && !empty($fechasVer[$mv]))
+                                                <br><span class="text-xs font-normal text-gray-500 dark:text-zinc-400">{{ \Carbon\Carbon::parse($fechasVer[$mv])->format('d/m/Y') }}</span>
+                                                @endif
+                                            </th>
+                                            @endfor
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($propiedadesComponente['secciones'] ?? [] as $seccionVer)
+                                            @if($seccionVer['subtitulo'] ?? null)
+                                            <tr>
+                                                <td colspan="{{ $numMuestrasVer + 1 }}" class="bg-gray-100 dark:bg-zinc-800 border border-gray-300 dark:border-zinc-700 px-3 py-2 font-bold text-center">
+                                                    {{ $seccionVer['subtitulo'] }}
+                                                </td>
+                                            </tr>
+                                            @endif
+                                            @foreach($seccionVer['campos'] ?? [] as $campoVer)
+                                                @php
+                                                    $nombreVer = $campoVer['nombre'] ?? '';
+                                                    $datosVer = $camposVerByName->get($nombreVer);
+                                                    $valoresVer = $datosVer['valores'] ?? [];
+                                                    if (!is_array($valoresVer)) { $valoresVer = array_values((array) $valoresVer); }
+                                                @endphp
+                                                @if($nombreVer && collect($valoresVer)->contains(fn($v) => !empty($v)))
+                                                <tr>
+                                                    <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 font-semibold bg-gray-50 dark:bg-zinc-800">{{ $nombreVer }}</td>
+                                                    @for($mv = 0; $mv < $numMuestrasVer; $mv++)
+                                                    <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-center">{{ $valoresVer[$mv] ?? '' }}</td>
+                                                    @endfor
+                                                </tr>
+                                                @endif
+                                            @endforeach
+                                        @endforeach
+                                    </tbody>
+                                </table>
+
+                            @elseif($tipo === 'campo-texto')
+                                {{-- Campo de Texto / Nota Fija --}}
+                                @php
+                                    $tipoUsoCT = $propiedadesComponente['tipo_uso'] ?? 'editable';
+                                    $valorCT = '';
+                                    if ($tipoUsoCT === 'nota') {
+                                        $valorCT = $propiedadesComponente['contenido'] ?? '';
+                                    } else {
+                                        $val = $resultado->valor;
+                                        $valorCT = is_array($val) ? ($val['valor'] ?? '') : $val;
+                                    }
+                                @endphp
+                                @if(!empty($valorCT))
+                                    @if($tipoUsoCT === 'nota')
+                                        <div class="p-3 bg-amber-50 dark:bg-amber-900/20 rounded border border-amber-200 dark:border-amber-800">
+                                            <p class="text-sm text-amber-900 dark:text-amber-200 whitespace-pre-line">{{ $valorCT }}</p>
+                                        </div>
+                                    @else
+                                        <p class="text-sm text-gray-900 dark:text-zinc-100 whitespace-pre-line">{{ $valorCT }}</p>
+                                    @endif
+                                @else
+                                    <p class="text-sm text-gray-400 dark:text-zinc-500 italic">Sin valor</p>
+                                @endif
 
                             @else
                                 {{-- Otros tipos --}}

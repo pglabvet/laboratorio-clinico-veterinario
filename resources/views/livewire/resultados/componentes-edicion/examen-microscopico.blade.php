@@ -1,14 +1,48 @@
 {{-- Componente de edición: Examen Microscópico --}}
 @php
     $filas = $componente['propiedades']['filas'] ?? [];
-    $tieneRangos = collect($filas)->contains(fn($f) => !empty($f['rango_referencia']));
+
+    // Generar texto de rango desde datos estructurados
+    $generarTextoRango = function ($fila) {
+        $tipo = $fila['rango_tipo'] ?? 'min-max';
+        $unidad = $fila['unidad'] ?? '';
+        $sufijo = $unidad ? ' ' . $unidad : '';
+        return match($tipo) {
+            'min-max' => (!empty($fila['rango_min']) || !empty($fila['rango_max']))
+                ? ($fila['rango_min'] ?? '') . ' - ' . ($fila['rango_max'] ?? '') . $sufijo
+                : '',
+            'menor' => !empty($fila['rango_valor']) ? '< ' . $fila['rango_valor'] . $sufijo : '',
+            'menor-igual' => !empty($fila['rango_valor']) ? '<= ' . $fila['rango_valor'] . $sufijo : '',
+            'mayor' => !empty($fila['rango_valor']) ? '> ' . $fila['rango_valor'] . $sufijo : '',
+            'mayor-igual' => !empty($fila['rango_valor']) ? '>= ' . $fila['rango_valor'] . $sufijo : '',
+            default => '',
+        };
+    };
+
+    $tieneRangos = collect($filas)->contains(fn($f) => $generarTextoRango($f) !== '');
+
+    // Preparar datos iniciales para Alpine
+    $datosIniciales = [];
+    foreach ($filas as $i => $fila) {
+        if (!empty($fila['parametro'])) {
+            $datosIniciales[$i] = [
+                'parametro' => $fila['parametro'],
+                'resultado' => '',
+                'rango_tipo' => $fila['rango_tipo'] ?? 'min-max',
+                'rango_min' => $fila['rango_min'] ?? '',
+                'rango_max' => $fila['rango_max'] ?? '',
+                'rango_valor' => $fila['rango_valor'] ?? '',
+                'rango_display' => $generarTextoRango($fila),
+            ];
+        }
+    }
 @endphp
 
 <div 
     wire:ignore
     x-data="{
         datosExistentes: @js($componentesData[$index]['data'] ?? []),
-        filas: @js(collect($filas)->filter(fn($f) => !empty($f['parametro']))->mapWithKeys(fn($f, $i) => [$i => ['parametro' => $f['parametro'], 'resultado' => '', 'rango_referencia' => $f['rango_referencia'] ?? '']])),
+        filas: @js($datosIniciales),
         init() {
             // Convertir a array si es objeto
             let existentes = this.datosExistentes;
@@ -37,6 +71,28 @@
                     this.sincronizarConLivewire();
                 });
             });
+        },
+        esFueraDeRango(fila) {
+            if (!fila.resultado) return false;
+            const resultado = parseFloat(fila.resultado);
+            if (isNaN(resultado)) return false;
+            
+            const tipo = fila.rango_tipo || 'min-max';
+            if (tipo === 'min-max') {
+                const min = parseFloat(fila.rango_min);
+                const max = parseFloat(fila.rango_max);
+                if (isNaN(min) && isNaN(max)) return false;
+                if (!isNaN(min) && resultado < min) return true;
+                if (!isNaN(max) && resultado > max) return true;
+                return false;
+            }
+            const valor = parseFloat(fila.rango_valor);
+            if (isNaN(valor)) return false;
+            if (tipo === 'menor') return resultado >= valor;
+            if (tipo === 'menor-igual') return resultado > valor;
+            if (tipo === 'mayor') return resultado <= valor;
+            if (tipo === 'mayor-igual') return resultado < valor;
+            return false;
         },
         sincronizarConLivewire() {
             const data = Object.values(this.filas);
@@ -76,13 +132,14 @@
                             x-model="filas[{{ $i }}].resultado"
                             @change="sincronizarConLivewire()"
                             @blur="sincronizarConLivewire()"
+                            :class="esFueraDeRango(filas[{{ $i }}]) ? 'text-red-600 font-bold' : 'text-gray-900 dark:text-zinc-100'"
                             placeholder="Completar..."
-                            class="w-full px-2 py-1 text-center border-0 focus:ring-2 focus:ring-blue-500 rounded bg-transparent text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500"
+                            class="w-full px-2 py-1 text-center border-0 focus:ring-2 focus:ring-blue-500 rounded bg-transparent placeholder-gray-400 dark:placeholder-zinc-500"
                         />
                     </td>
                     @if($tieneRangos)
                     <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-center text-gray-500 dark:text-zinc-400 text-xs">
-                        {{ $fila['rango_referencia'] ?? '' }}
+                        {{ $generarTextoRango($fila) }}
                     </td>
                     @endif
                 </tr>

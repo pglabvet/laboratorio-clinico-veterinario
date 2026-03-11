@@ -53,6 +53,7 @@ class GestionarPlantillas extends Component
         'campo-texto' => 'Campo de Texto Simple',
         'examen-microscopico' => 'Examen Microscópico',
         'examen-diferencial' => 'Examen Diferencial',
+        'coproparasitologia-seriado' => 'Coproparasitología Seriado',
     ];
 
     public function mount($plantilla = null)
@@ -201,24 +202,24 @@ class GestionarPlantillas extends Component
             'tabla-hematologica' => [
                 'titulo' => 'CUADRO HEMÁTICO',
                 'parametros_principales' => [
-                    ['nombre' => 'Eritrocitos', 'unidad' => 'mm³', 'ref_min' => '5.500.000', 'ref_max' => '8.500.000'],
-                    ['nombre' => 'Leucocitos', 'unidad' => 'mm³', 'ref_min' => '6.000', 'ref_max' => '16.000'],
-                    ['nombre' => 'Hematocrito', 'unidad' => '%', 'ref_min' => '34', 'ref_max' => '37'],
-                    ['nombre' => 'Hemoglobina', 'unidad' => 'g/dl', 'ref_min' => '8', 'ref_max' => '11'],
-                    ['nombre' => 'Recuento de plaquetas', 'unidad' => 'mm³', 'ref_min' => '150.000', 'ref_max' => '500.000'],
+                    ['nombre' => 'Eritrocitos', 'unidad' => 'mm³', 'rango_tipo' => 'min-max', 'rango_min' => '5.500.000', 'rango_max' => '8.500.000', 'rango_valor' => ''],
+                    ['nombre' => 'Leucocitos', 'unidad' => 'mm³', 'rango_tipo' => 'min-max', 'rango_min' => '6.000', 'rango_max' => '16.000', 'rango_valor' => ''],
+                    ['nombre' => 'Hematocrito', 'unidad' => '%', 'rango_tipo' => 'min-max', 'rango_min' => '34', 'rango_max' => '37', 'rango_valor' => ''],
+                    ['nombre' => 'Hemoglobina', 'unidad' => 'g/dl', 'rango_tipo' => 'min-max', 'rango_min' => '8', 'rango_max' => '11', 'rango_valor' => ''],
+                    ['nombre' => 'Recuento de plaquetas', 'unidad' => 'mm³', 'rango_tipo' => 'min-max', 'rango_min' => '150.000', 'rango_max' => '500.000', 'rango_valor' => ''],
                 ],
                 'diferenciales' => [
-                    ['nombre' => 'Cayados', 'ref_rel_min' => '0', 'ref_rel_max' => '3', 'ref_abs_min' => '0', 'ref_abs_max' => '300'],
-                    ['nombre' => 'Segmentados', 'ref_rel_min' => '60', 'ref_rel_max' => '77', 'ref_abs_min' => '6000', 'ref_abs_max' => '7000'],
-                    ['nombre' => 'Eosinófilos', 'ref_rel_min' => '2', 'ref_rel_max' => '6', 'ref_abs_min' => '200', 'ref_abs_max' => '300'],
-                    ['nombre' => 'Basófilos', 'ref_rel_min' => '0', 'ref_rel_max' => '1', 'ref_abs_min' => '0', 'ref_abs_max' => '100'],
-                    ['nombre' => 'Linfocitos', 'ref_rel_min' => '12', 'ref_rel_max' => '30', 'ref_abs_min' => '1200', 'ref_abs_max' => '3000'],
-                    ['nombre' => 'Monocitos', 'ref_rel_min' => '3', 'ref_rel_max' => '8', 'ref_abs_min' => '300', 'ref_abs_max' => '800'],
+                    ['nombre' => 'Cayados', 'rango_rel_tipo' => 'min-max', 'rango_rel_min' => '0', 'rango_rel_max' => '3', 'rango_rel_valor' => '', 'rango_abs_tipo' => 'min-max', 'rango_abs_min' => '0', 'rango_abs_max' => '300', 'rango_abs_valor' => ''],
+                    ['nombre' => 'Segmentados', 'rango_rel_tipo' => 'min-max', 'rango_rel_min' => '60', 'rango_rel_max' => '77', 'rango_rel_valor' => '', 'rango_abs_tipo' => 'min-max', 'rango_abs_min' => '6000', 'rango_abs_max' => '7000', 'rango_abs_valor' => ''],
+                    ['nombre' => 'Eosinófilos', 'rango_rel_tipo' => 'min-max', 'rango_rel_min' => '2', 'rango_rel_max' => '6', 'rango_rel_valor' => '', 'rango_abs_tipo' => 'min-max', 'rango_abs_min' => '200', 'rango_abs_max' => '300', 'rango_abs_valor' => ''],
+                    ['nombre' => 'Basófilos', 'rango_rel_tipo' => 'min-max', 'rango_rel_min' => '0', 'rango_rel_max' => '1', 'rango_rel_valor' => '', 'rango_abs_tipo' => 'min-max', 'rango_abs_min' => '0', 'rango_abs_max' => '100', 'rango_abs_valor' => ''],
+                    ['nombre' => 'Linfocitos', 'rango_rel_tipo' => 'min-max', 'rango_rel_min' => '12', 'rango_rel_max' => '30', 'rango_rel_valor' => '', 'rango_abs_tipo' => 'min-max', 'rango_abs_min' => '1200', 'rango_abs_max' => '3000', 'rango_abs_valor' => ''],
+                    ['nombre' => 'Monocitos', 'rango_rel_tipo' => 'min-max', 'rango_rel_min' => '3', 'rango_rel_max' => '8', 'rango_rel_valor' => '', 'rango_abs_tipo' => 'min-max', 'rango_abs_min' => '300', 'rango_abs_max' => '800', 'rango_abs_valor' => ''],
                 ],
                 'indices' => [
-                    ['nombre' => 'VCM', 'unidad' => 'fl', 'referencia' => 'vn 60-77 fl'],
-                    ['nombre' => 'HbCM', 'unidad' => 'pg', 'referencia' => 'vn 17-23 pg'],
-                    ['nombre' => 'CCMHb', 'unidad' => 'g/dl', 'referencia' => 'Vn 32-36 g/dl'],
+                    ['nombre' => 'VCM', 'unidad' => 'fl', 'rango_tipo' => 'min-max', 'rango_min' => '60', 'rango_max' => '77', 'rango_valor' => ''],
+                    ['nombre' => 'HbCM', 'unidad' => 'pg', 'rango_tipo' => 'min-max', 'rango_min' => '17', 'rango_max' => '23', 'rango_valor' => ''],
+                    ['nombre' => 'CCMHb', 'unidad' => 'g/dl', 'rango_tipo' => 'min-max', 'rango_min' => '32', 'rango_max' => '36', 'rango_valor' => ''],
                 ],
             ],
             'tabla-dos-columnas' => [
@@ -226,11 +227,18 @@ class GestionarPlantillas extends Component
                 'secciones' => [
                     [
                         'subtitulo' => '',
-                        'campos' => ['COLOR', 'CONSISTENCIA', 'RESTOS ALIMENTICIOS'],
+                        'campos' => [
+                            ['nombre' => 'COLOR', 'tipo_input' => 'input', 'opciones' => ''],
+                            ['nombre' => 'CONSISTENCIA', 'tipo_input' => 'input', 'opciones' => ''],
+                            ['nombre' => 'RESTOS ALIMENTICIOS', 'tipo_input' => 'input', 'opciones' => ''],
+                        ],
                     ],
                     [
                         'subtitulo' => 'EXAMEN MICROSCOPICO',
-                        'campos' => ['LEVADURAS', 'PARASITOS'],
+                        'campos' => [
+                            ['nombre' => 'LEVADURAS', 'tipo_input' => 'input', 'opciones' => ''],
+                            ['nombre' => 'PARASITOS', 'tipo_input' => 'input', 'opciones' => ''],
+                        ],
                     ],
                 ],
             ],
@@ -275,9 +283,12 @@ class GestionarPlantillas extends Component
                 'cantidad' => 2,
             ],
             'campo-texto' => [
+                'titulo' => '',
                 'label' => 'Campo',
                 'placeholder' => '',
                 'tipo' => 'texto', // texto, numero, fecha
+                'tipo_uso' => 'editable', // editable, nota
+                'contenido' => '',
             ],
             'tabla-temporal' => [
                 'titulo' => 'ANÁLISIS TEMPORAL',
@@ -335,11 +346,11 @@ class GestionarPlantillas extends Component
                 'columna_resultado' => 'RESULTADO',
                 'columna_rango' => 'RANGO REF.',
                 'filas' => [
-                    ['parametro' => 'LEUCOCITOS', 'rango_referencia' => ''],
-                    ['parametro' => 'CEL EPITELIALES', 'rango_referencia' => ''],
-                    ['parametro' => 'HEMATIES', 'rango_referencia' => ''],
-                    ['parametro' => 'FLORA BACTERIANA', 'rango_referencia' => ''],
-                    ['parametro' => 'OTROS', 'rango_referencia' => ''],
+                    ['parametro' => 'LEUCOCITOS', 'rango_tipo' => 'min-max', 'rango_min' => '', 'rango_max' => '', 'rango_valor' => '', 'unidad' => ''],
+                    ['parametro' => 'CEL EPITELIALES', 'rango_tipo' => 'min-max', 'rango_min' => '', 'rango_max' => '', 'rango_valor' => '', 'unidad' => ''],
+                    ['parametro' => 'HEMATIES', 'rango_tipo' => 'min-max', 'rango_min' => '', 'rango_max' => '', 'rango_valor' => '', 'unidad' => ''],
+                    ['parametro' => 'FLORA BACTERIANA', 'rango_tipo' => 'min-max', 'rango_min' => '', 'rango_max' => '', 'rango_valor' => '', 'unidad' => ''],
+                    ['parametro' => 'OTROS', 'rango_tipo' => 'min-max', 'rango_min' => '', 'rango_max' => '', 'rango_valor' => '', 'unidad' => ''],
                 ],
             ],
             'examen-diferencial' => [
@@ -352,6 +363,28 @@ class GestionarPlantillas extends Component
                     ['tipo_fila' => '3col', 'nombre' => 'LEUCOCITOS MONOMORFONUCLEARES', 'rango_tipo' => 'min-max', 'rango_min' => '20', 'rango_max' => '30', 'rango_valor' => '', 'unidad' => '%', 'opciones' => ''],
                     ['tipo_fila' => '3col', 'nombre' => 'LEUCOCITOS POLIMORFONUCLEARES', 'rango_tipo' => 'min-max', 'rango_min' => '60', 'rango_max' => '70', 'rango_valor' => '', 'unidad' => '%', 'opciones' => ''],
                     ['tipo_fila' => '2col', 'nombre' => 'ERITROCITOS', 'rango_tipo' => 'min-max', 'rango_min' => '', 'rango_max' => '', 'rango_valor' => '', 'unidad' => '', 'opciones' => 'NINGUNO,ESCASO,MODERADO,ABUNDANTE'],
+                ],
+            ],
+            'coproparasitologia-seriado' => [
+                'titulo' => 'COPROPARASITOLOGÍA SERIADO',
+                'num_muestras' => 3,
+                'mostrar_fecha' => true,
+                'secciones' => [
+                    [
+                        'subtitulo' => '',
+                        'campos' => [
+                            ['nombre' => 'COLOR', 'tipo_input' => 'select', 'opciones' => 'Café,Amarillo,Verde,Rojo,Negro,Blanco'],
+                            ['nombre' => 'CONSISTENCIA', 'tipo_input' => 'select', 'opciones' => 'Duro,Blando,Semilíquido,Líquido,Pastoso'],
+                            ['nombre' => 'RESTOS ALIMENTICIOS', 'tipo_input' => 'input', 'opciones' => ''],
+                        ],
+                    ],
+                    [
+                        'subtitulo' => 'EXAMEN MICROSCOPICO',
+                        'campos' => [
+                            ['nombre' => 'LEVADURAS', 'tipo_input' => 'input', 'opciones' => ''],
+                            ['nombre' => 'PARASITOS', 'tipo_input' => 'input', 'opciones' => ''],
+                        ],
+                    ],
                 ],
             ],
             default => [],
