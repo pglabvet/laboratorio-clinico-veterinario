@@ -1,7 +1,25 @@
 <!-- Preview de Examen Microscópico -->
 @php
     $filas = $props['filas'] ?? [];
-    $tieneRangos = collect($filas)->contains(fn($f) => !empty($f['rango_referencia']));
+
+    // Generar texto de rango desde datos estructurados
+    $generarTextoRango = function ($fila) {
+        $tipo = $fila['rango_tipo'] ?? 'min-max';
+        $unidad = $fila['unidad'] ?? '';
+        $sufijo = $unidad ? ' ' . $unidad : '';
+        return match($tipo) {
+            'min-max' => (!empty($fila['rango_min']) || !empty($fila['rango_max']))
+                ? ($fila['rango_min'] ?? '') . ' - ' . ($fila['rango_max'] ?? '') . $sufijo
+                : '',
+            'menor' => !empty($fila['rango_valor']) ? '< ' . $fila['rango_valor'] . $sufijo : '',
+            'menor-igual' => !empty($fila['rango_valor']) ? '<= ' . $fila['rango_valor'] . $sufijo : '',
+            'mayor' => !empty($fila['rango_valor']) ? '> ' . $fila['rango_valor'] . $sufijo : '',
+            'mayor-igual' => !empty($fila['rango_valor']) ? '>= ' . $fila['rango_valor'] . $sufijo : '',
+            default => '',
+        };
+    };
+
+    $tieneRangos = collect($filas)->contains(fn($f) => $generarTextoRango($f) !== '');
 @endphp
 
 <div class="space-y-3 p-4 border border-gray-300 dark:border-zinc-700 rounded-lg bg-gray-50 dark:bg-zinc-900">
@@ -27,7 +45,7 @@
                     <td class="border border-gray-300 dark:border-zinc-600 px-3 py-2 font-semibold text-gray-700 dark:text-zinc-300">{{ $fila['parametro'] }}</td>
                     <td class="border border-gray-300 dark:border-zinc-600 px-3 py-2 text-center text-gray-400 dark:text-zinc-500 italic">(a completar)</td>
                     @if($tieneRangos)
-                    <td class="border border-gray-300 dark:border-zinc-600 px-3 py-2 text-center text-gray-500 dark:text-zinc-400 text-xs">{{ $fila['rango_referencia'] ?? '' }}</td>
+                    <td class="border border-gray-300 dark:border-zinc-600 px-3 py-2 text-center text-gray-500 dark:text-zinc-400 text-xs">{{ $generarTextoRango($fila) }}</td>
                     @endif
                 </tr>
                 @endif
