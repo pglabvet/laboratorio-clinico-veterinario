@@ -72,27 +72,35 @@
                 });
             });
         },
-        esFueraDeRango(fila) {
-            if (!fila.resultado) return false;
-            const resultado = parseFloat(fila.resultado);
-            if (isNaN(resultado)) return false;
-            
+        clasificarResultado(fila) {
+            if (!fila.resultado) return 'normal';
+            const res = parseFloat(fila.resultado);
+            if (isNaN(res)) return 'normal';
             const tipo = fila.rango_tipo || 'min-max';
             if (tipo === 'min-max') {
                 const min = parseFloat(fila.rango_min);
                 const max = parseFloat(fila.rango_max);
-                if (isNaN(min) && isNaN(max)) return false;
-                if (!isNaN(min) && resultado < min) return true;
-                if (!isNaN(max) && resultado > max) return true;
-                return false;
+                if (isNaN(min) && isNaN(max)) return 'normal';
+                const amplitud = (!isNaN(min) && !isNaN(max)) ? max - min : 0;
+                const umbral = amplitud * 0.15;
+                if (!isNaN(min) && res < min) return (amplitud > 0 && res >= min - umbral) ? 'alerta' : 'critico';
+                if (!isNaN(max) && res > max) return (amplitud > 0 && res <= max + umbral) ? 'alerta' : 'critico';
+                return 'normal';
             }
-            const valor = parseFloat(fila.rango_valor);
-            if (isNaN(valor)) return false;
-            if (tipo === 'menor') return resultado >= valor;
-            if (tipo === 'menor-igual') return resultado > valor;
-            if (tipo === 'mayor') return resultado <= valor;
-            if (tipo === 'mayor-igual') return resultado < valor;
-            return false;
+            const val = parseFloat(fila.rango_valor);
+            if (isNaN(val)) return 'normal';
+            const umbral = Math.abs(val) * 0.15;
+            if (tipo === 'menor' && res >= val) return res <= val + umbral ? 'alerta' : 'critico';
+            if (tipo === 'menor-igual' && res > val) return res <= val + umbral ? 'alerta' : 'critico';
+            if (tipo === 'mayor' && res <= val) return res >= val - umbral ? 'alerta' : 'critico';
+            if (tipo === 'mayor-igual' && res < val) return res >= val - umbral ? 'alerta' : 'critico';
+            return 'normal';
+        },
+        claseResultado(fila) {
+            const c = this.clasificarResultado(fila);
+            if (c === 'alerta') return 'text-blue-600 dark:text-blue-400 font-bold';
+            if (c === 'critico') return 'text-red-600 dark:text-red-400 font-bold';
+            return 'text-gray-900 dark:text-zinc-100';
         },
         sincronizarConLivewire() {
             const data = Object.values(this.filas);
@@ -132,7 +140,7 @@
                             x-model="filas[{{ $i }}].resultado"
                             @change="sincronizarConLivewire()"
                             @blur="sincronizarConLivewire()"
-                            :class="esFueraDeRango(filas[{{ $i }}]) ? 'text-red-600 font-bold' : 'text-gray-900 dark:text-zinc-100'"
+                            :class="claseResultado(filas[{{ $i }}])"
                             placeholder="Completar..."
                             class="w-full px-2 py-1 text-center border-0 focus:ring-2 focus:ring-blue-500 rounded bg-transparent placeholder-gray-400 dark:placeholder-zinc-500"
                         />

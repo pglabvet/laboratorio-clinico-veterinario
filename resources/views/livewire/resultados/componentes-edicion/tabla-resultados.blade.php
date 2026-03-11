@@ -89,6 +89,64 @@
             window.__labvetData = window.__labvetData || {};
             window.__labvetData['{{ $index }}'] = data;
             $wire.set('componentesData.{{ $index }}.data', data);
+        },
+        clasificarResultado(rowIndex) {
+            const resultado = this.datos[rowIndex]?.col_0;
+            if (!resultado && resultado !== 0) return 'normal';
+            const res = parseFloat(resultado);
+            if (isNaN(res)) return 'normal';
+            const fila = this.filas[rowIndex];
+            if (!fila) return 'normal';
+            const tipo = fila.rango_tipo || '';
+            if (!tipo) return 'normal';
+            if (tipo === 'multiple') {
+                const rangos = fila.rangos || [];
+                if (rangos.length === 0) return 'normal';
+                for (const r of rangos) {
+                    if (this.valorEnRango(res, r)) return r.es_normal ? 'normal' : 'alerta';
+                }
+                return 'critico';
+            }
+            return this.clasificarConRango(res, tipo, fila.rango_min, fila.rango_max, fila.rango_valor);
+        },
+        valorEnRango(res, rango) {
+            const t = rango.tipo || 'min-max';
+            if (t === 'min-max') {
+                const min = parseFloat(rango.min); const max = parseFloat(rango.max);
+                return (!isNaN(min) ? res >= min : true) && (!isNaN(max) ? res <= max : true);
+            }
+            const v = parseFloat(rango.valor);
+            if (isNaN(v)) return false;
+            if (t === 'menor') return res < v;
+            if (t === 'menor-igual') return res <= v;
+            if (t === 'mayor') return res > v;
+            if (t === 'mayor-igual') return res >= v;
+            return false;
+        },
+        clasificarConRango(res, tipo, rangoMin, rangoMax, rangoValor) {
+            if (tipo === 'min-max') {
+                const min = parseFloat(rangoMin); const max = parseFloat(rangoMax);
+                if (isNaN(min) && isNaN(max)) return 'normal';
+                const amplitud = (!isNaN(min) && !isNaN(max)) ? max - min : 0;
+                const umbral = amplitud * 0.15;
+                if (!isNaN(min) && res < min) return (amplitud > 0 && res >= min - umbral) ? 'alerta' : 'critico';
+                if (!isNaN(max) && res > max) return (amplitud > 0 && res <= max + umbral) ? 'alerta' : 'critico';
+                return 'normal';
+            }
+            const val = parseFloat(rangoValor);
+            if (isNaN(val)) return 'normal';
+            const umbral = Math.abs(val) * 0.15;
+            if (tipo === 'menor' && res >= val) return res <= val + umbral ? 'alerta' : 'critico';
+            if (tipo === 'menor-igual' && res > val) return res <= val + umbral ? 'alerta' : 'critico';
+            if (tipo === 'mayor' && res <= val) return res >= val - umbral ? 'alerta' : 'critico';
+            if (tipo === 'mayor-igual' && res < val) return res >= val - umbral ? 'alerta' : 'critico';
+            return 'normal';
+        },
+        claseResultado(rowIndex) {
+            const c = this.clasificarResultado(rowIndex);
+            if (c === 'alerta') return 'text-blue-600 dark:text-blue-400 font-bold';
+            if (c === 'critico') return 'text-red-600 dark:text-red-400 font-bold';
+            return 'text-gray-900 dark:text-zinc-100';
         }
     }"
     class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:bg-zinc-900">
@@ -136,7 +194,8 @@
                                 @change="sincronizarConLivewire()"
                                 @blur="sincronizarConLivewire()"
                                 placeholder="..."
-                                class="w-full px-2 py-1 border-0 focus:ring-2 focus:ring-blue-500 rounded bg-transparent text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500"
+                                :class="claseResultado({{ $rowIndex }})"
+                                class="w-full px-2 py-1 border-0 focus:ring-2 focus:ring-blue-500 rounded bg-transparent placeholder-gray-400 dark:placeholder-zinc-500"
                             />
                         @else
                             {{-- Segunda columna y siguientes: RANGOS DE REFERENCIA (solo lectura - texto estático) --}}
