@@ -42,25 +42,56 @@
         };
     };
 
-    // Verificar si un valor está fuera de rango según el tipo de rango estructurado
-    $verificarFueraDeRango = function ($valorStr, $template, $infijo = '') {
+    // Clasificar resultado según tipo de rango (normal, alerta, critico)
+    $clasificarResultado = function ($valorStr, $template, $infijo = '') {
         if ($valorStr === '' || $valorStr === null || !$template) {
-            return false;
+            return 'normal';
         }
         $resultadoNum = floatval(str_replace(',', '', $valorStr));
         $tipo = $template['rango_' . $infijo . 'tipo'] ?? 'min-max';
         $min = $template['rango_' . $infijo . 'min'] ?? $template['ref_' . $infijo . 'min'] ?? null;
         $max = $template['rango_' . $infijo . 'max'] ?? $template['ref_' . $infijo . 'max'] ?? null;
         $valor = $template['rango_' . $infijo . 'valor'] ?? null;
-        return match($tipo) {
-            'min-max' => ($min !== null && $min !== '' && $max !== null && $max !== '')
-                ? ($resultadoNum < floatval(str_replace(',', '', $min)) || $resultadoNum > floatval(str_replace(',', '', $max)))
-                : false,
-            'menor' => ($valor !== null && $valor !== '') ? $resultadoNum >= floatval(str_replace(',', '', $valor)) : false,
-            'menor-igual' => ($valor !== null && $valor !== '') ? $resultadoNum > floatval(str_replace(',', '', $valor)) : false,
-            'mayor' => ($valor !== null && $valor !== '') ? $resultadoNum <= floatval(str_replace(',', '', $valor)) : false,
-            'mayor-igual' => ($valor !== null && $valor !== '') ? $resultadoNum < floatval(str_replace(',', '', $valor)) : false,
+
+        if ($tipo === 'min-max') {
+            $minF = ($min !== null && $min !== '') ? floatval(str_replace(',', '', $min)) : null;
+            $maxF = ($max !== null && $max !== '') ? floatval(str_replace(',', '', $max)) : null;
+            if ($minF === null && $maxF === null) return 'normal';
+            $amplitud = ($minF !== null && $maxF !== null) ? $maxF - $minF : 0;
+            $umbral = $amplitud * 0.15;
+            if ($minF !== null && $resultadoNum < $minF) {
+                return ($amplitud > 0 && $resultadoNum >= $minF - $umbral) ? 'alerta' : 'critico';
+            }
+            if ($maxF !== null && $resultadoNum > $maxF) {
+                return ($amplitud > 0 && $resultadoNum <= $maxF + $umbral) ? 'alerta' : 'critico';
+            }
+            return 'normal';
+        }
+
+        if ($valor === null || $valor === '') return 'normal';
+        $valorF = floatval(str_replace(',', '', $valor));
+        $umbral = abs($valorF) * 0.15;
+        $fuera = match($tipo) {
+            'menor' => $resultadoNum >= $valorF,
+            'menor-igual' => $resultadoNum > $valorF,
+            'mayor' => $resultadoNum <= $valorF,
+            'mayor-igual' => $resultadoNum < $valorF,
             default => false,
+        };
+        if (!$fuera) return 'normal';
+        $dist = match($tipo) {
+            'menor', 'menor-igual' => $resultadoNum - $valorF,
+            'mayor', 'mayor-igual' => $valorF - $resultadoNum,
+            default => 0,
+        };
+        return $dist <= $umbral ? 'alerta' : 'critico';
+    };
+
+    $estiloClasificacion = function ($clasificacion) {
+        return match($clasificacion) {
+            'alerta' => ' color: #2563eb; font-weight: bold;',
+            'critico' => ' color: #dc2626; font-weight: bold;',
+            default => '',
         };
     };
 @endphp
@@ -101,10 +132,10 @@
                         foreach ($componente['propiedades']['parametros_principales'] ?? [] as $pt) {
                             if (($pt['nombre'] ?? '') === ($param['nombre'] ?? '')) { $paramTemplate = $pt; break; }
                         }
-                        $fueraRango = $verificarFueraDeRango($valorParam, $paramTemplate);
+                        $clasificacion = $clasificarResultado($valorParam, $paramTemplate);
                     @endphp
                     <td style="font-weight: bold;">{{ $param['nombre'] ?? '' }}</td>
-                    <td style="text-align: center;{{ $fueraRango ? ' color: #dc2626; font-weight: bold;' : '' }}">{{ $valorParam }}</td>
+                    <td style="text-align: center;{{ $estiloClasificacion($clasificacion) }}">{{ $valorParam }}</td>
                     <td style="text-align: center;">{{ $param['unidad'] ?? '' }}</td>
                     <td style="text-align: center; color: #718096;" colspan="2">
                         {{ $paramTemplate ? $generarTextoRango($paramTemplate) : '' }}
@@ -126,15 +157,15 @@
                             if (($dt['nombre'] ?? '') === ($dif['nombre'] ?? '')) { $difTemplate = $dt; break; }
                         }
                         
-                        $fueraRangoRel = $verificarFueraDeRango($valorRel, $difTemplate, 'rel_');
-                        $fueraRangoAbs = $verificarFueraDeRango($valorAbs, $difTemplate, 'abs_');
+                        $clasifRel = $clasificarResultado($valorRel, $difTemplate, 'rel_');
+                        $clasifAbs = $clasificarResultado($valorAbs, $difTemplate, 'abs_');
                     @endphp
                     <td style="font-weight: bold;">{{ $dif['nombre'] ?? '' }}</td>
-                    <td style="text-align: center;{{ $fueraRangoRel ? ' color: #dc2626; font-weight: bold;' : '' }}">{{ $valorRel !== '' && $valorRel !== null ? ($valorRel . ' %') : '' }}</td>
+                    <td style="text-align: center;{{ $estiloClasificacion($clasifRel) }}">{{ $valorRel !== '' && $valorRel !== null ? ($valorRel . ' %') : '' }}</td>
                     <td style="text-align: center; color: #718096;">
                         {{ $difTemplate ? $generarTextoRango($difTemplate, 'rel_') : '' }}
                     </td>
-                    <td style="text-align: center;{{ $fueraRangoAbs ? ' color: #dc2626; font-weight: bold;' : '' }}">{{ $valorAbs !== '' && $valorAbs !== null ? ($valorAbs . ' mm³') : '' }}</td>
+                    <td style="text-align: center;{{ $estiloClasificacion($clasifAbs) }}">{{ $valorAbs !== '' && $valorAbs !== null ? ($valorAbs . ' mm³') : '' }}</td>
                     <td style="text-align: center; color: #718096;">
                         {{ $difTemplate ? $generarTextoRango($difTemplate, 'abs_') : '' }}
                     </td>
@@ -157,7 +188,7 @@
                 foreach ($componente['propiedades']['indices'] ?? [] as $it) {
                     if (($it['nombre'] ?? '') === ($indice['nombre'] ?? '')) { $indiceTemplate = $it; break; }
                 }
-                $fueraRango = $verificarFueraDeRango($resultado, $indiceTemplate);
+                $clasifIndice = $clasificarResultado($resultado, $indiceTemplate);
 
                 // Generar texto de referencia con fallback a campo antiguo
                 $textoRef = $indiceTemplate ? $generarTextoRango($indiceTemplate) : '';
@@ -167,7 +198,7 @@
             @endphp
             <tr>
                 <td colspan="2" style="font-weight: bold;">{{ $indice['nombre'] ?? '' }}</td>
-                <td style="text-align: center;{{ $fueraRango ? ' color: #dc2626; font-weight: bold;' : '' }}">{{ $resultado }}</td>
+                <td style="text-align: center;{{ $estiloClasificacion($clasifIndice) }}">{{ $resultado }}</td>
                 <td>{{ $indice['unidad'] ?? '' }}</td>
                 <td colspan="6" style="color: #718096;">
                     {{ $textoRef }}

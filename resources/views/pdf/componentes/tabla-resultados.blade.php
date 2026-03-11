@@ -46,28 +46,49 @@
                             // Solo aplicar detección fuera de rango para rangos simples (una línea)
                             if (!$esMultiRango && $valor !== '') {
                                 $resultadoNum = floatval($valor);
-                                $fueraDeRango = false;
+                                $clasificacion = 'normal';
 
                                 if (preg_match('/(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)/', $rangoRef, $matches)) {
-                                    // Rango min - max (ej: "2.0 - 6.2", "100-200 ng/ml")
-                                    $fueraDeRango = $resultadoNum < floatval($matches[1]) || $resultadoNum > floatval($matches[2]);
+                                    $min = floatval($matches[1]);
+                                    $max = floatval($matches[2]);
+                                    $amplitud = $max - $min;
+                                    $umbral = $amplitud * 0.15;
+                                    if ($resultadoNum < $min) {
+                                        $clasificacion = ($amplitud > 0 && $resultadoNum >= $min - $umbral) ? 'alerta' : 'critico';
+                                    } elseif ($resultadoNum > $max) {
+                                        $clasificacion = ($amplitud > 0 && $resultadoNum <= $max + $umbral) ? 'alerta' : 'critico';
+                                    }
                                 } elseif (preg_match('/^[<≤]\s*=\s*(\d+(?:\.\d+)?)/', $rangoRef, $matches)) {
-                                    // <= o ≤ (ej: "<= 200 ng/ml")
-                                    $fueraDeRango = $resultadoNum > floatval($matches[1]);
+                                    $val = floatval($matches[1]);
+                                    $umbral = abs($val) * 0.15;
+                                    if ($resultadoNum > $val) {
+                                        $clasificacion = ($resultadoNum <= $val + $umbral) ? 'alerta' : 'critico';
+                                    }
                                 } elseif (preg_match('/^[<]\s*(\d+(?:\.\d+)?)/', $rangoRef, $matches)) {
-                                    // < (ej: "< 21 seg")
-                                    $fueraDeRango = $resultadoNum >= floatval($matches[1]);
+                                    $val = floatval($matches[1]);
+                                    $umbral = abs($val) * 0.15;
+                                    if ($resultadoNum >= $val) {
+                                        $clasificacion = ($resultadoNum <= $val + $umbral) ? 'alerta' : 'critico';
+                                    }
                                 } elseif (preg_match('/^[>≥]\s*=\s*(\d+(?:\.\d+)?)/', $rangoRef, $matches)) {
-                                    // >= o ≥ (ej: ">= 10")
-                                    $fueraDeRango = $resultadoNum < floatval($matches[1]);
+                                    $val = floatval($matches[1]);
+                                    $umbral = abs($val) * 0.15;
+                                    if ($resultadoNum < $val) {
+                                        $clasificacion = ($resultadoNum >= $val - $umbral) ? 'alerta' : 'critico';
+                                    }
                                 } elseif (preg_match('/^[>]\s*(\d+(?:\.\d+)?)/', $rangoRef, $matches)) {
-                                    // > (ej: "> 54 ug/dl")
-                                    $fueraDeRango = $resultadoNum <= floatval($matches[1]);
+                                    $val = floatval($matches[1]);
+                                    $umbral = abs($val) * 0.15;
+                                    if ($resultadoNum <= $val) {
+                                        $clasificacion = ($resultadoNum >= $val - $umbral) ? 'alerta' : 'critico';
+                                    }
                                 }
 
-                                if ($fueraDeRango) {
-                                    $estiloExtra = 'color: #dc2626; font-weight: bold;';
-                                }
+                                $estiloExtra = match($clasificacion) {
+                                    'alerta' => 'color: #2563eb; font-weight: bold;',
+                                    'critico' => 'color: #dc2626; font-weight: bold;',
+                                    default => '',
+                                };
                             } elseif ($esMultiRango && $valor !== '') {
                                 // Buscar datos estructurados de rangos desde la plantilla
                                 $templateFilas = $componente['propiedades']['filas'] ?? [];
@@ -100,7 +121,11 @@
                                             break;
                                         }
                                     }
-                                    if ($rangoEncontrado && !($rangoEncontrado['es_normal'] ?? false)) {
+                                    if ($rangoEncontrado) {
+                                        if (!($rangoEncontrado['es_normal'] ?? false)) {
+                                            $estiloExtra = 'color: #2563eb; font-weight: bold;';
+                                        }
+                                    } else {
                                         $estiloExtra = 'color: #dc2626; font-weight: bold;';
                                     }
                                 }

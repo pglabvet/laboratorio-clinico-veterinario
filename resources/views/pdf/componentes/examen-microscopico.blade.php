@@ -52,30 +52,50 @@
 
                 if ($filaTemplate) {
                     $rangoTexto = $generarTextoRango($filaTemplate);
-                    $resultadoNum = floatval($fila['resultado']);
-                    $rtipo = $filaTemplate['rango_tipo'] ?? 'min-max';
-                    $fueraDeRango = false;
+                    $clasificacion = 'normal';
 
                     if ($fila['resultado'] !== '' && is_numeric($fila['resultado'])) {
+                        $res = floatval($fila['resultado']);
+                        $rtipo = $filaTemplate['rango_tipo'] ?? 'min-max';
+
                         if ($rtipo === 'min-max') {
                             $min = is_numeric($filaTemplate['rango_min'] ?? '') ? floatval($filaTemplate['rango_min']) : null;
                             $max = is_numeric($filaTemplate['rango_max'] ?? '') ? floatval($filaTemplate['rango_max']) : null;
-                            if ($min !== null && $resultadoNum < $min) { $fueraDeRango = true; }
-                            if ($max !== null && $resultadoNum > $max) { $fueraDeRango = true; }
-                        } elseif ($rtipo === 'menor' && is_numeric($filaTemplate['rango_valor'] ?? '')) {
-                            $fueraDeRango = $resultadoNum >= floatval($filaTemplate['rango_valor']);
-                        } elseif ($rtipo === 'menor-igual' && is_numeric($filaTemplate['rango_valor'] ?? '')) {
-                            $fueraDeRango = $resultadoNum > floatval($filaTemplate['rango_valor']);
-                        } elseif ($rtipo === 'mayor' && is_numeric($filaTemplate['rango_valor'] ?? '')) {
-                            $fueraDeRango = $resultadoNum <= floatval($filaTemplate['rango_valor']);
-                        } elseif ($rtipo === 'mayor-igual' && is_numeric($filaTemplate['rango_valor'] ?? '')) {
-                            $fueraDeRango = $resultadoNum < floatval($filaTemplate['rango_valor']);
+                            if ($min !== null || $max !== null) {
+                                $amplitud = ($min !== null && $max !== null) ? $max - $min : 0;
+                                $umbral = $amplitud * 0.15;
+                                if ($min !== null && $res < $min) {
+                                    $clasificacion = ($amplitud > 0 && $res >= $min - $umbral) ? 'alerta' : 'critico';
+                                } elseif ($max !== null && $res > $max) {
+                                    $clasificacion = ($amplitud > 0 && $res <= $max + $umbral) ? 'alerta' : 'critico';
+                                }
+                            }
+                        } elseif (is_numeric($filaTemplate['rango_valor'] ?? '')) {
+                            $val = floatval($filaTemplate['rango_valor']);
+                            $umbral = abs($val) * 0.15;
+                            $fuera = match($rtipo) {
+                                'menor' => $res >= $val,
+                                'menor-igual' => $res > $val,
+                                'mayor' => $res <= $val,
+                                'mayor-igual' => $res < $val,
+                                default => false,
+                            };
+                            if ($fuera) {
+                                $dist = match($rtipo) {
+                                    'menor', 'menor-igual' => $res - $val,
+                                    'mayor', 'mayor-igual' => $val - $res,
+                                    default => 0,
+                                };
+                                $clasificacion = $dist <= $umbral ? 'alerta' : 'critico';
+                            }
                         }
                     }
 
-                    if ($fueraDeRango) {
-                        $estiloResultado = 'color: #dc2626; font-weight: bold;';
-                    }
+                    $estiloResultado = match($clasificacion) {
+                        'alerta' => 'color: #2563eb; font-weight: bold;',
+                        'critico' => 'color: #dc2626; font-weight: bold;',
+                        default => '',
+                    };
                 }
             @endphp
             <tr>

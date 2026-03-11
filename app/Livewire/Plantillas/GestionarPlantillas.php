@@ -202,11 +202,11 @@ class GestionarPlantillas extends Component
             'tabla-hematologica' => [
                 'titulo' => 'CUADRO HEMÁTICO',
                 'parametros_principales' => [
-                    ['nombre' => 'Eritrocitos', 'unidad' => 'mm³', 'rango_tipo' => 'min-max', 'rango_min' => '5.500.000', 'rango_max' => '8.500.000', 'rango_valor' => ''],
-                    ['nombre' => 'Leucocitos', 'unidad' => 'mm³', 'rango_tipo' => 'min-max', 'rango_min' => '6.000', 'rango_max' => '16.000', 'rango_valor' => ''],
+                    ['nombre' => 'Eritrocitos', 'unidad' => 'mm³', 'rango_tipo' => 'min-max', 'rango_min' => '5500000', 'rango_max' => '8500000', 'rango_valor' => ''],
+                    ['nombre' => 'Leucocitos', 'unidad' => 'mm³', 'rango_tipo' => 'min-max', 'rango_min' => '6000', 'rango_max' => '16000', 'rango_valor' => ''],
                     ['nombre' => 'Hematocrito', 'unidad' => '%', 'rango_tipo' => 'min-max', 'rango_min' => '34', 'rango_max' => '37', 'rango_valor' => ''],
                     ['nombre' => 'Hemoglobina', 'unidad' => 'g/dl', 'rango_tipo' => 'min-max', 'rango_min' => '8', 'rango_max' => '11', 'rango_valor' => ''],
-                    ['nombre' => 'Recuento de plaquetas', 'unidad' => 'mm³', 'rango_tipo' => 'min-max', 'rango_min' => '150.000', 'rango_max' => '500.000', 'rango_valor' => ''],
+                    ['nombre' => 'Recuento de plaquetas', 'unidad' => 'mm³', 'rango_tipo' => 'min-max', 'rango_min' => '150000', 'rango_max' => '500000', 'rango_valor' => ''],
                 ],
                 'diferenciales' => [
                     ['nombre' => 'Cayados', 'rango_rel_tipo' => 'min-max', 'rango_rel_min' => '0', 'rango_rel_max' => '3', 'rango_rel_valor' => '', 'rango_abs_tipo' => 'min-max', 'rango_abs_min' => '0', 'rango_abs_max' => '300', 'rango_abs_valor' => ''],
@@ -297,17 +297,26 @@ class GestionarPlantillas extends Component
                 'filas' => [
                     [
                         'analisis' => 'Cortisol basal 1ra',
-                        'rango_referencia' => '2.0 - 6.0',
+                        'rango_tipo' => 'min-max',
+                        'rango_min' => '2.0',
+                        'rango_max' => '6.0',
+                        'rango_valor' => '',
                         'unidad' => 'ug/dL',
                     ],
                     [
                         'analisis' => 'Cortisol basal 2ra',
-                        'rango_referencia' => '2.0 - 6.0',
+                        'rango_tipo' => 'min-max',
+                        'rango_min' => '2.0',
+                        'rango_max' => '6.0',
+                        'rango_valor' => '',
                         'unidad' => 'ug/dL',
                     ],
                     [
                         'analisis' => 'Cortisol basal 3ra',
-                        'rango_referencia' => '2.0 - 6.0',
+                        'rango_tipo' => 'min-max',
+                        'rango_min' => '2.0',
+                        'rango_max' => '6.0',
+                        'rango_valor' => '',
                         'unidad' => 'ug/dL',
                     ],
                 ],
