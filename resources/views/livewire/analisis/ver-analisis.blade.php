@@ -15,8 +15,8 @@
                 @if($analisis->estado === 'Aprobado')
                     {{-- Botón PDF para análisis aprobados --}}
                     @can('descargar-pdf-analisis')
-                    <flux:button href="{{ route('analisis.pdf', $analisis->id) }}" variant="primary" icon="document-arrow-down">
-                        Descargar PDF
+                    <flux:button href="{{ route('analisis.pdf', $analisis->id) }}" target="_blank" variant="primary" icon="eye">
+                        Ver PDF
                     </flux:button>
                     @endcan
                 @elseif($analisis->estado === 'En revision')

@@ -206,6 +206,6 @@ class AnalisisPdfService
     {
         $resultado = $this->generar($analisis);
 
-        return $resultado['pdf']->download($resultado['nombre']);
+        return $resultado['pdf']->stream($resultado['nombre']);
     }
 }

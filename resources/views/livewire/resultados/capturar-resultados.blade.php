@@ -165,8 +165,8 @@
                             <flux:button 
                                 wire:click="descargarPdf"
                                 variant="primary" 
-                                icon="document-arrow-down">
-                                Descargar PDF
+                                icon="eye">
+                                Ver PDF
                             </flux:button>
                             @endcan
                         @else

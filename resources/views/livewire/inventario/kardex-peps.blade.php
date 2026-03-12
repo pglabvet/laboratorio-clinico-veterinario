@@ -344,7 +344,7 @@
                 </div>
             @endif
         </div>
-    @elseif($sucursal_id && ($insumo_id || $filtro_categoria))
+    @elseif($sucursal_id)
         <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700 p-12 text-center">
             <div class="flex flex-col items-center justify-center text-neutral-500 dark:text-neutral-400">
                 <flux:icon.document-text class="mb-3 size-16" />
@@ -356,8 +356,8 @@
         <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700 p-12 text-center">
             <div class="flex flex-col items-center justify-center text-neutral-500 dark:text-neutral-400">
                 <flux:icon.funnel class="mb-3 size-16" />
-                <p class="text-lg font-medium">Seleccione los filtros</p>
-                <p class="text-sm mt-1">Escoja una sucursal y un insumo (o categoría) para generar el Kardex PEPS</p>
+                <p class="text-lg font-medium">Seleccione una sucursal</p>
+                <p class="text-sm mt-1">Escoja una sucursal para generar el Kardex PEPS. Opcionalmente filtre por categoría o insumo específico</p>
             </div>
         </div>
     @endif
