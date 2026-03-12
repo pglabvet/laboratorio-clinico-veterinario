@@ -72,28 +72,55 @@
                     </div>
 
 
-                    <!-- Rangos de referencia y unidad -->
-                    <div class="grid grid-cols-2 gap-2 items-end">
+                    <!-- Tipo de rango de referencia -->
+                    @php $rangoTipo = $fila['rango_tipo'] ?? 'min-max'; @endphp
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 dark:text-zinc-400 mb-1">Tipo de Rango</label>
+                        <select
+                            wire:model.live="componentes.{{ $indiceComponente }}.propiedades.filas.{{ $filaIndex }}.rango_tipo"
+                            class="w-full px-2 py-1 border border-gray-300 dark:border-zinc-700 rounded text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
+                            <option value="min-max">Rango (min - max)</option>
+                            <option value="menor">Menor que (&lt;)</option>
+                            <option value="menor-igual">Menor o igual (&le;)</option>
+                            <option value="mayor">Mayor que (&gt;)</option>
+                            <option value="mayor-igual">Mayor o igual (&ge;)</option>
+                        </select>
+                    </div>
+
+                    @if($rangoTipo === 'min-max')
+                    <div class="grid grid-cols-2 gap-2">
                         <div>
-                            <label class="block text-xs font-medium text-gray-600 dark:text-zinc-400 mb-1">
-                                Rango de Referencia
-                            </label>
-                            <input 
-                                type="text"
-                                wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.filas.{{ $filaIndex }}.rango_referencia"
-                                placeholder="Ej: 2.0 - 6.0"
+                            <label class="block text-xs font-medium text-gray-600 dark:text-zinc-400 mb-1">Mínimo</label>
+                            <input type="text"
+                                wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.filas.{{ $filaIndex }}.rango_min"
+                                placeholder="Ej: 2.0"
                                 class="w-full px-2 py-1 border border-gray-300 dark:border-zinc-700 rounded text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-gray-600 dark:text-zinc-400 mb-1">
-                                Unidad
-                            </label>
-                            <input 
-                                type="text"
-                                wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.filas.{{ $filaIndex }}.unidad"
-                                placeholder="Ej: ug/dL"
+                            <label class="block text-xs font-medium text-gray-600 dark:text-zinc-400 mb-1">Máximo</label>
+                            <input type="text"
+                                wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.filas.{{ $filaIndex }}.rango_max"
+                                placeholder="Ej: 6.0"
                                 class="w-full px-2 py-1 border border-gray-300 dark:border-zinc-700 rounded text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
                         </div>
+                    </div>
+                    @elseif(in_array($rangoTipo, ['menor', 'menor-igual', 'mayor', 'mayor-igual']))
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 dark:text-zinc-400 mb-1">Valor</label>
+                        <input type="text"
+                            wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.filas.{{ $filaIndex }}.rango_valor"
+                            placeholder="Ej: 6.0"
+                            class="w-full px-2 py-1 border border-gray-300 dark:border-zinc-700 rounded text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
+                    </div>
+                    @endif
+
+                    <!-- Unidad -->
+                    <div>
+                        <label class="block text-xs font-medium text-gray-600 dark:text-zinc-400 mb-1">Unidad</label>
+                        <input type="text"
+                            wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.filas.{{ $filaIndex }}.unidad"
+                            placeholder="Ej: ug/dL"
+                            class="w-full px-2 py-1 border border-gray-300 dark:border-zinc-700 rounded text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
                     </div>
                 </div>
             </div>
@@ -101,7 +128,7 @@
         </div>
 
         <flux:button 
-            wire:click="$set('componentes.{{ $indiceComponente }}.propiedades.filas', {{ json_encode(array_merge($props['filas'] ?? [], [['analisis' => '', 'rango_referencia' => '', 'unidad' => '']])) }})"
+            wire:click="$set('componentes.{{ $indiceComponente }}.propiedades.filas', {{ json_encode(array_merge($props['filas'] ?? [], [['analisis' => '', 'rango_tipo' => 'min-max', 'rango_min' => '', 'rango_max' => '', 'rango_valor' => '', 'unidad' => '']])) }})"
             variant="primary" 
             icon="plus" 
             class="w-full mt-3">

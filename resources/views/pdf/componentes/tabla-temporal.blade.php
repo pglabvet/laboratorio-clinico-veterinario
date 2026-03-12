@@ -1,4 +1,63 @@
 {{-- Componente PDF: Tabla Temporal con Gráfica --}}
+@php
+    $generarTextoRango = function ($fila) {
+        $tipo = $fila['rango_tipo'] ?? 'min-max';
+        $unidad = $fila['unidad'] ?? '';
+        $sufijo = $unidad ? " $unidad" : '';
+        return match($tipo) {
+            'min-max' => (!empty($fila['rango_min']) || !empty($fila['rango_max']))
+                ? ($fila['rango_min'] ?? '') . ' - ' . ($fila['rango_max'] ?? '') . $sufijo
+                : '',
+            'menor' => !empty($fila['rango_valor']) ? '< ' . $fila['rango_valor'] . $sufijo : '',
+            'menor-igual' => !empty($fila['rango_valor']) ? '<= ' . $fila['rango_valor'] . $sufijo : '',
+            'mayor' => !empty($fila['rango_valor']) ? '> ' . $fila['rango_valor'] . $sufijo : '',
+            'mayor-igual' => !empty($fila['rango_valor']) ? '>= ' . $fila['rango_valor'] . $sufijo : '',
+            default => '',
+        };
+    };
+
+    $clasificarResultado = function ($resultadoNumerico, $fila) {
+        $tipo = $fila['rango_tipo'] ?? '';
+        if (!$tipo) return 'normal';
+
+        if ($tipo === 'min-max') {
+            if (empty($fila['rango_min']) && empty($fila['rango_max'])) return 'normal';
+            $min = !empty($fila['rango_min']) ? floatval($fila['rango_min']) : null;
+            $max = !empty($fila['rango_max']) ? floatval($fila['rango_max']) : null;
+            $amplitud = ($min !== null && $max !== null) ? $max - $min : 0;
+            $umbral = $amplitud * 0.15;
+            if ($min !== null && $resultadoNumerico < $min) {
+                return ($amplitud > 0 && $resultadoNumerico >= $min - $umbral) ? 'alerta' : 'critico';
+            }
+            if ($max !== null && $resultadoNumerico > $max) {
+                return ($amplitud > 0 && $resultadoNumerico <= $max + $umbral) ? 'alerta' : 'critico';
+            }
+            return 'normal';
+        }
+
+        if (empty($fila['rango_valor'])) return 'normal';
+        $val = floatval($fila['rango_valor']);
+        $umbral = abs($val) * 0.15;
+        $fuera = match($tipo) {
+            'menor' => $resultadoNumerico >= $val,
+            'menor-igual' => $resultadoNumerico > $val,
+            'mayor' => $resultadoNumerico <= $val,
+            'mayor-igual' => $resultadoNumerico < $val,
+            default => false,
+        };
+        if (!$fuera) return 'normal';
+        $dist = match($tipo) {
+            'menor', 'menor-igual' => $resultadoNumerico - $val,
+            'mayor', 'mayor-igual' => $val - $resultadoNumerico,
+            default => 0,
+        };
+        return $dist <= $umbral ? 'alerta' : 'critico';
+    };
+
+    // Mapear filas de la plantilla por índice para acceso rápido
+    $filasPlantilla = $componente['propiedades']['filas'] ?? [];
+@endphp
+
 @if(isset($componente['propiedades']['titulo']))
     <div class="component-title">{{ $componente['propiedades']['titulo'] }}</div>
 @endif
@@ -14,23 +73,24 @@
         </tr>
     </thead>
     <tbody>
-        @foreach($resultado as $fila)
+        @foreach($resultado as $filaIdx => $fila)
             @if(is_array($fila))
             @php
-                // Determinar si el resultado está fuera de rango
-                $fueraDeRango = false;
+                // Obtener la fila de la plantilla para los datos de rango estructurados
+                $filaTemplate = $filasPlantilla[$filaIdx] ?? [];
+                $clasificacion = 'normal';
                 $resultadoNumerico = isset($fila['resultado']) ? floatval($fila['resultado']) : null;
                 
-                if ($resultadoNumerico !== null && isset($fila['rango_referencia'])) {
-                    $rango = $fila['rango_referencia'];
-                    preg_match('/(\d+\.?\d*)\s*-\s*(\d+\.?\d*)/', $rango, $matches);
-                    
-                    if (count($matches) >= 3) {
-                        $min = floatval($matches[1]);
-                        $max = floatval($matches[2]);
-                        $fueraDeRango = ($resultadoNumerico < $min || $resultadoNumerico > $max);
-                    }
+                if ($resultadoNumerico !== null) {
+                    $clasificacion = $clasificarResultado($resultadoNumerico, $filaTemplate);
                 }
+
+                $rangoTexto = $generarTextoRango($filaTemplate);
+                $estiloResultado = match($clasificacion) {
+                    'alerta' => 'color: #2563eb;',
+                    'critico' => 'color: #dc2626;',
+                    default => '',
+                };
             @endphp
             <tr>
                 <td style="font-weight: bold;">
@@ -39,14 +99,11 @@
                 <td style="text-align: center;">
                     {{ $fila['hora'] ?? '' }}
                 </td>
-                <td style="text-align: center; font-weight: bold; {{ $fueraDeRango ? 'color: #dc2626;' : '' }}">
+                <td style="text-align: center; font-weight: bold; {{ $estiloResultado }}">
                     {{ $fila['resultado'] ?? 'N/A' }}
                 </td>
                 <td style="text-align: center;">
-                    {{ $fila['rango_referencia'] ?? '' }}
-                    @if(!empty($fila['unidad']))
-                        <span style="margin-left: 8px; color: #718096;">{{ $fila['unidad'] }}</span>
-                    @endif
+                    {{ $rangoTexto }}
                 </td>
             </tr>
             @endif

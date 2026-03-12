@@ -1,4 +1,4 @@
-﻿<!-- Propiedades de Tabla de Dos Columnas -->
+<!-- Propiedades de Coproparasitología Seriado -->
 <div class="space-y-4">
     <!-- Título principal -->
     <div>
@@ -6,14 +6,38 @@
         <input 
             type="text" 
             wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.titulo"
-            placeholder="Ej: EXAMEN MACROSCOPICO"
+            placeholder="Ej: COPROPARASITOLOGÍA SERIADO"
             class="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
+    </div>
+
+    <!-- Número de muestras -->
+    <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">Número de Muestras</label>
+        <select
+            wire:model.live="componentes.{{ $indiceComponente }}.propiedades.num_muestras"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
+            @for($i = 1; $i <= 6; $i++)
+            <option value="{{ $i }}">{{ $i }} {{ $i === 1 ? 'muestra' : 'muestras' }}</option>
+            @endfor
+        </select>
+    </div>
+
+    <!-- Mostrar fecha por muestra -->
+    <div class="flex items-center gap-2">
+        <input 
+            type="checkbox"
+            wire:model.live="componentes.{{ $indiceComponente }}.propiedades.mostrar_fecha"
+            id="mostrar_fecha_{{ $indiceComponente }}"
+            class="rounded border-gray-300 dark:border-zinc-700 text-blue-600">
+        <label for="mostrar_fecha_{{ $indiceComponente }}" class="text-sm text-gray-700 dark:text-zinc-300">
+            Permitir fecha por cada muestra
+        </label>
     </div>
 
     <!-- Secciones -->
     <div>
-        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">Secciones</label>
-        <p class="text-xs text-gray-500 dark:text-zinc-400 mb-3">Define las secciones de la tabla. Cada sección puede tener un subtítulo opcional y múltiples campos.</p>
+        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">Secciones y Campos</label>
+        <p class="text-xs text-gray-500 dark:text-zinc-400 mb-3">Define las secciones. Cada campo tendrá una columna por muestra.</p>
         
         <div class="space-y-4 max-h-96 overflow-y-auto">
             @foreach($props['secciones'] ?? [] as $secIndex => $seccion)
@@ -99,9 +123,10 @@
             <i class="fas fa-info-circle mr-1"></i> ¿Cómo funciona este componente?
         </p>
         <ul class="text-xs text-blue-700 dark:text-blue-300 space-y-1 ml-4 list-disc">
-            <li>Crea una tabla de <strong>2 columnas</strong>: la izquierda muestra el nombre del campo (fijo) y la derecha es donde el bioquímico escribe el resultado.</li>
-            <li>Puedes organizarla en <strong>secciones</strong> con subtítulos opcionales.</li>
-            <li>Cada campo puede ser de <strong>texto libre</strong> (el bioquímico escribe lo que quiera) o <strong>seleccionable</strong> (elige entre opciones predefinidas separadas por coma).</li>
+            <li>Crea una tabla con <strong>una columna por muestra</strong>: la primera columna es el campo y las siguientes son para cada muestra.</li>
+            <li>El bioquímico llena el resultado de cada campo <strong>para cada muestra</strong> por separado.</li>
+            <li>Opcionalmente cada muestra puede tener su propia <strong>fecha</strong> en el encabezado.</li>
+            <li>Los campos pueden ser de <strong>texto libre</strong> o <strong>seleccionable</strong> (opciones predefinidas).</li>
         </ul>
     </div>
 </div>

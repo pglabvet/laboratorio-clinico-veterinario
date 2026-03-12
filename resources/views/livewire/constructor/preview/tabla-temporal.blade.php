@@ -1,4 +1,21 @@
 <!-- Preview de Tabla Temporal con Gráfica -->
+@php
+    $generarTextoRango = function ($fila) {
+        $tipo = $fila['rango_tipo'] ?? 'min-max';
+        $unidad = $fila['unidad'] ?? '';
+        $sufijo = $unidad ? " $unidad" : '';
+        return match($tipo) {
+            'min-max' => (!empty($fila['rango_min']) || !empty($fila['rango_max']))
+                ? ($fila['rango_min'] ?? '') . ' - ' . ($fila['rango_max'] ?? '') . $sufijo
+                : '',
+            'menor' => !empty($fila['rango_valor']) ? '< ' . $fila['rango_valor'] . $sufijo : '',
+            'menor-igual' => !empty($fila['rango_valor']) ? '<= ' . $fila['rango_valor'] . $sufijo : '',
+            'mayor' => !empty($fila['rango_valor']) ? '> ' . $fila['rango_valor'] . $sufijo : '',
+            'mayor-igual' => !empty($fila['rango_valor']) ? '>= ' . $fila['rango_valor'] . $sufijo : '',
+            default => '',
+        };
+    };
+@endphp
 <div class="border border-gray-300 dark:border-zinc-700 rounded-lg overflow-hidden">
     @if(isset($props['titulo']))
     <div class="bg-white dark:bg-zinc-800 border-b border-gray-300 dark:border-zinc-700">
@@ -36,10 +53,8 @@
                     
                     <!-- Rangos de referencia (admin) -->
                     <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-900 dark:text-zinc-100 text-center">
-                        {{ $fila['rango_referencia'] ?: 'Sin rango' }}
-                        @if(!empty($fila['unidad']))
-                            <span class="text-gray-500 dark:text-zinc-500 ml-2">{{ $fila['unidad'] }}</span>
-                        @endif
+                        @php $rangoTexto = $generarTextoRango($fila); @endphp
+                        {{ $rangoTexto ?: 'Sin rango' }}
                     </td>
                 </tr>
                 @endforeach

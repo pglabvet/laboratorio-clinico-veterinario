@@ -444,9 +444,27 @@ class CapturarResultados extends Component
                     return ! empty($item);
                 }));
 
+            case 'campos-etiquetados':
+                // Estructura: {titulo, campos: [{nombre, valor}, ...]}
+                if (isset($data['campos']) && is_array($data['campos'])) {
+                    $data['campos'] = array_values(array_filter($data['campos'], function ($item) {
+                        return is_array($item) && (! empty($item['valor']) || ! empty($item['resultado']));
+                    }));
+
+                    return (! empty($data['campos']) || ! empty($data['titulo'])) ? $data : null;
+                }
+
+                // Fallback: array plano
+                return array_values(array_filter($data, function ($item) {
+                    if (is_array($item)) {
+                        return ! empty($item['valor']) || ! empty($item['resultado']);
+                    }
+
+                    return ! empty($item);
+                }));
+
             case 'tabla-dos-columnas':
             case 'serologia':
-            case 'campos-etiquetados':
                 // Filtrar campos con valor vacío y re-indexar para mantener array JSON válido
                 return array_values(array_filter($data, function ($item) {
                     if (is_array($item)) {
@@ -503,6 +521,29 @@ class CapturarResultados extends Component
                 return array_values(array_filter($data, function ($campo) {
                     return isset($campo['valor']) && $campo['valor'] !== '' && $campo['valor'] !== null;
                 }));
+
+            case 'coproparasitologia-seriado':
+                // Data structure: { campos: [...], fechas: [...] }
+                // Filter campos that have at least one non-empty value in valores array
+                if (! isset($data['campos']) || ! is_array($data['campos'])) {
+                    return null;
+                }
+                $camposFiltrados = array_values(array_filter($data['campos'], function ($campo) {
+                    $valores = $campo['valores'] ?? [];
+                    if (! is_array($valores)) {
+                        $valores = array_values((array) $valores);
+                    }
+
+                    return collect($valores)->contains(fn ($v) => ! empty($v));
+                }));
+                if (empty($camposFiltrados)) {
+                    return null;
+                }
+
+                return [
+                    'campos' => $camposFiltrados,
+                    'fechas' => $data['fechas'] ?? [],
+                ];
 
             default:
                 return $data;

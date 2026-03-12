@@ -1,4 +1,7 @@
-<div class="min-h-screen bg-gray-50 dark:bg-zinc-800" x-data="gestorDescargaPDF()">
+<div class="min-h-screen bg-gray-50 dark:bg-zinc-800" 
+    x-data="gestorDescargaPDF()"
+    @keydown.ctrl.s.prevent.window="if (!{{ json_encode($modoRevision) }}) { window.__labvetData = {}; window.dispatchEvent(new Event('antes-de-guardar')); $wire.guardarBorrador(window.__labvetData); }"
+    @keydown.ctrl.enter.prevent.window="if (!{{ json_encode($modoRevision) }}) { window.__labvetData = {}; window.dispatchEvent(new Event('antes-de-guardar')); $wire.finalizarYEnviar(window.__labvetData); }">
     <div class="container mx-auto px-4 py-6">
         {{-- Header con info del análisis --}}
         <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-md p-6 mb-6">
@@ -126,15 +129,39 @@
             @endif
 
             {{-- Renderizado dinámico de componentes desde JSON --}}
-            <div class="space-y-6">
+            <div class="space-y-4">
                 @foreach($plantilla->componentes as $index => $componente)
                     @if(view()->exists('livewire.resultados.componentes-edicion.' . $componente['tipo']))
-                        @include('livewire.resultados.componentes-edicion.' . $componente['tipo'], [
-                            'componente' => $componente,
-                            'index' => $index,
-                            'componentesData' => $componentesData,
-                            'analisis' => $analisis
-                        ])
+                        @if($componente['tipo'] === 'subtitulo')
+                            {{-- Subtítulo no se colapsa --}}
+                            @include('livewire.resultados.componentes-edicion.' . $componente['tipo'], [
+                                'componente' => $componente,
+                                'index' => $index,
+                                'componentesData' => $componentesData,
+                                'analisis' => $analisis
+                            ])
+                        @else
+                        <div x-data="{ abierto: true }">
+                            {{-- Barra colapsable --}}
+                            <button type="button" @click="abierto = !abierto" class="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors" :class="abierto ? 'rounded-b-none border-b-0' : ''">
+                                <span class="font-semibold text-gray-700 dark:text-zinc-300 text-sm uppercase tracking-wide">
+                                    {{ $componente['propiedades']['titulo'] ?? str_replace('-', ' ', $componente['tipo']) }}
+                                </span>
+                                <svg :class="{ 'rotate-180': abierto }" class="w-4 h-4 text-gray-500 dark:text-zinc-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                            {{-- Contenido colapsable --}}
+                            <div x-show="abierto" x-collapse>
+                                @include('livewire.resultados.componentes-edicion.' . $componente['tipo'], [
+                                    'componente' => $componente,
+                                    'index' => $index,
+                                    'componentesData' => $componentesData,
+                                    'analisis' => $analisis
+                                ])
+                            </div>
+                        </div>
+                        @endif
                     @else
                         <div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                             <p class="text-sm text-yellow-800 dark:text-yellow-300">
@@ -206,7 +233,8 @@
                     </div>
                 @else
                     {{-- Botones normales de captura --}}
-                    <div class="flex gap-3">
+                    <div class="flex gap-3 items-center">
+                        <span class="text-xs text-gray-400 dark:text-zinc-500 hidden md:inline"><kbd class="px-1.5 py-0.5 bg-gray-100 dark:bg-zinc-700 rounded text-gray-500 dark:text-zinc-400 font-mono">Ctrl+S</kbd> borrador · <kbd class="px-1.5 py-0.5 bg-gray-100 dark:bg-zinc-700 rounded text-gray-500 dark:text-zinc-400 font-mono">Ctrl+Enter</kbd> enviar</span>
                         @can('guardar-borrador-resultados')
                         <flux:button 
                             @click="window.__labvetData = {}; window.dispatchEvent(new Event('antes-de-guardar')); $wire.guardarBorrador(window.__labvetData)"

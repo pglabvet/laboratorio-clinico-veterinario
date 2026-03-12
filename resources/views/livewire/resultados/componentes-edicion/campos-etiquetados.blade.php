@@ -3,12 +3,22 @@
     wire:ignore
     x-data="{
         datosExistentes: @js($componentesData[$index]['data'] ?? []),
+        titulo: @js($componente['propiedades']['titulo'] ?? ''),
         campos: @js(collect($componente['propiedades']['campos'] ?? [])->filter()->mapWithKeys(fn($campo, $i) => [$i => ['nombre' => $campo, 'valor' => '']])),
         init() {
             // Convertir a array si es objeto (ocurre cuando PHP preserva keys no secuenciales)
             let existentes = this.datosExistentes;
-            if (existentes && !Array.isArray(existentes)) {
-                existentes = Object.values(existentes);
+            if (existentes && !Array.isArray(existentes) && typeof existentes === 'object') {
+                // Verificar si tiene titulo guardado
+                if (existentes.titulo !== undefined) {
+                    this.titulo = existentes.titulo;
+                }
+                // Los campos pueden estar en existentes.campos o directamente como array
+                if (existentes.campos) {
+                    existentes = existentes.campos;
+                } else if (!Array.isArray(existentes)) {
+                    existentes = Object.values(existentes);
+                }
             }
 
             // Cargar datos existentes buscando por nombre
@@ -34,18 +44,27 @@
             });
         },
         sincronizarConLivewire() {
-            const data = Object.values(this.campos);
+            const data = {
+                titulo: this.titulo,
+                campos: Object.values(this.campos)
+            };
             window.__labvetData = window.__labvetData || {};
             window.__labvetData['{{ $index }}'] = data;
             $wire.set('componentesData.{{ $index }}.data', data);
         }
     }"
     class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:bg-zinc-900">
-    @if(isset($componente['propiedades']['titulo']))
-    <h4 class="font-bold text-gray-800 dark:text-zinc-100 text-center text-lg mb-4">
-        {{ $componente['propiedades']['titulo'] }}
-    </h4>
-    @endif
+    
+    <div class="mb-4">
+        <input 
+            type="text"
+            x-model="titulo"
+            @change="sincronizarConLivewire()"
+            @blur="sincronizarConLivewire()"
+            placeholder="Título del componente"
+            class="w-full px-3 py-2 text-lg font-bold text-center border border-gray-300 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500"
+        />
+    </div>
 
     <div class="space-y-3">
         @foreach($componente['propiedades']['campos'] ?? [] as $i => $campo)

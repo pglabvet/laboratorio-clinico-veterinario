@@ -25,6 +25,75 @@
         }
     }
     unset($dif);
+
+    // Generar texto de rango desde datos estructurados (con fallback a campos antiguos)
+    $generarTextoRango = function ($item, $infijo = '') {
+        $tipo = $item['rango_' . $infijo . 'tipo'] ?? 'min-max';
+        $min = $item['rango_' . $infijo . 'min'] ?? $item['ref_' . $infijo . 'min'] ?? '';
+        $max = $item['rango_' . $infijo . 'max'] ?? $item['ref_' . $infijo . 'max'] ?? '';
+        $valor = $item['rango_' . $infijo . 'valor'] ?? '';
+        return match($tipo) {
+            'min-max' => (!empty($min) || !empty($max)) ? $min . '-' . $max : '',
+            'menor' => !empty($valor) ? '< ' . $valor : '',
+            'menor-igual' => !empty($valor) ? '≤ ' . $valor : '',
+            'mayor' => !empty($valor) ? '> ' . $valor : '',
+            'mayor-igual' => !empty($valor) ? '≥ ' . $valor : '',
+            default => '',
+        };
+    };
+
+    // Clasificar resultado según tipo de rango (normal, alerta, critico)
+    $clasificarResultado = function ($valorStr, $template, $infijo = '') {
+        if ($valorStr === '' || $valorStr === null || !$template) {
+            return 'normal';
+        }
+        $resultadoNum = floatval(str_replace(',', '', $valorStr));
+        $tipo = $template['rango_' . $infijo . 'tipo'] ?? 'min-max';
+        $min = $template['rango_' . $infijo . 'min'] ?? $template['ref_' . $infijo . 'min'] ?? null;
+        $max = $template['rango_' . $infijo . 'max'] ?? $template['ref_' . $infijo . 'max'] ?? null;
+        $valor = $template['rango_' . $infijo . 'valor'] ?? null;
+
+        if ($tipo === 'min-max') {
+            $minF = ($min !== null && $min !== '') ? floatval(str_replace(',', '', $min)) : null;
+            $maxF = ($max !== null && $max !== '') ? floatval(str_replace(',', '', $max)) : null;
+            if ($minF === null && $maxF === null) return 'normal';
+            $amplitud = ($minF !== null && $maxF !== null) ? $maxF - $minF : 0;
+            $umbral = $amplitud * 0.15;
+            if ($minF !== null && $resultadoNum < $minF) {
+                return ($amplitud > 0 && $resultadoNum >= $minF - $umbral) ? 'alerta' : 'critico';
+            }
+            if ($maxF !== null && $resultadoNum > $maxF) {
+                return ($amplitud > 0 && $resultadoNum <= $maxF + $umbral) ? 'alerta' : 'critico';
+            }
+            return 'normal';
+        }
+
+        if ($valor === null || $valor === '') return 'normal';
+        $valorF = floatval(str_replace(',', '', $valor));
+        $umbral = abs($valorF) * 0.15;
+        $fuera = match($tipo) {
+            'menor' => $resultadoNum >= $valorF,
+            'menor-igual' => $resultadoNum > $valorF,
+            'mayor' => $resultadoNum <= $valorF,
+            'mayor-igual' => $resultadoNum < $valorF,
+            default => false,
+        };
+        if (!$fuera) return 'normal';
+        $dist = match($tipo) {
+            'menor', 'menor-igual' => $resultadoNum - $valorF,
+            'mayor', 'mayor-igual' => $valorF - $resultadoNum,
+            default => 0,
+        };
+        return $dist <= $umbral ? 'alerta' : 'critico';
+    };
+
+    $estiloClasificacion = function ($clasificacion) {
+        return match($clasificacion) {
+            'alerta' => ' color: #2563eb; font-weight: bold;',
+            'critico' => ' color: #dc2626; font-weight: bold;',
+            default => '',
+        };
+    };
 @endphp
 
 @if(isset($componente['propiedades']['titulo']))
@@ -63,21 +132,13 @@
                         foreach ($componente['propiedades']['parametros_principales'] ?? [] as $pt) {
                             if (($pt['nombre'] ?? '') === ($param['nombre'] ?? '')) { $paramTemplate = $pt; break; }
                         }
-                        $refMin = $paramTemplate['ref_min'] ?? null;
-                        $refMax = $paramTemplate['ref_max'] ?? null;
-                        $fueraRango = false;
-                        if ($valorParam !== '' && $refMin !== null && $refMax !== null) {
-                            $resultadoNum = floatval(str_replace(',', '', $valorParam));
-                            $refMinNum = floatval(str_replace(',', '', $refMin));
-                            $refMaxNum = floatval(str_replace(',', '', $refMax));
-                            $fueraRango = $resultadoNum < $refMinNum || $resultadoNum > $refMaxNum;
-                        }
+                        $clasificacion = $clasificarResultado($valorParam, $paramTemplate);
                     @endphp
                     <td style="font-weight: bold;">{{ $param['nombre'] ?? '' }}</td>
-                    <td style="text-align: center;{{ $fueraRango ? ' color: #dc2626; font-weight: bold;' : '' }}">{{ $valorParam }}</td>
+                    <td style="text-align: center;{{ $estiloClasificacion($clasificacion) }}">{{ $valorParam }}</td>
                     <td style="text-align: center;">{{ $param['unidad'] ?? '' }}</td>
                     <td style="text-align: center; color: #718096;" colspan="2">
-                        {{ $paramTemplate ? ($paramTemplate['ref_min'] ?? '') . '-' . ($paramTemplate['ref_max'] ?? '') : '' }}
+                        {{ $paramTemplate ? $generarTextoRango($paramTemplate) : '' }}
                     </td>
                 @else
                     <td colspan="5"></td>
@@ -96,36 +157,17 @@
                             if (($dt['nombre'] ?? '') === ($dif['nombre'] ?? '')) { $difTemplate = $dt; break; }
                         }
                         
-                        // Verificar si valor relativo está fuera de rango
-                        $fueraRangoRel = false;
-                        if ($valorRel !== '' && $difTemplate) {
-                            $refRelMin = $difTemplate['ref_rel_min'] ?? null;
-                            $refRelMax = $difTemplate['ref_rel_max'] ?? null;
-                            if ($refRelMin !== null && $refRelMax !== null) {
-                                $valorRelNum = floatval($valorRel);
-                                $fueraRangoRel = $valorRelNum < floatval($refRelMin) || $valorRelNum > floatval($refRelMax);
-                            }
-                        }
-                        
-                        // Verificar si valor absoluto está fuera de rango
-                        $fueraRangoAbs = false;
-                        if ($valorAbs !== '' && $difTemplate) {
-                            $refAbsMin = $difTemplate['ref_abs_min'] ?? null;
-                            $refAbsMax = $difTemplate['ref_abs_max'] ?? null;
-                            if ($refAbsMin !== null && $refAbsMax !== null) {
-                                $valorAbsNum = floatval(str_replace(',', '', $valorAbs));
-                                $fueraRangoAbs = $valorAbsNum < floatval(str_replace(',', '', $refAbsMin)) || $valorAbsNum > floatval(str_replace(',', '', $refAbsMax));
-                            }
-                        }
+                        $clasifRel = $clasificarResultado($valorRel, $difTemplate, 'rel_');
+                        $clasifAbs = $clasificarResultado($valorAbs, $difTemplate, 'abs_');
                     @endphp
                     <td style="font-weight: bold;">{{ $dif['nombre'] ?? '' }}</td>
-                    <td style="text-align: center;{{ $fueraRangoRel ? ' color: #dc2626; font-weight: bold;' : '' }}">{{ $valorRel !== '' && $valorRel !== null ? ($valorRel . ' %') : '' }}</td>
+                    <td style="text-align: center;{{ $estiloClasificacion($clasifRel) }}">{{ $valorRel !== '' && $valorRel !== null ? ($valorRel . ' %') : '' }}</td>
                     <td style="text-align: center; color: #718096;">
-                        {{ $difTemplate ? ($difTemplate['ref_rel_min'] ?? '') . '-' . ($difTemplate['ref_rel_max'] ?? '') : '' }}
+                        {{ $difTemplate ? $generarTextoRango($difTemplate, 'rel_') : '' }}
                     </td>
-                    <td style="text-align: center;{{ $fueraRangoAbs ? ' color: #dc2626; font-weight: bold;' : '' }}">{{ $valorAbs !== '' && $valorAbs !== null ? ($valorAbs . ' mm³') : '' }}</td>
+                    <td style="text-align: center;{{ $estiloClasificacion($clasifAbs) }}">{{ $valorAbs !== '' && $valorAbs !== null ? ($valorAbs . ' mm³') : '' }}</td>
                     <td style="text-align: center; color: #718096;">
-                        {{ $difTemplate ? ($difTemplate['ref_abs_min'] ?? '') . '-' . ($difTemplate['ref_abs_max'] ?? '') : '' }}
+                        {{ $difTemplate ? $generarTextoRango($difTemplate, 'abs_') : '' }}
                     </td>
                 @else
                     <td colspan="5"></td>
@@ -146,26 +188,20 @@
                 foreach ($componente['propiedades']['indices'] ?? [] as $it) {
                     if (($it['nombre'] ?? '') === ($indice['nombre'] ?? '')) { $indiceTemplate = $it; break; }
                 }
-                $referencia = $indiceTemplate['referencia'] ?? '';
-                $fueraRango = false;
-                
-                // Parsear el rango de referencia (formato: "vn 60-77 fl" o "8-11")
-                if ($resultado !== '' && $referencia !== '') {
-                    preg_match('/(-?\d+[.,]?\d*)\s*-\s*(-?\d+[.,]?\d*)/', $referencia, $matches);
-                    if (count($matches) >= 3) {
-                        $resultadoNum = floatval(str_replace(',', '.', str_replace('.', '', $resultado)));
-                        $refMin = floatval(str_replace(',', '.', $matches[1]));
-                        $refMax = floatval(str_replace(',', '.', $matches[2]));
-                        $fueraRango = $resultadoNum < $refMin || $resultadoNum > $refMax;
-                    }
+                $clasifIndice = $clasificarResultado($resultado, $indiceTemplate);
+
+                // Generar texto de referencia con fallback a campo antiguo
+                $textoRef = $indiceTemplate ? $generarTextoRango($indiceTemplate) : '';
+                if (empty($textoRef) && $indiceTemplate) {
+                    $textoRef = $indiceTemplate['referencia'] ?? '';
                 }
             @endphp
             <tr>
                 <td colspan="2" style="font-weight: bold;">{{ $indice['nombre'] ?? '' }}</td>
-                <td style="text-align: center;{{ $fueraRango ? ' color: #dc2626; font-weight: bold;' : '' }}">{{ $resultado }}</td>
+                <td style="text-align: center;{{ $estiloClasificacion($clasifIndice) }}">{{ $resultado }}</td>
                 <td>{{ $indice['unidad'] ?? '' }}</td>
                 <td colspan="6" style="color: #718096;">
-                    {{ $referencia }}
+                    {{ $textoRef }}
                 </td>
             </tr>
             @endforeach

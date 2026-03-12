@@ -19,13 +19,17 @@
 
             <!-- Campos de la sección -->
             @foreach($seccion['campos'] ?? [] as $campo)
-                @if($campo)
+                @if(!empty($campo['nombre']))
                 <tr>
                     <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 font-semibold bg-gray-50 dark:bg-zinc-900 w-1/3 text-gray-900 dark:text-zinc-100">
-                        {{ $campo }}
+                        {{ $campo['nombre'] }}
                     </td>
                     <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-400 dark:text-zinc-500 italic">
-                        (a completar)
+                        @if(($campo['tipo_input'] ?? 'input') === 'select')
+                            (seleccionar)
+                        @else
+                            (a completar)
+                        @endif
                     </td>
                 </tr>
                 @endif
