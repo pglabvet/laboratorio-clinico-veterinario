@@ -142,7 +142,11 @@
                                 {{ $veterinaria->email }}
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-700 dark:text-neutral-300">
-                                {{ $veterinaria->telefono }}
+                                @php
+                                    $telefonoPrincipal = $veterinaria->telefonos->firstWhere('es_principal', true) 
+                                        ?? $veterinaria->telefonos->first();
+                                @endphp
+                                {{ $telefonoPrincipal?->telefono ?? 'Sin teléfono' }}
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
                                 <flux:badge 
@@ -253,27 +257,15 @@
                     :error="$errors->first('responsable')"
                 />
 
-                {{-- Email y Teléfono en dos columnas --}}
-                <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    {{-- Email --}}
-                    <flux:input 
-                        wire:model="email"
-                        label="Email"
-                        type="email"
-                        placeholder="contacto@veterinaria.com"
-                        required
-                        :error="$errors->first('email')"
-                    />
-
-                    {{-- Teléfono --}}
-                    <flux:input 
-                        wire:model="telefono"
-                        label="Teléfono"
-                        placeholder="Ej: 555-1234"
-                        required
-                        :error="$errors->first('telefono')"
-                    />
-                </div>
+                {{-- Email --}}
+                <flux:input 
+                    wire:model="email"
+                    label="Email"
+                    type="email"
+                    placeholder="contacto@veterinaria.com"
+                    required
+                    :error="$errors->first('email')"
+                />
 
                 {{-- Dirección --}}
                 <flux:textarea 
@@ -284,6 +276,108 @@
                     required
                     :error="$errors->first('direccion')"
                 />
+                </div>
+
+                {{-- Teléfonos --}}
+                <div class="space-y-4 rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-900/50">
+                    <div>
+                        <h4 class="mb-1 text-sm font-semibold text-neutral-900 dark:text-neutral-100">Teléfonos</h4>
+                        <p class="text-xs text-neutral-600 dark:text-neutral-400">Gestiona los teléfonos de contacto de la veterinaria</p>
+                    </div>
+
+                    {{-- Teléfonos actuales --}}
+                    <div class="space-y-2">
+                        @forelse($telefonos as $indice => $tel)
+                            <div class="rounded-lg bg-white p-4 dark:bg-neutral-800">
+                                <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+                                    {{-- Número de teléfono --}}
+                                    <div>
+                                        <label class="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1">Teléfono</label>
+                                        <flux:input 
+                                            wire:model.debounce="telefonos.{{ $indice }}.telefono"
+                                            placeholder="Ej: 555-1234"
+                                            size="sm"
+                                            :error="$errors->first('telefonos.'.$indice.'.telefono')"
+                                        />
+                                    </div>
+
+                                    {{-- Nombre del contacto --}}
+                                    <div>
+                                        <label class="block text-xs font-medium text-neutral-700 dark:text-neutral-300 mb-1">Nombre</label>
+                                        <flux:input 
+                                            wire:model.debounce="telefonos.{{ $indice }}.nombre_contacto"
+                                            placeholder="Ej: Principal"
+                                            size="sm"
+                                        />
+                                    </div>
+
+                                    {{-- Botones de acción --}}
+                                    <div class="flex items-end gap-2">
+                                        {{-- Marcar como principal --}}
+                                        @if(!$tel['es_principal'])
+                                            <flux:button
+                                                wire:click="hacerPrincipal({{ $indice }})"
+                                                size="sm"
+                                                variant="ghost"
+                                                title="Marcar como principal"
+                                            >
+                                                Marcar principal
+                                            </flux:button>
+                                        @else
+                                            <span class="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900/20 dark:text-green-400">
+                                                Principal
+                                            </span>
+                                        @endif
+
+                                        {{-- Eliminar --}}
+                                        @if(count($telefonos) > 1)
+                                            <flux:button
+                                                wire:click="eliminarTelefono({{ $indice }})"
+                                                size="sm"
+                                                variant="ghost"
+                                                icon="trash"
+                                                color="red"
+                                            />
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <p class="text-sm text-neutral-600 dark:text-neutral-400">Sin teléfonos agregados</p>
+                        @endforelse
+                    </div>
+
+                    {{-- Agregar nuevo teléfono --}}
+                    <div class="border-t border-neutral-200 pt-3 dark:border-neutral-700">
+                        <p class="mb-3 text-xs font-medium text-neutral-700 dark:text-neutral-300">Agregar nuevo teléfono</p>
+                        <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
+                            <div>
+                                <flux:input 
+                                    wire:model="nuevoTelefono"
+                                    placeholder="Ej: 555-5678"
+                                    size="sm"
+                                />
+                            </div>
+                            <div>
+                                <flux:input 
+                                    wire:model="nuevoNombreContacto"
+                                    placeholder="Ej: Emergencias"
+                                    size="sm"
+                                />
+                            </div>
+                            <div class="flex gap-2">
+                                <flux:button
+                                    wire:click="agregarTelefono"
+                                    icon="plus"
+                                    size="sm"
+                                    variant="primary"
+                                >
+                                    Agregar
+                                </flux:button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 {{-- Estado --}}
                 <flux:select 
@@ -361,8 +455,24 @@
                     <div class="flex items-start gap-3 px-4 py-3.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
                         <svg class="w-5 h-5 text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" /></svg>
                         <div class="flex-1 min-w-0">
-                            <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-0.5">Teléfono</p>
-                            <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $veterinariaAVer->telefono }}</p>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-0.5">Teléfonos</p>
+                            <div class="flex flex-col gap-2">
+                                @forelse($veterinariaAVer->telefonos as $tel)
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $tel->telefono }}</span>
+                                        @if($tel->es_principal)
+                                            <span class="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+                                                Principal
+                                            </span>
+                                        @endif
+                                        @if($tel->nombre_contacto)
+                                            <span class="text-xs text-neutral-600 dark:text-neutral-400">({{ $tel->nombre_contacto }})</span>
+                                        @endif
+                                    </div>
+                                @empty
+                                    <p class="text-sm text-neutral-600 dark:text-neutral-400">Sin teléfonos registrados</p>
+                                @endforelse
+                            </div>
                         </div>
                     </div>
                 </div>
