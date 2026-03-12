@@ -39,7 +39,8 @@ class PdfController extends Controller
         }
 
         try {
-            return $this->pdfService->descargarDirecto($analisis);
+            $resultado = $this->pdfService->generar($analisis);
+            return $resultado['pdf']->stream($resultado['nombre']);
         } catch (\Exception $e) {
             \Log::error('Error generando PDF:', [
                 'analisis_id' => $analisisId,

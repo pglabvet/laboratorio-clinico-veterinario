@@ -42,7 +42,9 @@ class RegistrarSalida extends Component
     // Busqueda y filtros
     public $buscar = '';
     public $filtroSucursal = '';
-    public $filtroPeriodo = '';
+    public $fechaDesdeSalidas = '';
+    public $fechaHastaSalidas = '';
+    public $busquedaSalidas = '';
 
     // Opciones de motivo
     public $motivosDisponibles = [
@@ -271,33 +273,26 @@ class RegistrarSalida extends Component
             $movimientosQuery->where('sucursal_id', $this->filtroSucursal);
         }
 
-        if ($this->filtroPeriodo) {
-            $now = now();
+        // Aplicar filtro de fecha desde
+        if ($this->fechaDesdeSalidas) {
+            $movimientosQuery->whereDate('fecha', '>=', $this->fechaDesdeSalidas);
+        }
 
-            switch ($this->filtroPeriodo) {
-                case 'hoy':
-                    $movimientosQuery->whereDate('fecha', $now->toDateString());
-                    break;
-                case 'ayer':
-                    $movimientosQuery->whereDate('fecha', $now->copy()->subDay()->toDateString());
-                    break;
-                case 'ultimos_7_dias':
-                    $movimientosQuery->where('fecha', '>=', $now->copy()->subDays(7)->startOfDay());
-                    break;
-                case 'esta_semana':
-                    $movimientosQuery->whereBetween('fecha', [
-                        $now->copy()->startOfWeek()->startOfDay(),
-                        $now->copy()->endOfWeek()->endOfDay()
-                    ]);
-                    break;
-                case 'este_mes':
-                    $movimientosQuery->whereMonth('fecha', $now->month)
-                                      ->whereYear('fecha', $now->year);
-                    break;
-                case 'este_anio':
-                    $movimientosQuery->whereYear('fecha', $now->year);
-                    break;
-            }
+        // Aplicar filtro de fecha hasta
+        if ($this->fechaHastaSalidas) {
+            $movimientosQuery->whereDate('fecha', '<=', $this->fechaHastaSalidas);
+        }
+
+        // Aplicar filtro de búsqueda
+        if ($this->busquedaSalidas) {
+            $busqueda = $this->busquedaSalidas;
+            $movimientosQuery->where(function ($q) use ($busqueda) {
+                $q->whereHas('insumo', function ($qi) use ($busqueda) {
+                    $qi->where('nombre', 'like', "%{$busqueda}%");
+                })
+                ->orWhere('motivo', 'like', "%{$busqueda}%")
+                ->orWhere('observacion', 'like', "%{$busqueda}%");
+            });
         }
 
         $movimientos = $movimientosQuery->paginate(10);

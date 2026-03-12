@@ -33,7 +33,9 @@ class RegistrarEntradaInsumos extends Component
 
     // Filtros para entradas recientes
     public $filtroSucursalEntradas = '';
-    public $filtroFechaEntradas = '';
+    public $fechaDesdeEntradas = '';
+    public $fechaHastaEntradas = '';
+    public $busquedaEntradas = '';
 
     // Opciones de motivo
     public const MOTIVOS = [
@@ -162,7 +164,17 @@ class RegistrarEntradaInsumos extends Component
         $this->resetPage();
     }
 
-    public function updatingFiltroFechaEntradas()
+    public function updatingFechaDesdeEntradas()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFechaHastaEntradas()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingBusquedaEntradas()
     {
         $this->resetPage();
     }
@@ -204,34 +216,26 @@ class RegistrarEntradaInsumos extends Component
             $entradasQuery->where('sucursal_id', $this->filtroSucursalEntradas);
         }
 
-        // Aplicar filtro de período
-        if ($this->filtroFechaEntradas) {
-            $now = now();
+        // Aplicar filtro de fecha desde
+        if ($this->fechaDesdeEntradas) {
+            $entradasQuery->whereDate('fecha', '>=', $this->fechaDesdeEntradas);
+        }
 
-            switch ($this->filtroFechaEntradas) {
-                case 'hoy':
-                    $entradasQuery->whereDate('fecha', $now->toDateString());
-                    break;
-                case 'ayer':
-                    $entradasQuery->whereDate('fecha', $now->copy()->subDay()->toDateString());
-                    break;
-                case 'ultimos_7_dias':
-                    $entradasQuery->where('fecha', '>=', $now->copy()->subDays(7)->startOfDay());
-                    break;
-                case 'esta_semana':
-                    $entradasQuery->whereBetween('fecha', [
-                        $now->copy()->startOfWeek()->startOfDay(),
-                        $now->copy()->endOfWeek()->endOfDay()
-                    ]);
-                    break;
-                case 'este_mes':
-                    $entradasQuery->whereMonth('fecha', $now->month)
-                                  ->whereYear('fecha', $now->year);
-                    break;
-                case 'este_año':
-                    $entradasQuery->whereYear('fecha', $now->year);
-                    break;
-            }
+        // Aplicar filtro de fecha hasta
+        if ($this->fechaHastaEntradas) {
+            $entradasQuery->whereDate('fecha', '<=', $this->fechaHastaEntradas);
+        }
+
+        // Aplicar filtro de búsqueda
+        if ($this->busquedaEntradas) {
+            $busqueda = $this->busquedaEntradas;
+            $entradasQuery->where(function ($q) use ($busqueda) {
+                $q->whereHas('insumo', function ($qi) use ($busqueda) {
+                    $qi->where('nombre', 'like', "%{$busqueda}%");
+                })
+                ->orWhere('motivo', 'like', "%{$busqueda}%")
+                ->orWhere('observacion', 'like', "%{$busqueda}%");
+            });
         }
 
         $entradasRecientes = $entradasQuery->paginate(10);
