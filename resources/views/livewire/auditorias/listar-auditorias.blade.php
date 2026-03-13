@@ -2,77 +2,162 @@
     {{-- ========================================== --}}
     {{-- ENCABEZADO: Título y descripción            --}}
     {{-- ========================================== --}}
-    <div class="mb-4 flex items-center justify-between">
-        <div>
-            <flux:heading size="xl" class="mb-1">Auditorías del Sistema</flux:heading>
-            <flux:subheading>Registro de todas las acciones realizadas por los usuarios</flux:subheading>
-        </div>
-
-        {{-- Botón para limpiar todos los filtros de una vez --}}
-        @if($busqueda || $filtroUsuario || $filtroAccion || $filtroEntidad || $fechaDesde || $fechaHasta)
-            <flux:button wire:click="limpiarFiltros" icon="x-mark" variant="subtle" size="sm">
-                Limpiar filtros
-            </flux:button>
-        @endif
+    <div class="mb-6">
+        <flux:heading size="xl" class="mb-1">Auditorías del Sistema</flux:heading>
+        <flux:subheading>Registro de todas las acciones realizadas por los usuarios</flux:subheading>
     </div>
 
     {{-- ========================================== --}}
     {{-- PANEL DE FILTROS                            --}}
-    {{-- Los filtros se conectan al componente con   --}}
-    {{-- wire:model.live = actualización en tiempo    --}}
-    {{-- real sin necesidad de botón "Buscar"         --}}
     {{-- ========================================== --}}
-    <div class="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-        {{-- Búsqueda por texto en descripción --}}
-        <flux:input
-            wire:model.live.debounce.300ms="busqueda"
-            icon="magnifying-glass"
-            placeholder="Buscar..."
-            size="sm"
-        />
+    <div class="mb-4" x-data="{
+        mostrarFiltros: window.innerWidth >= 640,
+        get filtrosActivos() {
+            let count = 0;
+            if ($wire.busqueda) count++;
+            if ($wire.filtroUsuario) count++;
+            if ($wire.filtroAccion) count++;
+            if ($wire.filtroEntidad) count++;
+            if ($wire.fechaDesde) count++;
+            if ($wire.fechaHasta) count++;
+            return count;
+        }
+    }">
+        {{-- Botón para mostrar/ocultar filtros en móvil --}}
+        <div class="mb-3 sm:hidden">
+            <flux:button
+                @click="mostrarFiltros = !mostrarFiltros"
+                variant="outline"
+                icon="funnel"
+                class="w-full relative"
+            >
+                <span x-text="mostrarFiltros ? 'Ocultar filtros' : 'Mostrar filtros'"></span>
+                <span x-show="filtrosActivos > 0"
+                      class="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-blue-600 rounded-full"
+                      x-text="filtrosActivos"></span>
+            </flux:button>
+        </div>
 
-        {{-- Filtro por usuario --}}
-        <flux:select wire:model.live="filtroUsuario" size="sm" placeholder="Todos los usuarios">
-            <flux:select.option value="">Todos los usuarios</flux:select.option>
-            @foreach($this->usuarios as $usuario)
-                <flux:select.option value="{{ $usuario->id }}">{{ $usuario->name }}</flux:select.option>
-            @endforeach
-        </flux:select>
+        {{-- Contenedor de filtros --}}
+        <div x-show="mostrarFiltros"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 -translate-y-2"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 -translate-y-2"
+             class="rounded-lg border border-neutral-200 bg-neutral-50 p-3 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
 
-        {{-- Filtro por acción (crear, actualizar, eliminar) --}}
-        <flux:select wire:model.live="filtroAccion" size="sm" placeholder="Todas las acciones">
-            <flux:select.option value="">Todas las acciones</flux:select.option>
-            <flux:select.option value="crear">Crear</flux:select.option>
-            <flux:select.option value="actualizar">Actualizar</flux:select.option>
-            <flux:select.option value="eliminar">Eliminar</flux:select.option>
-        </flux:select>
+            <div class="space-y-3">
+                {{-- Búsqueda (ancho completo) --}}
+                <div>
+                    <flux:input
+                        wire:model.live.debounce.300ms="busqueda"
+                        icon="magnifying-glass"
+                        placeholder="Buscar..."
+                        class="w-full"
+                    />
+                </div>
 
-        {{-- Filtro por entidad (Muestra, Insumo, etc.) --}}
-        <flux:select wire:model.live="filtroEntidad" size="sm" placeholder="Todas las entidades">
-            <flux:select.option value="">Todas las entidades</flux:select.option>
-            @foreach($this->entidades as $entidad)
-                <flux:select.option value="{{ $entidad }}">
-                    {{ \App\Models\Auditoria::nombresEntidades()[$entidad] ?? $entidad }}
-                </flux:select.option>
-            @endforeach
-        </flux:select>
+                {{-- Dropdowns + Fechas + Limpiar --}}
+                <div class="grid grid-cols-2 gap-3 sm:flex sm:flex-row sm:flex-wrap sm:items-end">
+                    {{-- Fecha desde --}}
+                    <div>
+                        <flux:input
+                            type="date"
+                            wire:model.live="fechaDesde"
+                            label="Desde"
+                        />
+                    </div>
 
-        {{-- Filtro fecha desde --}}
-        <flux:input
-            wire:model.live="fechaDesde"
-            type="date"
-            size="sm"
-            placeholder="Desde"
-        />
+                    {{-- Fecha hasta --}}
+                    <div>
+                        <flux:input
+                            type="date"
+                            wire:model.live="fechaHasta"
+                            label="Hasta"
+                        />
+                    </div>
 
-        {{-- Filtro fecha hasta --}}
-        <flux:input
-            wire:model.live="fechaHasta"
-            type="date"
-            size="sm"
-            placeholder="Hasta"
-        />
+                    {{-- Filtro por usuario --}}
+                    <div class="w-full sm:w-auto">
+                        <flux:dropdown>
+                            <flux:button variant="outline" icon="user" icon-trailing="chevron-down">
+                                {{ $filtroUsuario ? $this->usuarios->firstWhere('id', $filtroUsuario)?->name : 'Usuario' }}
+                            </flux:button>
+                            <flux:menu>
+                                <flux:menu.item wire:click="$set('filtroUsuario', '')" icon="bars-3">
+                                    Todos los usuarios
+                                </flux:menu.item>
+                                <flux:menu.separator />
+                                @foreach($this->usuarios as $usuario)
+                                    <flux:menu.item wire:click="$set('filtroUsuario', '{{ $usuario->id }}')" icon="user-circle">
+                                        {{ $usuario->name }}
+                                    </flux:menu.item>
+                                @endforeach
+                            </flux:menu>
+                        </flux:dropdown>
+                    </div>
+
+                    {{-- Filtro por acción --}}
+                    <div class="w-full sm:w-auto">
+                        <flux:dropdown>
+                            <flux:button variant="outline" icon="bolt" icon-trailing="chevron-down">
+                                {{ $filtroAccion ? ucfirst($filtroAccion) : 'Acción' }}
+                            </flux:button>
+                            <flux:menu>
+                                <flux:menu.item wire:click="$set('filtroAccion', '')" icon="bars-3">
+                                    Todas las acciones
+                                </flux:menu.item>
+                                <flux:menu.separator />
+                                <flux:menu.item wire:click="$set('filtroAccion', 'crear')" icon="plus-circle">
+                                    Crear
+                                </flux:menu.item>
+                                <flux:menu.item wire:click="$set('filtroAccion', 'actualizar')" icon="pencil-square">
+                                    Actualizar
+                                </flux:menu.item>
+                                <flux:menu.item wire:click="$set('filtroAccion', 'eliminar')" icon="trash">
+                                    Eliminar
+                                </flux:menu.item>
+                            </flux:menu>
+                        </flux:dropdown>
+                    </div>
+
+                    {{-- Filtro por entidad --}}
+                    <div class="w-full sm:w-auto">
+                        <flux:dropdown>
+                            <flux:button variant="outline" icon="cube" icon-trailing="chevron-down">
+                                {{ $filtroEntidad ? (\App\Models\Auditoria::nombresEntidades()[$filtroEntidad] ?? $filtroEntidad) : 'Entidad' }}
+                            </flux:button>
+                            <flux:menu>
+                                <flux:menu.item wire:click="$set('filtroEntidad', '')" icon="bars-3">
+                                    Todas las entidades
+                                </flux:menu.item>
+                                <flux:menu.separator />
+                                @foreach($this->entidades as $entidad)
+                                    <flux:menu.item wire:click="$set('filtroEntidad', '{{ $entidad }}')" icon="document">
+                                        {{ \App\Models\Auditoria::nombresEntidades()[$entidad] ?? $entidad }}
+                                    </flux:menu.item>
+                                @endforeach
+                            </flux:menu>
+                        </flux:dropdown>
+                    </div>
+
+                    {{-- Botón limpiar filtros --}}
+                    <div class="w-full sm:w-auto">
+                        <flux:button
+                            wire:click="limpiarFiltros"
+                            variant="outline"
+                            icon="x-mark"
+                        >
+                            Limpiar
+                        </flux:button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
 
     {{-- ========================================== --}}
     {{-- TABLA DE AUDITORÍAS                         --}}

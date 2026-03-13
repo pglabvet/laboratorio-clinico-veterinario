@@ -179,6 +179,12 @@ class RegistrarEntradaInsumos extends Component
         $this->resetPage();
     }
 
+    public function limpiarFiltrosHistorial()
+    {
+        $this->reset(['busquedaEntradas', 'filtroSucursalEntradas', 'fechaDesdeEntradas', 'fechaHastaEntradas']);
+        $this->resetPage();
+    }
+
     #[Computed]
     public function sucursales()
     {
