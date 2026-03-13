@@ -161,3 +161,18 @@ select:focus[data-flux-control] {
 .login-btn:active {
     transform: scale(0.985);
 }
+
+/* ===== App Background ===== */
+.app-bg {
+    background-color: #f3f4f6;
+    background-image: url('/images/fondo_pdf_v3.png');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+.dark .app-bg {
+    background-color: #27272a;
+    background-image: url('/images/fondo_sistema_oscuro.png');
+}

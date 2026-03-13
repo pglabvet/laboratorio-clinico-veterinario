@@ -233,6 +233,12 @@ class RegistrarSalida extends Component
         $this->resetValidation();
     }
 
+    public function limpiarFiltrosHistorial()
+    {
+        $this->reset(['busquedaSalidas', 'filtroSucursal', 'fechaDesdeSalidas', 'fechaHastaSalidas']);
+        $this->resetPage();
+    }
+
     public function cancelar()
     {
         return $this->redirect(route('inventario.historial'), navigate: true);
