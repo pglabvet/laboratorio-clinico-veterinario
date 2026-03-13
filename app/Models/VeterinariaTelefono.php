@@ -12,6 +12,12 @@ class VeterinariaTelefono extends Model
     protected $fillable = [
         'veterinaria_id',
         'telefono',
+        'nombre_contacto',
+        'es_principal',
+    ];
+
+    protected $casts = [
+        'es_principal' => 'boolean',
     ];
 
     public function veterinaria(): BelongsTo

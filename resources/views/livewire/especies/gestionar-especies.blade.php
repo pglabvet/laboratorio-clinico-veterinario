@@ -210,11 +210,13 @@
                 />
 
                 {{-- Estado --}}
-                <flux:checkbox 
-                    wire:model="estado"
-                    label="Especie activa"
-                    description="Indica si la especie está disponible para análisis"
-                />
+                <div class="rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-700 dark:bg-neutral-900/50">
+                    <flux:checkbox 
+                        wire:model="estado"
+                        label="Especie activa"
+                        description="Indica si la especie estara disponible para analisis"
+                    />
+                </div>
             </div>
 
             {{-- Botones del modal --}}

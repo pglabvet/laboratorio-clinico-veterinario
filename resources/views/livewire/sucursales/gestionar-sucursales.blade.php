@@ -288,13 +288,13 @@
                 />
 
                 {{-- Estado --}}
-                <flux:select 
-                    wire:model="estado"
-                    label="Estado"
-                >
-                    <option value="1">Activo</option>
-                    <option value="0">Inactivo</option>
-                </flux:select>
+                <div class="rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-700 dark:bg-neutral-900/50">
+                    <flux:checkbox
+                        wire:model="estado"
+                        label="Sucursal activa"
+                        description="Define si la sucursal estara disponible en el sistema"
+                    />
+                </div>
             </div>
 
             {{-- Botones del modal --}}

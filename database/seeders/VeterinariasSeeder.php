@@ -21,6 +21,8 @@ class VeterinariasSeeder extends Seeder
         } else {
             $this->seedDefaults();
         }
+
+        $this->syncIdSequence();
     }
 
     /**
@@ -89,5 +91,18 @@ class VeterinariasSeeder extends Seeder
         fclose($file);
         $this->command->info('Veterinarias migradas desde CSV.');
     }
-}
 
+    /**
+     * Sincroniza la secuencia de IDs para evitar llaves duplicadas.
+     */
+    private function syncIdSequence(): void
+    {
+        $sequence = DB::scalar("select pg_get_serial_sequence('veterinarias', 'id')");
+
+        if (! $sequence) {
+            return;
+        }
+
+        DB::statement("select setval('{$sequence}', coalesce((select max(id) from veterinarias), 1), true)");
+    }
+}
