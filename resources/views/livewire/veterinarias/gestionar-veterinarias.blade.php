@@ -82,7 +82,7 @@
                             </button>
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-                            TELEFONO PRINCIPAL
+                            TELEFONO
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
                             <button wire:click="ordenarPor('estado')" class="flex items-center gap-1 hover:text-neutral-900 dark:hover:text-neutral-100">
@@ -119,7 +119,12 @@
                                 {{ $veterinaria->email }}
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-700 dark:text-neutral-300">
-                                {{ $telefonoPrincipal?->telefono ?? 'Sin telefono' }}
+                                @if($telefonoPrincipal)
+                                    <p class="font-medium text-neutral-900 dark:text-neutral-100">{{ $telefonoPrincipal->telefono }}</p>
+                                    <p class="text-xs text-neutral-500 dark:text-neutral-400">{{ $telefonoPrincipal->nombre_contacto ?: 'Sin nombre' }}</p>
+                                @else
+                                    Sin telefono
+                                @endif
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
                                 @can('editar-veterinarias')

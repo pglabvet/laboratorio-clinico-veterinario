@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Mail;
 
 class EnvioResultadosService
 {
+    private const DIAS_EXPIRACION_ENLACE = 14;
+
     protected AnalisisPdfService $pdfService;
 
     public function __construct(AnalisisPdfService $pdfService)
@@ -46,8 +48,8 @@ class EnvioResultadosService
             $pdf = $resultado['modelo'];
         }
 
-        // Crear token de descarga (3 días)
-        $tokenDescarga = TokenDescarga::crearParaPdf($pdf->id, 3);
+        // Crear token de descarga (14 días)
+        $tokenDescarga = TokenDescarga::crearParaPdf($pdf->id, self::DIAS_EXPIRACION_ENLACE);
         $urlDescarga = $tokenDescarga->getUrlDescarga();
 
         // Construir mensaje y URL
@@ -96,7 +98,7 @@ class EnvioResultadosService
                 $pdf = $resultado['modelo'];
             }
 
-            $tokenDescarga = TokenDescarga::crearParaPdf($pdf->id, 3);
+            $tokenDescarga = TokenDescarga::crearParaPdf($pdf->id, self::DIAS_EXPIRACION_ENLACE);
             $linksDescarga[] = [
                 'nombre' => $analisis->tipoAnalisis->nombre ?? 'Análisis',
                 'url' => $tokenDescarga->getUrlDescarga(),
@@ -305,7 +307,7 @@ class EnvioResultadosService
             "------------------------------------\n".
             "*Descarga tu resultado aqui:*\n".
             $urlDescarga."\n\n".
-            "_Enlace valido por 3 dias_\n\n".
+            "_Enlace valido por 14 dias_\n\n".
             '_Gracias por confiar en nosotros!_';
     }
 
@@ -330,7 +332,7 @@ class EnvioResultadosService
             $mensaje .= "{$numero}. *{$link['nombre']}*\n{$link['url']}\n\n";
         }
 
-        $mensaje .= "_Enlaces validos por 3 dias_\n\n".
+        $mensaje .= "_Enlaces validos por 14 dias_\n\n".
             '_Gracias por confiar en nosotros!_';
 
         return $mensaje;

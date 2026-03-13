@@ -31,9 +31,9 @@ class GestionarVeterinarias extends Component
 
     public $nuevoTelefono = '';
 
-    public $nuevoNombreContacto = 'Principal';
+    public $nuevoNombreContacto = '';
 
-    public $esNuevoPrincipal = true;
+    public $esNuevoPrincipal = false;
 
     // Propiedades de control
 
@@ -180,7 +180,7 @@ class GestionarVeterinarias extends Component
 
                 'telefono' => $t->telefono,
 
-                'nombre_contacto' => $t->nombre_contacto ?? 'Principal',
+                'nombre_contacto' => $t->nombre_contacto ?? '',
 
                 'es_principal' => $t->es_principal,
 
@@ -340,19 +340,24 @@ class GestionarVeterinarias extends Component
 
         if (! empty($this->nuevoTelefono)) {
 
+            $yaExistePrincipal = collect($this->telefonos)
+                ->contains(fn ($telefono) => (bool) ($telefono['es_principal'] ?? false));
+
+            $nuevoEsPrincipal = $yaExistePrincipal ? (bool) $this->esNuevoPrincipal : true;
+
             $this->telefonos[] = [
 
                 'telefono' => $this->nuevoTelefono,
 
                 'nombre_contacto' => $this->nuevoNombreContacto,
 
-                'es_principal' => $this->esNuevoPrincipal,
+                'es_principal' => $nuevoEsPrincipal,
 
             ];
 
             // Si es principal, desmarcar los otros
 
-            if ($this->esNuevoPrincipal) {
+            if ($nuevoEsPrincipal) {
 
                 foreach ($this->telefonos as $i => &$t) {
 
@@ -368,9 +373,9 @@ class GestionarVeterinarias extends Component
 
             $this->nuevoTelefono = '';
 
-            $this->nuevoNombreContacto = 'Principal';
+            $this->nuevoNombreContacto = '';
 
-            $this->esNuevoPrincipal = true;
+            $this->esNuevoPrincipal = false;
 
         }
 
@@ -640,7 +645,7 @@ class GestionarVeterinarias extends Component
 
             'telefono' => '',
 
-            'nombre_contacto' => 'Principal',
+            'nombre_contacto' => '',
 
             'es_principal' => true,
 
@@ -648,9 +653,9 @@ class GestionarVeterinarias extends Component
 
         $this->nuevoTelefono = '';
 
-        $this->nuevoNombreContacto = 'Principal';
+        $this->nuevoNombreContacto = '';
 
-        $this->esNuevoPrincipal = true;
+        $this->esNuevoPrincipal = false;
 
         $this->email = '';
 
