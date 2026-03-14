@@ -265,8 +265,26 @@ class GestionarSucursales extends Component
             }
 
             $sucursal = Sucursal::findOrFail($this->sucursalACambiar);
-            $sucursal->update(['estado' => ! $sucursal->estado]);
-
+            
+            // Validar si intenta desactivar y hay usuarios asignados
+            if ($sucursal->estado && $sucursal->users()->count() > 0) {
+                $usuariosAsignados = $sucursal->users->pluck('name')->take(5)->implode(', ');
+                $totalUsuarios = $sucursal->users()->count();
+                $mensaje = "⚠️ No se puede desactivar esta sucursal. Hay {$totalUsuarios} usuario(s) asignado(s): {$usuariosAsignados}";
+                if ($totalUsuarios > 5) {
+                    $mensaje .= " y " . ($totalUsuarios - 5) . " más";
+                }
+                $mensaje .= ". Por favor, reasigna estos usuarios a otra sucursal antes de desactivar.";
+                session()->flash('error', $mensaje);
+                
+                $this->modalCambiarEstado = false;
+                $this->sucursalACambiar = null;
+                $this->estadoActual = null;
+                return;
+            }
+            
+            $sucursal->update(['estado' => !$sucursal->estado]);
+            
             $mensaje = $sucursal->estado ? 'Sucursal activada exitosamente.' : 'Sucursal desactivada exitosamente.';
             session()->flash('mensaje', $mensaje);
 

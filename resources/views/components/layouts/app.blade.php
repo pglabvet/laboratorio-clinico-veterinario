@@ -2,8 +2,36 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
     <head>
         @include('partials.head')
+        <style>
+            body.app-bg {
+                background-image: url('{{ asset('images/fondo_pdf_v3.png') }}');
+                background-repeat: repeat;
+                background-size: auto;
+                background-attachment: fixed;
+            }
+            .dark body.app-bg {
+                background-image: url('{{ asset('images/fondo_sistema_oscuro.png') }}');
+            }
+
+            /* Dark mode: overlay to soften the background pattern */
+            .dark .app-bg-overlay {
+                position: fixed;
+                inset: 0;
+                background: rgba(39, 39, 42, 0.65);
+                pointer-events: none;
+                z-index: 0;
+            }
+
+            /* Ensure content sits above the overlay */
+            .dark body.app-bg > *:not(.app-bg-overlay) {
+                position: relative;
+                z-index: 1;
+            }
+        </style>
     </head>
-    <body class="min-h-screen bg-gray-100 dark:bg-zinc-800">
+    <body class="min-h-screen bg-gray-100 dark:bg-zinc-800 app-bg">
+        {{-- Dark mode background overlay --}}
+        <div class="app-bg-overlay"></div>
         {{-- Sidebar --}}
         <x-layouts.app.sidebar />
 

@@ -82,7 +82,18 @@
                             </button>
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-                            TELEFONO
+                            <button wire:click="ordenarPor('telefono')" class="flex items-center gap-1 hover:text-neutral-900 dark:hover:text-neutral-100">
+                                <span>TELÉFONO</span>
+                                @if($sortBy === 'telefono')
+                                    <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                        @if($sortDirection === 'asc')
+                                            <path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd"/>
+                                        @else
+                                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                        @endif
+                                    </svg>
+                                @endif
+                            </button>
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
                             <button wire:click="ordenarPor('estado')" class="flex items-center gap-1 hover:text-neutral-900 dark:hover:text-neutral-100">
@@ -128,15 +139,16 @@
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
                                 @can('editar-veterinarias')
-                                    <button type="button" wire:click="confirmarCambiarEstado({{ $veterinaria->id }})" class="cursor-pointer group outline-none focus:outline-none">
-                                        <div class="pointer-events-none">
-                                            <flux:switch :checked="$veterinaria->estado" wire:key="switch-veterinaria-{{ $veterinaria->id }}-{{ $veterinaria->estado ? 'active' : 'inactive' }}" />
-                                        </div>
-                                    </button>
+                                <button type="button" wire:click="confirmarCambiarEstado({{ $veterinaria->id }})" class="cursor-pointer group outline-none focus:outline-none">
+                                    <flux:switch
+                                        size="sm"
+                                        :checked="$veterinaria->estado"
+                                        wire:key="switch-{{ $veterinaria->id }}-{{ $veterinaria->estado ? 'active' : 'inactive' }}"
+                                        class="pointer-events-none"
+                                    />
+                                </button>
                                 @else
-                                    <flux:badge :color="$veterinaria->estado ? 'green' : 'red'" size="sm">
-                                        {{ $veterinaria->estado ? 'Activa' : 'Inactiva' }}
-                                    </flux:badge>
+                                <flux:badge :color="$veterinaria->estado ? 'green' : 'red'" size="sm">{{ $veterinaria->estado ? 'Activa' : 'Inactiva' }}</flux:badge>
                                 @endcan
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm">

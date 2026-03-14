@@ -156,7 +156,7 @@ class GestionarEspecies extends Component
 
             $especie = Especie::findOrFail($this->especieAEliminar);
             
-            // Verificar si tiene muestras o rangos de referencia asociados
+            // Verificar si tiene muestras asociadas
             if ($especie->muestras()->count() > 0) {
                 session()->flash('error', 'No se puede eliminar la especie porque tiene muestras asociadas.');
                 $this->modalEliminar = false;

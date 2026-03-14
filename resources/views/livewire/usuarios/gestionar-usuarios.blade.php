@@ -9,13 +9,45 @@
         <flux:subheading>Administra los usuarios del sistema</flux:subheading>
     </div>
 
-    {{-- Barra de acciones --}}
-    <div class="mb-6 flex flex-col gap-4">
-        <div class="flex flex-col sm:flex-row gap-4 sm:items-end sm:justify-between">
-            {{-- Búsqueda y Filtros --}}
-            <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                <div class="w-full sm:w-80">
-                    <flux:input 
+    {{-- Bloque de filtros --}}
+    <div class="mb-4" x-data="{
+        mostrarFiltros: window.innerWidth >= 640,
+        get filtrosActivos() {
+            let count = 0;
+            if ($wire.search) count++;
+            if ($wire.filtroSucursal) count++;
+            return count;
+        }
+    }">
+        {{-- Botón para mostrar/ocultar filtros en móvil --}}
+        <div class="mb-3 sm:hidden">
+            <flux:button
+                @click="mostrarFiltros = !mostrarFiltros"
+                variant="outline"
+                icon="funnel"
+                class="w-full relative"
+            >
+                <span x-text="mostrarFiltros ? 'Ocultar filtros' : 'Mostrar filtros'"></span>
+                <span x-show="filtrosActivos > 0"
+                      class="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-blue-600 rounded-full"
+                      x-text="filtrosActivos"></span>
+            </flux:button>
+        </div>
+
+        {{-- Contenedor de filtros --}}
+        <div x-show="mostrarFiltros"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 -translate-y-2"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 -translate-y-2"
+             class="rounded-lg border border-neutral-200 bg-neutral-50 p-3 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
+
+            <div class="space-y-3">
+                {{-- Búsqueda (ancho completo) --}}
+                <div>
+                    <flux:input
                         wire:model.live.debounce.300ms="search"
                         icon="magnifying-glass"
                         placeholder="Buscar usuarios..."
@@ -23,44 +55,56 @@
                     />
                 </div>
 
-                <div class="w-full sm:w-64">
-                    <flux:select 
-                        wire:model.live="filtroSucursal"
-                        placeholder="Todas las sucursales"
-                    >
-                        <option value="">Todas las sucursales</option>
-                        @foreach ($this->sucursales as $sucursal)
-                            <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
-                        @endforeach
-                    </flux:select>
-                </div>
+                {{-- Dropdowns + Limpiar --}}
+                <div class="grid grid-cols-2 gap-3 sm:flex sm:flex-row sm:flex-wrap sm:items-end">
+                    {{-- Filtro por sucursal --}}
+                    <div class="w-full sm:w-auto">
+                        <flux:dropdown>
+                            <flux:button variant="outline" icon="building-office-2" icon-trailing="chevron-down">
+                                {{ $filtroSucursal ? $this->sucursales->firstWhere('id', $filtroSucursal)?->nombre : 'Sucursal' }}
+                            </flux:button>
+                            <flux:menu>
+                                <flux:menu.item wire:click="$set('filtroSucursal', '')" icon="bars-3">
+                                    Todas las sucursales
+                                </flux:menu.item>
+                                <flux:menu.separator />
+                                @foreach ($this->sucursales as $sucursal)
+                                    <flux:menu.item wire:click="$set('filtroSucursal', '{{ $sucursal->id }}')" icon="building-storefront">
+                                        {{ $sucursal->nombre }}
+                                    </flux:menu.item>
+                                @endforeach
+                            </flux:menu>
+                        </flux:dropdown>
+                    </div>
 
-                {{-- Botón limpiar filtro --}}
-                @if($search || $filtroSucursal)
-                    <div class="flex items-center">
-                        <flux:button 
+                    {{-- Botón limpiar filtros --}}
+                    <div class="w-full sm:w-auto">
+                        <flux:button
                             wire:click="limpiarFiltro"
-                            variant="ghost"
+                            variant="outline"
                             icon="x-mark"
                         >
                             Limpiar
                         </flux:button>
                     </div>
-                @endif
+                </div>
             </div>
-
-            {{-- Botón crear --}}
-            @can('gestionar-usuarios')
-                <flux:button 
-                    wire:click="abrirModal"
-                    icon="plus"
-                    variant="primary"
-                >
-                    Nuevo Usuario
-                </flux:button>
-            @endcan
         </div>
     </div>
+
+    {{-- Botón crear --}}
+    <div class="mb-4 flex justify-end">
+        @can('gestionar-usuarios')
+            <flux:button
+                wire:click="abrirModal"
+                icon="plus"
+                variant="primary"
+            >
+                Nuevo Usuario
+            </flux:button>
+        @endcan
+    </div>
+
 
     {{-- Tabla de usuarios --}}
     <div class="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow dark:border-neutral-700 dark:bg-neutral-800">
