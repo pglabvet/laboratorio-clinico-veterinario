@@ -17,6 +17,7 @@ class TokenDescarga extends Model
     protected $fillable = [
         'pdf_id',
         'token',
+        'codigo_corto',
         'fecha_expiracion',
         'usado',
     ];
@@ -46,7 +47,7 @@ class TokenDescarga extends Model
      * Crear un token de descarga para un PDF
      * 
      * @param int $pdfId ID del PDF
-    * @param int $diasExpiracion Días hasta que expire el token (default: 14)
+     * @param int $diasExpiracion Días hasta que expire el token (default: 14)
      * @return self
      */
     public static function crearParaPdf(int $pdfId, int $diasExpiracion = 14): self
@@ -54,6 +55,7 @@ class TokenDescarga extends Model
         return self::create([
             'pdf_id' => $pdfId,
             'token' => Str::random(64),
+            'codigo_corto' => self::generarCodigoCorto(),
             'fecha_expiracion' => now()->addDays($diasExpiracion),
             'usado' => false,
         ]);
@@ -68,15 +70,15 @@ class TokenDescarga extends Model
     }
 
     /**
-     * Obtener la URL de descarga completa
+     * Obtener la URL de descarga (usa código corto)
      */
     public function getUrlDescarga(): string
     {
-        return url("/descargar/{$this->token}");
+        return url("/r/{$this->codigo_corto}");
     }
 
     /**
-     * Buscar token válido por string
+     * Buscar token válido por string (token largo)
      */
     public static function buscarValido(string $token): ?self
     {
@@ -85,4 +87,28 @@ class TokenDescarga extends Model
             ->where('usado', false)
             ->first();
     }
+
+    /**
+     * Buscar token válido por código corto
+     */
+    public static function buscarPorCodigoCorto(string $codigo): ?self
+    {
+        return self::where('codigo_corto', $codigo)
+            ->where('fecha_expiracion', '>', now())
+            ->where('usado', false)
+            ->first();
+    }
+
+    /**
+     * Generar un código corto único de 10 caracteres alfanuméricos
+     */
+    private static function generarCodigoCorto(): string
+    {
+        do {
+            $codigo = Str::random(10);
+        } while (self::where('codigo_corto', $codigo)->exists());
+
+        return $codigo;
+    }
 }
+
