@@ -7,6 +7,7 @@ use App\Models\Muestra;
 use App\Models\PlantillaFormulario;
 use App\Models\Sucursal;
 use App\Models\TipoAnalisis;
+use Illuminate\Support\Facades\DB;
 
 class MuestraService
 {
@@ -24,35 +25,36 @@ class MuestraService
         }
         $prefijo = $sucursal->getPrefijo();
 
-        // Obtener el último código de muestra de esta sucursal
-        // lockForUpdate() previene race conditions cuando dos usuarios crean muestras simultáneamente
-        $ultimaMuestra = Muestra::where('sucursal_id', $sucursalId)
-            ->orderBy('id', 'desc')
-            ->lockForUpdate()
-            ->first();
+        // Transacción con lockForUpdate() para prevenir race conditions
+        return DB::transaction(function () use ($sucursalId, $prefijo) {
+            $ultimaMuestra = Muestra::where('sucursal_id', $sucursalId)
+                ->orderBy('id', 'desc')
+                ->lockForUpdate()
+                ->first();
 
-        if (!$ultimaMuestra) {
-            return $prefijo . 'AA0001';
-        }
+            if (!$ultimaMuestra) {
+                return $prefijo . 'AA0001';
+            }
 
-        $ultimoCodigo = $ultimaMuestra->codigo_muestra;
+            $ultimoCodigo = $ultimaMuestra->codigo_muestra;
 
-        // Si no sigue el formato PREFIJOAA0000, empezar desde AA0001
-        if (!preg_match('/^[A-Z]{1,2}([A-Z]{2})(\d{4})$/', $ultimoCodigo, $matches)) {
-            return $prefijo . 'AA0001';
-        }
+            // Si no sigue el formato PREFIJOAA0000, empezar desde AA0001
+            if (!preg_match('/^[A-Z]{1,2}([A-Z]{2})(\d{4})$/', $ultimoCodigo, $matches)) {
+                return $prefijo . 'AA0001';
+            }
 
-        $letras = $matches[1];
-        $numero = (int)$matches[2];
+            $letras = $matches[1];
+            $numero = (int)$matches[2];
 
-        $numero++;
+            $numero++;
 
-        if ($numero > 9999) {
-            $numero = 1;
-            $letras = $this->incrementarLetras($letras);
-        }
+            if ($numero > 9999) {
+                $numero = 1;
+                $letras = $this->incrementarLetras($letras);
+            }
 
-        return $prefijo . $letras . str_pad($numero, 4, '0', STR_PAD_LEFT);
+            return $prefijo . $letras . str_pad($numero, 4, '0', STR_PAD_LEFT);
+        });
     }
 
     /**

@@ -45,4 +45,23 @@ class Pdf extends Model
     {
         return $this->hasMany(TokenDescarga::class);
     }
+
+    /**
+     * Alias para tokensDescarga (uso simplificado)
+     */
+    public function tokens(): HasMany
+    {
+        return $this->tokensDescarga();
+    }
+
+    /**
+     * Obtiene el token vigente (no expirado) más reciente para este PDF.
+     */
+    public function tokenVigente(): ?TokenDescarga
+    {
+        return $this->tokens()
+            ->where('fecha_expiracion', '>', now())
+            ->latest()
+            ->first();
+    }
 }

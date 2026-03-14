@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Analisis;
 use App\Models\LogDescarga;
-use App\Models\Muestra;
 use App\Models\TokenDescarga;
 use App\Services\AnalisisPdfService;
 use Illuminate\Http\Request;
@@ -20,18 +19,12 @@ class PdfController extends Controller
     }
 
     /**
-     * Genera y descarga el PDF de un análisis
+     * Genera y descarga el PDF de un análisis (uso admin)
+     * Reutiliza el PDF existente si ya fue generado.
      */
     public function descargar(int $analisisId)
     {
-        $analisis = Analisis::with([
-            'muestra.especie',
-            'muestra.veterinaria',
-            'tipoAnalisis.plantillas',
-            'bioquimico',
-            'aprobador',
-            'resultados',
-        ])->findOrFail($analisisId);
+        $analisis = Analisis::findOrFail($analisisId);
 
         // Verificar que esté aprobado o enviado
         $estadosValidos = [Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO];
@@ -40,8 +33,12 @@ class PdfController extends Controller
         }
 
         try {
-            $resultado = $this->pdfService->generar($analisis);
-            return $resultado['pdf']->stream($resultado['nombre']);
+            $resultado = $this->pdfService->obtenerOGenerar($analisis);
+
+            return response()->file($resultado['fullPath'], [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="'.$resultado['nombre'].'"',
+            ]);
         } catch (\Exception $e) {
             \Log::error('Error generando PDF:', [
                 'analisis_id' => $analisisId,
@@ -53,18 +50,12 @@ class PdfController extends Controller
     }
 
     /**
-     * Ver el PDF en el navegador (sin descargar)
+     * Ver el PDF en el navegador (uso admin)
+     * Reutiliza el PDF existente si ya fue generado.
      */
     public function ver(int $analisisId)
     {
-        $analisis = Analisis::with([
-            'muestra.especie',
-            'muestra.veterinaria',
-            'tipoAnalisis',
-            'bioquimico',
-            'aprobador',
-            'resultados',
-        ])->findOrFail($analisisId);
+        $analisis = Analisis::findOrFail($analisisId);
 
         $estadosValidos = [Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO];
         if (! in_array($analisis->estado, $estadosValidos)) {
@@ -72,9 +63,12 @@ class PdfController extends Controller
         }
 
         try {
-            $resultado = $this->pdfService->generar($analisis);
+            $resultado = $this->pdfService->obtenerOGenerar($analisis);
 
-            return $resultado['pdf']->stream($resultado['nombre']);
+            return response()->file($resultado['fullPath'], [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="'.$resultado['nombre'].'"',
+            ]);
         } catch (\Exception $e) {
             return back()->with('error', 'Error al generar el PDF: '.$e->getMessage());
         }
@@ -126,16 +120,13 @@ class PdfController extends Controller
             abort(404, 'El PDF no fue encontrado.');
         }
 
-        // Verificar que el archivo existe, si no, regenerarlo
+        // Verificar que el archivo existe, si no, regenerarlo (solo el archivo, sin crear registros nuevos)
         if (! Storage::disk('public')->exists($pdf->ruta_archivo)) {
-            // Intentar regenerar el PDF
             try {
                 $analisis = $pdf->analisis;
                 if ($analisis) {
-                    $pdfService = app(AnalisisPdfService::class);
-                    $resultado = $pdfService->generar($analisis);
-                    // Actualizar la ruta del PDF existente
-                    $pdf->update(['ruta_archivo' => $resultado['ruta']]);
+                    $qrUrl = $tokenDescarga->getUrlDescarga();
+                    $this->pdfService->renderizarPdf($analisis, $pdf->ruta_archivo, $qrUrl);
                 } else {
                     abort(404, 'El archivo PDF no existe y no se puede regenerar.');
                 }
@@ -161,38 +152,12 @@ class PdfController extends Controller
         $analisis = $pdf->analisis;
         $nombreArchivo = 'Resultado_'.($analisis->muestra->codigo_muestra ?? 'PDF').'_'.$analisis->id.'.pdf';
 
-        // Descargar el archivo
-        return Storage::disk('public')->download($pdf->ruta_archivo, $nombreArchivo);
-    }
+        // Mostrar el PDF en el navegador (inline)
+        $fullPath = Storage::disk('public')->path($pdf->ruta_archivo);
 
-    /**
-     * Ver el PDF en el navegador buscando por código de muestra (ruta pública)
-     */
-    public function verPorCodigoMuestra(string $codigoMuestra)
-    {
-        // Buscar la muestra por código
-        $muestra = Muestra::where('codigo_muestra', $codigoMuestra)->first();
-
-        if (! $muestra) {
-            abort(404, 'No se encontró una muestra con el código proporcionado.');
-        }
-
-        // Buscar el análisis más reciente aprobado o enviado
-        $analisis = $muestra->analisis()
-            ->whereIn('estado', [Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO])
-            ->latest()
-            ->first();
-
-        if (! $analisis) {
-            abort(404, 'No se encontraron resultados disponibles para esta muestra.');
-        }
-
-        try {
-            $resultado = $this->pdfService->generar($analisis);
-
-            return $resultado['pdf']->stream($resultado['nombre']);
-        } catch (\Exception $e) {
-            abort(500, 'Error al generar el PDF: '.$e->getMessage());
-        }
+        return response()->file($fullPath, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="'.$nombreArchivo.'"',
+        ]);
     }
 }

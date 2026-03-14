@@ -41,15 +41,17 @@ class EnvioResultadosService
 
         $telefono = $this->resolverTelefonoWhatsapp($analisis->muestra->veterinaria, $telefonoSeleccionado);
 
-        // Obtener o generar el PDF
-        $pdf = $analisis->pdfs()->latest()->first();
-        if (! $pdf) {
-            $resultado = $this->pdfService->generar($analisis);
-            $pdf = $resultado['modelo'];
-        }
+        // Obtener o generar el PDF (reutiliza si ya existe)
+        $resultado = $this->pdfService->obtenerOGenerar($analisis);
+        $pdf = $resultado['modelo'];
 
-        // Crear token de descarga (14 días)
-        $tokenDescarga = TokenDescarga::crearParaPdf($pdf->id, self::DIAS_EXPIRACION_ENLACE);
+        // Reutilizar token vigente; solo crear uno nuevo si expiró
+        $tokenDescarga = $pdf->tokenVigente();
+        if (! $tokenDescarga) {
+            $tokenDescarga = TokenDescarga::crearParaPdf($pdf->id, self::DIAS_EXPIRACION_ENLACE);
+            // Re-renderizar el PDF con el nuevo token en el QR
+            $this->pdfService->renderizarPdf($analisis, $pdf->ruta_archivo, $tokenDescarga->getUrlDescarga());
+        }
         $urlDescarga = $tokenDescarga->getUrlDescarga();
 
         // Construir mensaje y URL
@@ -92,16 +94,22 @@ class EnvioResultadosService
         $linksDescarga = [];
 
         foreach ($analisisCollection as $analisis) {
-            $pdf = $analisis->pdfs()->latest()->first();
-            if (! $pdf) {
-                $resultado = $this->pdfService->generar($analisis);
-                $pdf = $resultado['modelo'];
-            }
+            // Obtener o generar el PDF (reutiliza si ya existe)
+            $resultado = $this->pdfService->obtenerOGenerar($analisis);
+            $pdf = $resultado['modelo'];
 
-            $tokenDescarga = TokenDescarga::crearParaPdf($pdf->id, self::DIAS_EXPIRACION_ENLACE);
+            // Reutilizar token vigente; solo crear uno nuevo si expiró
+            $tokenDescarga = $pdf->tokenVigente();
+            if (! $tokenDescarga) {
+                $tokenDescarga = TokenDescarga::crearParaPdf($pdf->id, self::DIAS_EXPIRACION_ENLACE);
+                // Re-renderizar el PDF con el nuevo token en el QR
+                $this->pdfService->renderizarPdf($analisis, $pdf->ruta_archivo, $tokenDescarga->getUrlDescarga());
+            }
+            $urlToken = $tokenDescarga->getUrlDescarga();
+
             $linksDescarga[] = [
                 'nombre' => $analisis->tipoAnalisis->nombre ?? 'Análisis',
-                'url' => $tokenDescarga->getUrlDescarga(),
+                'url' => $urlToken,
             ];
 
             $analisis->update(['estado' => Analisis::ESTADO_ENVIADO]);
@@ -141,14 +149,10 @@ class EnvioResultadosService
             throw new \Exception('La veterinaria no tiene un correo electrónico registrado.');
         }
 
-        // Obtener o generar el PDF
-        $pdf = $analisis->pdfs()->latest()->first();
-        if (! $pdf) {
-            $resultado = $this->pdfService->generar($analisis);
-            $pdf = $resultado['modelo'];
-        }
+        // Obtener o generar el PDF (reutiliza si ya existe)
+        $this->pdfService->obtenerOGenerar($analisis);
 
-        // Refrescar la relación de PDFs para asegurar que el recién creado esté disponible
+        // Refrescar la relación de PDFs
         $analisis->load('pdfs');
 
         $muestra = $analisis->muestra->load(['veterinaria', 'sucursal', 'especie']);
@@ -191,11 +195,8 @@ class EnvioResultadosService
         $analisisIds = [];
 
         foreach ($analisisCollection as $analisis) {
-            $pdf = $analisis->pdfs()->latest()->first();
-            if (! $pdf) {
-                $resultado = $this->pdfService->generar($analisis);
-                $pdf = $resultado['modelo'];
-            }
+            // Obtener o generar el PDF (reutiliza si ya existe)
+            $this->pdfService->obtenerOGenerar($analisis);
 
             $analisisIds[] = $analisis->id;
             $analisis->update(['estado' => Analisis::ESTADO_ENVIADO]);

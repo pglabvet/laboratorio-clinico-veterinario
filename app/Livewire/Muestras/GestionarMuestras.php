@@ -30,7 +30,7 @@ class GestionarMuestras extends Component
 
     public $fecha_recepcion;
 
-    public $estado = 'Pendiente';
+    public $estado = Muestra::ESTADO_PENDIENTE;
 
     public $observaciones;
 
@@ -409,7 +409,7 @@ class GestionarMuestras extends Component
                     'sucursal_id' => $this->sucursal_id,
                     'tipo_muestra' => $this->tipo_muestra,
                     'fecha_recepcion' => now(),
-                    'estado' => 'Pendiente',
+                    'estado' => Muestra::ESTADO_PENDIENTE,
                     'observaciones' => $this->observaciones,
                 ]);
 
@@ -419,7 +419,7 @@ class GestionarMuestras extends Component
                         'muestra_id' => $muestra->id,
                         'tipo_analisis_id' => $tipo_analisis_id,
                         'bioquimico_id' => auth()->id(),
-                        'estado' => 'Pendiente',
+                        'estado' => Analisis::ESTADO_PENDIENTE,
                         'fecha_inicio' => now(),
                     ]);
                 }
@@ -485,7 +485,7 @@ class GestionarMuestras extends Component
             $pepsService = app(PepsInventarioService::class);
             $movimientosConsumo = MovimientoInventario::where('tipo_movimiento', 'CONSUMO_ANALISIS')
                 ->where('sucursal_id', $muestra->sucursal_id)
-                ->where('observacion', 'like', "%Muestra: {$muestra->codigo_muestra}%")
+                ->where('observacion', 'ilike', "%Muestra: {$muestra->codigo_muestra}%")
                 ->get();
 
             foreach ($movimientosConsumo as $movimiento) {
@@ -500,7 +500,7 @@ class GestionarMuestras extends Component
             }
 
             // Eliminar análisis pendientes
-            $muestra->analisis()->where('estado', 'Pendiente')->delete();
+            $muestra->analisis()->where('estado', Analisis::ESTADO_PENDIENTE)->delete();
 
             $muestra->delete();
 
@@ -552,7 +552,7 @@ class GestionarMuestras extends Component
         $this->observaciones = '';
         $this->tipos_analisis_seleccionados = [];
         $this->sucursal_id = auth()->user()->sucursal_id ?? Sucursal::first()?->id;
-        $this->estado = 'Pendiente';
+        $this->estado = Muestra::ESTADO_PENDIENTE;
     }
 
     /**

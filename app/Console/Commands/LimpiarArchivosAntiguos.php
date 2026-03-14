@@ -92,36 +92,36 @@ class LimpiarArchivosAntiguos extends Command
         $archivosEliminados = 0;
         $registrosEliminados = 0;
 
-        $pdfsAntiguos = Pdf::where('fecha_generacion', '<', $fechaLimite)->get();
+        Pdf::where('fecha_generacion', '<', $fechaLimite)->chunk(200, function ($pdfsAntiguos) use ($disk, $dryRun, &$archivosEliminados, &$registrosEliminados) {
+            foreach ($pdfsAntiguos as $pdf) {
+                $ruta = $pdf->ruta_archivo;
+                $existeArchivo = $disk->exists($ruta);
+                $tamaño = $existeArchivo ? $this->formatearTamaño($disk->size($ruta)) : 'N/A';
+                $fecha = $pdf->fecha_generacion->format('d/m/Y H:i');
 
-        foreach ($pdfsAntiguos as $pdf) {
-            $ruta = $pdf->ruta_archivo;
-            $existeArchivo = $disk->exists($ruta);
-            $tamaño = $existeArchivo ? $this->formatearTamaño($disk->size($ruta)) : 'N/A';
-            $fecha = $pdf->fecha_generacion->format('d/m/Y H:i');
+                if ($dryRun) {
+                    $estado = $existeArchivo ? 'archivo + registro' : 'solo registro (archivo no existe)';
+                    $this->line("   [SIMULAR] {$ruta} ({$tamaño}) - Generado: {$fecha} - {$estado}");
+                } else {
+                    // Eliminar archivo físico si existe
+                    if ($existeArchivo) {
+                        $disk->delete($ruta);
+                        $archivosEliminados++;
+                    }
 
-            if ($dryRun) {
-                $estado = $existeArchivo ? 'archivo + registro' : 'solo registro (archivo no existe)';
-                $this->line("   [SIMULAR] {$ruta} ({$tamaño}) - Generado: {$fecha} - {$estado}");
-            } else {
-                // Eliminar archivo físico si existe
-                if ($existeArchivo) {
-                    $disk->delete($ruta);
-                    $archivosEliminados++;
+                    // Eliminar registro de la BD siempre
+                    $pdf->delete();
+                    $registrosEliminados++;
+
+                    $this->line("   [ELIMINADO] {$ruta} ({$tamaño}) - Generado: {$fecha}");
                 }
 
-                // Eliminar registro de la BD siempre
-                $pdf->delete();
-                $registrosEliminados++;
-
-                $this->line("   [ELIMINADO] {$ruta} ({$tamaño}) - Generado: {$fecha}");
+                if ($dryRun) {
+                    $archivosEliminados += $existeArchivo ? 1 : 0;
+                    $registrosEliminados++;
+                }
             }
-
-            if ($dryRun) {
-                $archivosEliminados += $existeArchivo ? 1 : 0;
-                $registrosEliminados++;
-            }
-        }
+        });
 
         $accion = $dryRun ? 'encontrados' : 'eliminados';
         $this->info("📁 PDFs (base de datos): {$registrosEliminados} registros {$accion}");
@@ -186,20 +186,20 @@ class LimpiarArchivosAntiguos extends Command
         $disk = Storage::disk('public');
         $eliminados = 0;
 
-        $todosPdfs = Pdf::all();
+        Pdf::chunk(200, function ($pdfs) use ($disk, $dryRun, &$eliminados) {
+            foreach ($pdfs as $pdf) {
+                if (! $disk->exists($pdf->ruta_archivo)) {
+                    if ($dryRun) {
+                        $this->line("   [SIMULAR] Registro huérfano ID={$pdf->id}: {$pdf->ruta_archivo} (archivo no existe)");
+                    } else {
+                        $pdf->delete();
+                        $this->line("   [ELIMINADO] Registro huérfano ID={$pdf->id}: {$pdf->ruta_archivo}");
+                    }
 
-        foreach ($todosPdfs as $pdf) {
-            if (! $disk->exists($pdf->ruta_archivo)) {
-                if ($dryRun) {
-                    $this->line("   [SIMULAR] Registro huérfano ID={$pdf->id}: {$pdf->ruta_archivo} (archivo no existe)");
-                } else {
-                    $pdf->delete();
-                    $this->line("   [ELIMINADO] Registro huérfano ID={$pdf->id}: {$pdf->ruta_archivo}");
+                    $eliminados++;
                 }
-
-                $eliminados++;
             }
-        }
+        });
 
         $accion = $dryRun ? 'encontrados' : 'eliminados';
         $this->info("🗃️  Registros huérfanos (sin archivo): {$eliminados} {$accion}");
