@@ -13,6 +13,7 @@ use App\Services\EnvioResultadosService;
 use App\Services\MuestraService;
 use App\Services\PepsInventarioService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -253,7 +254,7 @@ class GestionarMuestras extends Component
 
             session()->flash('mensaje', $resultado['mensaje']);
         } catch (\Exception $e) {
-            \Log::error('Error al generar enlace de WhatsApp para análisis '.$analisisId.': '.$e->getMessage(), [
+            Log::error('Error al generar enlace de WhatsApp para análisis '.$analisisId.': '.$e->getMessage(), [
                 'exception' => $e,
             ]);
             session()->flash('error', 'No se pudo generar el enlace de WhatsApp. El análisis no ha sido marcado como enviado. Detalle técnico: '.$e->getMessage());
@@ -300,7 +301,7 @@ class GestionarMuestras extends Component
 
             session()->flash('mensaje', $mensaje);
         } catch (\Exception $e) {
-            \Log::error('Error al enviar email para análisis '.$analisisId.': '.$e->getMessage(), [
+            Log::error('Error al enviar email para análisis '.$analisisId.': '.$e->getMessage(), [
                 'exception' => $e,
             ]);
             session()->flash('error', 'No se pudo enviar el correo electrónico. Detalle: '.$e->getMessage());
@@ -326,7 +327,7 @@ class GestionarMuestras extends Component
 
             session()->flash('mensaje', $mensaje);
         } catch (\Exception $e) {
-            \Log::error('Error al enviar todos los análisis por email: '.$e->getMessage(), [
+            Log::error('Error al enviar todos los análisis por email: '.$e->getMessage(), [
                 'exception' => $e,
             ]);
             session()->flash('error', 'Error al enviar los resultados por correo: '.$e->getMessage());
