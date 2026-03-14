@@ -19,6 +19,13 @@
     {{-- Session Status --}}
     <x-auth-session-status class="text-center" :status="session('status')" />
 
+    {{-- Error de cuenta desactivada --}}
+    @if(session('error'))
+        <div class="rounded-lg border border-red-800/50 bg-red-950/50 px-4 py-3 text-sm text-red-400">
+            {{ session('error') }}
+        </div>
+    @endif
+
     <form method="POST" action="{{ route('login.store') }}" class="flex flex-col gap-5" id="login-form">
         @csrf
 
