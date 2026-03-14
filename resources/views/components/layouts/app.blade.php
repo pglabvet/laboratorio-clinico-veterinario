@@ -27,6 +27,12 @@
                 position: relative;
                 z-index: 1;
             }
+
+            /* Header needs higher z-index so notification dropdowns appear above page content */
+            .dark body.app-bg > header,
+            .dark body.app-bg > [data-flux-header] {
+                z-index: 10;
+            }
         </style>
     </head>
     <body class="min-h-screen bg-gray-100 dark:bg-zinc-800 app-bg">
