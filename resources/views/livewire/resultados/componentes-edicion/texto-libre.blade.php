@@ -116,12 +116,14 @@
             if (this.quill) {
                 this.contenido = this.quill.root.innerHTML;
             }
-            
-            $wire.set('componentesData.{{ $index }}.data', {
+            const data = {
                 titulo: '{{ $componente['propiedades']['titulo'] ?? '' }}',
                 formato: '{{ $componente['propiedades']['formato'] ?? 'parrafos' }}',
                 contenido: this.contenido
-            });
+            };
+            window.__labvetData = window.__labvetData || {};
+            window.__labvetData['{{ $index }}'] = data;
+            $wire.set('componentesData.{{ $index }}.data', data);
         }
     }"
     class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:bg-zinc-900"

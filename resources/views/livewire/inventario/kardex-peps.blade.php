@@ -11,67 +11,101 @@
     <x-toast type="danger" :message="session('error')" />
 
     {{-- Filtros --}}
-    <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
-        <flux:heading size="lg" class="mb-4">Filtros</flux:heading>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {{-- Sucursal --}}
-            <flux:select 
-                wire:model.live="sucursal_id"
-                label="Sucursal"
-                placeholder="Seleccione..."
-            >
-                <option value="">Seleccione...</option>
-                @foreach($this->sucursales as $sucursal)
-                    <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
-                @endforeach
-            </flux:select>
-
-            {{-- Categoría de Insumo (Filtro) --}}
-            <flux:select 
-                wire:model.live="filtro_categoria"
-                label="Categoría de Insumo"
-            >
-                <option value="">Todas las categorías</option>
-                @foreach($this->categorias as $categoria)
-                    <option value="{{ $categoria->id }}">{{ $categoria->nombre }}</option>
-                @endforeach
-            </flux:select>
-            {{-- Insumo --}}
-            <flux:select 
-                wire:model.live="insumo_id"
-                label="Insumo"
-                placeholder="Seleccione..."
-            >
-                <option value="">Seleccione...</option>
-                @foreach($this->insumos as $insumo)
-                    <option value="{{ $insumo->id }}">{{ $insumo->nombre }}</option>
-                @endforeach
-            </flux:select>
-
-            {{-- Fecha Desde --}}
-            <flux:input 
-                wire:model.live="fecha_desde"
-                label="Fecha Desde"
-                type="date"
-            />
-
-            {{-- Fecha Hasta --}}
-            <flux:input 
-                wire:model.live="fecha_hasta"
-                label="Fecha Hasta"
-                type="date"
-            />
+    <div class="mb-2" x-data="{
+        mostrarFiltros: window.innerWidth >= 640,
+        get filtrosActivos() {
+            let count = 0;
+            if ($wire.sucursal_id) count++;
+            if ($wire.filtro_categoria) count++;
+            if ($wire.insumo_id) count++;
+            if ($wire.fecha_desde) count++;
+            if ($wire.fecha_hasta) count++;
+            return count;
+        }
+    }">
+        {{-- Toggle móvil --}}
+        <div class="mb-3 sm:hidden">
+            <flux:button @click="mostrarFiltros = !mostrarFiltros" variant="outline" icon="funnel" class="w-full relative">
+                <span x-text="mostrarFiltros ? 'Ocultar filtros' : 'Mostrar filtros'"></span>
+                <span x-show="filtrosActivos > 0" class="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-blue-600 rounded-full" x-text="filtrosActivos"></span>
+            </flux:button>
         </div>
 
-        <div class="mt-4 flex gap-3">
-            <flux:button 
-                wire:click="limpiarFiltros"
-                variant="outline"
-                icon="arrow-path"
-            >
-                Limpiar
-            </flux:button>
+        <div x-show="mostrarFiltros"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 -translate-y-2"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 -translate-y-2"
+             class="rounded-lg border border-neutral-200 bg-neutral-50 p-3 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
+
+            <div class="grid grid-cols-2 gap-3 sm:flex sm:flex-row sm:flex-wrap sm:items-end">
+                {{-- Sucursal --}}
+                <div class="w-full sm:w-auto">
+                    <flux:dropdown>
+                        <flux:button variant="outline" icon="building-office-2" icon-trailing="chevron-down">
+                            {{ $sucursal_id ? $this->sucursales->firstWhere('id', $sucursal_id)?->nombre : 'Sucursal' }}
+                        </flux:button>
+                        <flux:menu>
+                            <flux:menu.item wire:click="$set('sucursal_id', '')" icon="bars-3">Todas las sucursales</flux:menu.item>
+                            <flux:menu.separator />
+                            @foreach($this->sucursales as $sucursal)
+                                <flux:menu.item wire:click="$set('sucursal_id', '{{ $sucursal->id }}')" icon="building-storefront">{{ $sucursal->nombre }}</flux:menu.item>
+                            @endforeach
+                        </flux:menu>
+                    </flux:dropdown>
+                </div>
+
+                {{-- Categoría --}}
+                <div class="w-full sm:w-auto">
+                    <flux:dropdown>
+                        <flux:button variant="outline" icon="tag" icon-trailing="chevron-down">
+                            {{ $filtro_categoria ? $this->categorias->firstWhere('id', $filtro_categoria)?->nombre : 'Categoría' }}
+                        </flux:button>
+                        <flux:menu>
+                            <flux:menu.item wire:click="$set('filtro_categoria', '')" icon="bars-3">Todas las categorías</flux:menu.item>
+                            <flux:menu.separator />
+                            @foreach($this->categorias as $categoria)
+                                <flux:menu.item wire:click="$set('filtro_categoria', '{{ $categoria->id }}')" icon="tag">{{ $categoria->nombre }}</flux:menu.item>
+                            @endforeach
+                        </flux:menu>
+                    </flux:dropdown>
+                </div>
+
+                {{-- Insumo --}}
+                <div class="w-full sm:w-auto">
+                    <flux:dropdown>
+                        <flux:button variant="outline" icon="beaker" icon-trailing="chevron-down">
+                            {{ $insumo_id ? $this->insumos->firstWhere('id', $insumo_id)?->nombre : 'Insumo' }}
+                        </flux:button>
+                        <flux:menu>
+                            <flux:menu.item wire:click="$set('insumo_id', '')" icon="bars-3">Todos los insumos</flux:menu.item>
+                            <flux:menu.separator />
+                            @foreach($this->insumos as $insumo)
+                                <flux:menu.item wire:click="$set('insumo_id', '{{ $insumo->id }}')" icon="beaker">{{ $insumo->nombre }}</flux:menu.item>
+                            @endforeach
+                        </flux:menu>
+                    </flux:dropdown>
+                </div>
+
+                {{-- Fecha desde --}}
+                <div>
+                    <flux:input type="date" wire:model.live="fecha_desde" label="Desde" />
+                </div>
+
+                {{-- Fecha hasta --}}
+                <div>
+                    <flux:input type="date" wire:model.live="fecha_hasta" label="Hasta" />
+                </div>
+
+                {{-- Limpiar --}}
+                <div class="w-full sm:w-auto">
+                    <flux:button wire:click="limpiarFiltros" variant="outline" icon="x-mark">
+                        Limpiar
+                    </flux:button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -344,7 +378,7 @@
                 </div>
             @endif
         </div>
-    @elseif($sucursal_id && ($insumo_id || $filtro_categoria))
+    @elseif($sucursal_id)
         <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700 p-12 text-center">
             <div class="flex flex-col items-center justify-center text-neutral-500 dark:text-neutral-400">
                 <flux:icon.document-text class="mb-3 size-16" />
@@ -356,8 +390,8 @@
         <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700 p-12 text-center">
             <div class="flex flex-col items-center justify-center text-neutral-500 dark:text-neutral-400">
                 <flux:icon.funnel class="mb-3 size-16" />
-                <p class="text-lg font-medium">Seleccione los filtros</p>
-                <p class="text-sm mt-1">Escoja una sucursal y un insumo (o categoría) para generar el Kardex PEPS</p>
+                <p class="text-lg font-medium">Seleccione una sucursal</p>
+                <p class="text-sm mt-1">Escoja una sucursal para generar el Kardex PEPS. Opcionalmente filtre por categoría o insumo específico</p>
             </div>
         </div>
     @endif

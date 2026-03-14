@@ -2,31 +2,39 @@
 
 namespace App\Livewire\Plantillas;
 
-use Livewire\Component;
+use App\Models\CategoriaInsumo;
+use App\Models\Insumo;
 use App\Models\PlantillaFormulario;
 use App\Models\TipoAnalisis;
-use App\Models\Insumo;
-use App\Models\CategoriaInsumo;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Component;
 
 class GestionarPlantillas extends Component
 {
     public $plantillaId = null;
+
     public $nombreFormulario = '';
+
     public $descripcionFormulario = '';
+
     public $tipo_analisis_id = null;
+
     public $componentes = [];
+
     public $componenteSeleccionado = null;
-    
+
     // Insumos requeridos
     public $insumos = []; // Array de insumos agregados
+
     public $categoriaInsumoFiltro = [];
-    
+
     // Campos temporales para agregar nuevo insumo
     public $nuevaCategoria = '';
+
     public $nuevoInsumo = '';
+
     public $nuevaCantidad = 1;
-    
+
     // Tipos de componentes disponibles
     // Nota: tabla-info no está aquí porque se incluye automáticamente en todos los análisis
     public $tiposComponentes = [
@@ -34,6 +42,7 @@ class GestionarPlantillas extends Component
         'antibiograma' => 'Antibiograma',
         'tabla-hematologica' => 'Tabla Hematologica',
         'tabla-dos-columnas' => 'Tabla de Dos Columnas',
+        'serologia' => 'Serología',
         'tabla-temporal' => 'Tabla Temporal con Gráfica',
         'carga-viral' => 'Carga Viral qPCR',
         'campos-etiquetados' => 'Lista de Campos Etiquetados',
@@ -42,6 +51,9 @@ class GestionarPlantillas extends Component
         'subtitulo' => 'Subtitulo',
         // 'campo-imagenes' => 'Campo de Imagenes', // TODO: Deshabilitado temporalmente - Fase 2
         'campo-texto' => 'Campo de Texto Simple',
+        'examen-microscopico' => 'Examen Microscópico',
+        'examen-diferencial' => 'Examen Diferencial',
+        'coproparasitologia-seriado' => 'Coproparasitología Seriado',
     ];
 
     public function mount($plantilla = null)
@@ -53,22 +65,22 @@ class GestionarPlantillas extends Component
         // Si existe el parÃƒÂ¡metro 'duplicar', cargar datos de esa plantilla
         elseif (request()->has('duplicar')) {
             $plantillaOriginal = PlantillaFormulario::with('insumos')->findOrFail(request('duplicar'));
-            $this->nombreFormulario = $plantillaOriginal->nombre . ' (Copia)';
+            $this->nombreFormulario = $plantillaOriginal->nombre.' (Copia)';
             $this->descripcionFormulario = $plantillaOriginal->descripcion;
             $this->tipo_analisis_id = $plantillaOriginal->tipo_analisis_id;
-            
+
             // Cargar insumos asociados
-            $this->insumos = $plantillaOriginal->insumos->map(function($insumo) {
+            $this->insumos = $plantillaOriginal->insumos->map(function ($insumo) {
                 return [
                     'insumo_id' => $insumo->id,
                     'cantidad_requerida' => $insumo->pivot->cantidad_requerida,
                 ];
             })->toArray();
-            
+
             // Asegurar que todos los componentes tengan ID
             $componentes = $plantillaOriginal->componentes ?? [];
             foreach ($componentes as &$componente) {
-                if (!isset($componente['id'])) {
+                if (! isset($componente['id'])) {
                     $componente['id'] = uniqid('comp_', true);
                 }
             }
@@ -86,19 +98,19 @@ class GestionarPlantillas extends Component
         $this->nombreFormulario = $plantilla->nombre;
         $this->descripcionFormulario = $plantilla->descripcion ?? '';
         $this->tipo_analisis_id = $plantilla->tipo_analisis_id;
-        
+
         // Cargar insumos asociados
-        $this->insumos = $plantilla->insumos->map(function($insumo) {
+        $this->insumos = $plantilla->insumos->map(function ($insumo) {
             return [
                 'insumo_id' => $insumo->id,
                 'cantidad_requerida' => $insumo->pivot->cantidad_requerida,
             ];
         })->toArray();
-        
+
         // Asegurar que todos los componentes tengan ID
         $componentes = $plantilla->componentes ?? [];
         foreach ($componentes as &$componente) {
-            if (!isset($componente['id'])) {
+            if (! isset($componente['id'])) {
                 $componente['id'] = uniqid('comp_', true);
             }
         }
@@ -113,7 +125,7 @@ class GestionarPlantillas extends Component
             'tipo' => $tipo,
             'propiedades' => $this->propiedadesPorDefecto($tipo),
         ];
-        
+
         $this->componentes[] = $componente;
         // Re-indexar para asegurar que los ÃƒÂ­ndices sean estables
         $this->componentes = array_values($this->componentes);
@@ -122,9 +134,9 @@ class GestionarPlantillas extends Component
     public function eliminarComponente($id)
     {
         $this->componentes = array_values(
-            array_filter($this->componentes, fn($c) => $c['id'] !== $id)
+            array_filter($this->componentes, fn ($c) => $c['id'] !== $id)
         );
-        
+
         if ($this->componenteSeleccionado === $id) {
             $this->componenteSeleccionado = null;
         }
@@ -137,7 +149,7 @@ class GestionarPlantillas extends Component
 
     public function actualizarPropiedadComponente($componenteId, $path, $valor)
     {
-        $index = collect($this->componentes)->search(fn($c) => $c['id'] === $componenteId);
+        $index = collect($this->componentes)->search(fn ($c) => $c['id'] === $componenteId);
         if ($index !== false) {
             data_set($this->componentes[$index]['propiedades'], $path, $valor);
         }
@@ -156,13 +168,14 @@ class GestionarPlantillas extends Component
 
     public function getComponenteIndexPorId($id)
     {
-        $index = collect($this->componentes)->search(fn($c) => $c['id'] === $id);
+        $index = collect($this->componentes)->search(fn ($c) => $c['id'] === $id);
+
         return $index !== false ? $index : null;
     }
 
     private function propiedadesPorDefecto($tipo)
     {
-        return match($tipo) {
+        return match ($tipo) {
             'tabla-info' => [
                 'titulo' => 'INFORMACION DEL PACIENTE',
                 'filas' => [
@@ -189,24 +202,24 @@ class GestionarPlantillas extends Component
             'tabla-hematologica' => [
                 'titulo' => 'CUADRO HEMÁTICO',
                 'parametros_principales' => [
-                    ['nombre' => 'Eritrocitos', 'unidad' => 'mm³', 'ref_min' => '5.500.000', 'ref_max' => '8.500.000'],
-                    ['nombre' => 'Leucocitos', 'unidad' => 'mm³', 'ref_min' => '6.000', 'ref_max' => '16.000'],
-                    ['nombre' => 'Hematocrito', 'unidad' => '%', 'ref_min' => '34', 'ref_max' => '37'],
-                    ['nombre' => 'Hemoglobina', 'unidad' => 'g/dl', 'ref_min' => '8', 'ref_max' => '11'],
-                    ['nombre' => 'Recuento de plaquetas', 'unidad' => 'mm³', 'ref_min' => '150.000', 'ref_max' => '500.000'],
+                    ['nombre' => 'Eritrocitos', 'unidad' => 'mm³', 'rango_tipo' => 'min-max', 'rango_min' => '5500000', 'rango_max' => '8500000', 'rango_valor' => ''],
+                    ['nombre' => 'Leucocitos', 'unidad' => 'mm³', 'rango_tipo' => 'min-max', 'rango_min' => '6000', 'rango_max' => '16000', 'rango_valor' => ''],
+                    ['nombre' => 'Hematocrito', 'unidad' => '%', 'rango_tipo' => 'min-max', 'rango_min' => '34', 'rango_max' => '37', 'rango_valor' => ''],
+                    ['nombre' => 'Hemoglobina', 'unidad' => 'g/dl', 'rango_tipo' => 'min-max', 'rango_min' => '8', 'rango_max' => '11', 'rango_valor' => ''],
+                    ['nombre' => 'Recuento de plaquetas', 'unidad' => 'mm³', 'rango_tipo' => 'min-max', 'rango_min' => '150000', 'rango_max' => '500000', 'rango_valor' => ''],
                 ],
                 'diferenciales' => [
-                    ['nombre' => 'Cayados', 'ref_rel_min' => '0', 'ref_rel_max' => '3', 'ref_abs_min' => '0', 'ref_abs_max' => '300'],
-                    ['nombre' => 'Segmentados', 'ref_rel_min' => '60', 'ref_rel_max' => '77', 'ref_abs_min' => '6000', 'ref_abs_max' => '7000'],
-                    ['nombre' => 'Eosinófilos', 'ref_rel_min' => '2', 'ref_rel_max' => '6', 'ref_abs_min' => '200', 'ref_abs_max' => '300'],
-                    ['nombre' => 'Basófilos', 'ref_rel_min' => '0', 'ref_rel_max' => '1', 'ref_abs_min' => '0', 'ref_abs_max' => '100'],
-                    ['nombre' => 'Linfocitos', 'ref_rel_min' => '12', 'ref_rel_max' => '30', 'ref_abs_min' => '1200', 'ref_abs_max' => '3000'],
-                    ['nombre' => 'Monocitos', 'ref_rel_min' => '3', 'ref_rel_max' => '8', 'ref_abs_min' => '300', 'ref_abs_max' => '800'],
+                    ['nombre' => 'Cayados', 'rango_rel_tipo' => 'min-max', 'rango_rel_min' => '0', 'rango_rel_max' => '3', 'rango_rel_valor' => '', 'rango_abs_tipo' => 'min-max', 'rango_abs_min' => '0', 'rango_abs_max' => '300', 'rango_abs_valor' => ''],
+                    ['nombre' => 'Segmentados', 'rango_rel_tipo' => 'min-max', 'rango_rel_min' => '60', 'rango_rel_max' => '77', 'rango_rel_valor' => '', 'rango_abs_tipo' => 'min-max', 'rango_abs_min' => '6000', 'rango_abs_max' => '7000', 'rango_abs_valor' => ''],
+                    ['nombre' => 'Eosinófilos', 'rango_rel_tipo' => 'min-max', 'rango_rel_min' => '2', 'rango_rel_max' => '6', 'rango_rel_valor' => '', 'rango_abs_tipo' => 'min-max', 'rango_abs_min' => '200', 'rango_abs_max' => '300', 'rango_abs_valor' => ''],
+                    ['nombre' => 'Basófilos', 'rango_rel_tipo' => 'min-max', 'rango_rel_min' => '0', 'rango_rel_max' => '1', 'rango_rel_valor' => '', 'rango_abs_tipo' => 'min-max', 'rango_abs_min' => '0', 'rango_abs_max' => '100', 'rango_abs_valor' => ''],
+                    ['nombre' => 'Linfocitos', 'rango_rel_tipo' => 'min-max', 'rango_rel_min' => '12', 'rango_rel_max' => '30', 'rango_rel_valor' => '', 'rango_abs_tipo' => 'min-max', 'rango_abs_min' => '1200', 'rango_abs_max' => '3000', 'rango_abs_valor' => ''],
+                    ['nombre' => 'Monocitos', 'rango_rel_tipo' => 'min-max', 'rango_rel_min' => '3', 'rango_rel_max' => '8', 'rango_rel_valor' => '', 'rango_abs_tipo' => 'min-max', 'rango_abs_min' => '300', 'rango_abs_max' => '800', 'rango_abs_valor' => ''],
                 ],
                 'indices' => [
-                    ['nombre' => 'VCM', 'unidad' => 'fl', 'referencia' => 'vn 60-77 fl'],
-                    ['nombre' => 'HbCM', 'unidad' => 'pg', 'referencia' => 'vn 17-23 pg'],
-                    ['nombre' => 'CCMHb', 'unidad' => 'g/dl', 'referencia' => 'Vn 32-36 g/dl'],
+                    ['nombre' => 'VCM', 'unidad' => 'fl', 'rango_tipo' => 'min-max', 'rango_min' => '60', 'rango_max' => '77', 'rango_valor' => ''],
+                    ['nombre' => 'HbCM', 'unidad' => 'pg', 'rango_tipo' => 'min-max', 'rango_min' => '17', 'rango_max' => '23', 'rango_valor' => ''],
+                    ['nombre' => 'CCMHb', 'unidad' => 'g/dl', 'rango_tipo' => 'min-max', 'rango_min' => '32', 'rango_max' => '36', 'rango_valor' => ''],
                 ],
             ],
             'tabla-dos-columnas' => [
@@ -214,16 +227,41 @@ class GestionarPlantillas extends Component
                 'secciones' => [
                     [
                         'subtitulo' => '',
-                        'campos' => ['COLOR', 'CONSISTENCIA', 'RESTOS ALIMENTICIOS'],
+                        'campos' => [
+                            ['nombre' => 'COLOR', 'tipo_input' => 'input', 'opciones' => ''],
+                            ['nombre' => 'CONSISTENCIA', 'tipo_input' => 'input', 'opciones' => ''],
+                            ['nombre' => 'RESTOS ALIMENTICIOS', 'tipo_input' => 'input', 'opciones' => ''],
+                        ],
                     ],
                     [
                         'subtitulo' => 'EXAMEN MICROSCOPICO',
-                        'campos' => ['LEVADURAS', 'PARASITOS'],
+                        'campos' => [
+                            ['nombre' => 'LEVADURAS', 'tipo_input' => 'input', 'opciones' => ''],
+                            ['nombre' => 'PARASITOS', 'tipo_input' => 'input', 'opciones' => ''],
+                        ],
                     ],
+                ],
+            ],
+            'serologia' => [
+                'titulo' => 'SEROLOGIA',
+                'descripcion' => '',
+                'columnas' => [
+                    ['nombre' => 'PRUEBA'],
+                    ['nombre' => 'RESULTADO'],
+                ],
+                'campos' => [
+                    'Dirofilaria Immitis',
+                    'Erlichia Canis',
+                    'Leishmania infantum',
+                    'Anaplacia Phagocytophilum/Anaplacia Platys',
                 ],
             ],
             'campos-etiquetados' => [
                 'titulo' => 'CULTIVO',
+                'columnas' => [
+                    ['nombre' => 'CAMPO'],
+                    ['nombre' => 'RESULTADO'],
+                ],
                 'campos' => [
                     'MUESTRA',
                     'COLOR',
@@ -253,9 +291,9 @@ class GestionarPlantillas extends Component
                 'cantidad' => 2,
             ],
             'campo-texto' => [
-                'label' => 'Campo',
-                'placeholder' => '',
-                'tipo' => 'texto', // texto, numero, fecha
+                'titulo' => '',
+                'tipo_uso' => 'editable', // editable, nota
+                'contenido' => '',
             ],
             'tabla-temporal' => [
                 'titulo' => 'ANÁLISIS TEMPORAL',
@@ -264,17 +302,26 @@ class GestionarPlantillas extends Component
                 'filas' => [
                     [
                         'analisis' => 'Cortisol basal 1ra',
-                        'rango_referencia' => '2.0 - 6.0',
+                        'rango_tipo' => 'min-max',
+                        'rango_min' => '2.0',
+                        'rango_max' => '6.0',
+                        'rango_valor' => '',
                         'unidad' => 'ug/dL',
                     ],
                     [
                         'analisis' => 'Cortisol basal 2ra',
-                        'rango_referencia' => '2.0 - 6.0',
+                        'rango_tipo' => 'min-max',
+                        'rango_min' => '2.0',
+                        'rango_max' => '6.0',
+                        'rango_valor' => '',
                         'unidad' => 'ug/dL',
                     ],
                     [
                         'analisis' => 'Cortisol basal 3ra',
-                        'rango_referencia' => '2.0 - 6.0',
+                        'rango_tipo' => 'min-max',
+                        'rango_min' => '2.0',
+                        'rango_max' => '6.0',
+                        'rango_valor' => '',
                         'unidad' => 'ug/dL',
                     ],
                 ],
@@ -307,6 +354,53 @@ class GestionarPlantillas extends Component
                 ],
                 'mostrar_grafica' => true,
             ],
+            'examen-microscopico' => [
+                'titulo' => 'EXAMEN MICROSCOPICO',
+                'columna_parametro' => 'PARÁMETRO',
+                'columna_resultado' => 'RESULTADO',
+                'columna_rango' => 'RANGO REF.',
+                'filas' => [
+                    ['parametro' => 'LEUCOCITOS', 'rango_tipo' => 'min-max', 'rango_min' => '', 'rango_max' => '', 'rango_valor' => '', 'unidad' => ''],
+                    ['parametro' => 'CEL EPITELIALES', 'rango_tipo' => 'min-max', 'rango_min' => '', 'rango_max' => '', 'rango_valor' => '', 'unidad' => ''],
+                    ['parametro' => 'HEMATIES', 'rango_tipo' => 'min-max', 'rango_min' => '', 'rango_max' => '', 'rango_valor' => '', 'unidad' => ''],
+                    ['parametro' => 'FLORA BACTERIANA', 'rango_tipo' => 'min-max', 'rango_min' => '', 'rango_max' => '', 'rango_valor' => '', 'unidad' => ''],
+                    ['parametro' => 'OTROS', 'rango_tipo' => 'min-max', 'rango_min' => '', 'rango_max' => '', 'rango_valor' => '', 'unidad' => ''],
+                ],
+            ],
+            'examen-diferencial' => [
+                'titulo' => 'EXAMEN DIFERENCIAL CELULAR',
+                'columna_analisis' => 'ANÁLISIS',
+                'columna_resultado' => 'RESULTADO',
+                'columna_rango' => 'RANGO REF.',
+                'filas' => [
+                    ['tipo_fila' => '3col', 'nombre' => 'LEUCOCITOS', 'rango_tipo' => 'menor', 'rango_min' => '', 'rango_max' => '', 'rango_valor' => '2000', 'unidad' => 'cel/mm3', 'opciones' => ''],
+                    ['tipo_fila' => '3col', 'nombre' => 'LEUCOCITOS MONOMORFONUCLEARES', 'rango_tipo' => 'min-max', 'rango_min' => '20', 'rango_max' => '30', 'rango_valor' => '', 'unidad' => '%', 'opciones' => ''],
+                    ['tipo_fila' => '3col', 'nombre' => 'LEUCOCITOS POLIMORFONUCLEARES', 'rango_tipo' => 'min-max', 'rango_min' => '60', 'rango_max' => '70', 'rango_valor' => '', 'unidad' => '%', 'opciones' => ''],
+                    ['tipo_fila' => '2col', 'nombre' => 'ERITROCITOS', 'rango_tipo' => 'min-max', 'rango_min' => '', 'rango_max' => '', 'rango_valor' => '', 'unidad' => '', 'opciones' => 'NINGUNO,ESCASO,MODERADO,ABUNDANTE'],
+                ],
+            ],
+            'coproparasitologia-seriado' => [
+                'titulo' => 'COPROPARASITOLOGÍA SERIADO',
+                'num_muestras' => 3,
+                'mostrar_fecha' => true,
+                'secciones' => [
+                    [
+                        'subtitulo' => '',
+                        'campos' => [
+                            ['nombre' => 'COLOR', 'tipo_input' => 'select', 'opciones' => 'Café,Amarillo,Verde,Rojo,Negro,Blanco'],
+                            ['nombre' => 'CONSISTENCIA', 'tipo_input' => 'select', 'opciones' => 'Duro,Blando,Semilíquido,Líquido,Pastoso'],
+                            ['nombre' => 'RESTOS ALIMENTICIOS', 'tipo_input' => 'input', 'opciones' => ''],
+                        ],
+                    ],
+                    [
+                        'subtitulo' => 'EXAMEN MICROSCOPICO',
+                        'campos' => [
+                            ['nombre' => 'LEVADURAS', 'tipo_input' => 'input', 'opciones' => ''],
+                            ['nombre' => 'PARASITOS', 'tipo_input' => 'input', 'opciones' => ''],
+                        ],
+                    ],
+                ],
+            ],
             default => [],
         };
     }
@@ -323,19 +417,20 @@ class GestionarPlantillas extends Component
             'nuevaCantidad.numeric' => 'La cantidad debe ser un número',
             'nuevaCantidad.min' => 'La cantidad debe ser mayor a 0',
         ]);
-        
+
         // Verificar que no esté duplicado
         $existe = collect($this->insumos)->contains('insumo_id', $this->nuevoInsumo);
         if ($existe) {
             session()->flash('error', 'Este insumo ya ha sido agregado');
+
             return;
         }
-        
+
         $this->insumos[] = [
             'insumo_id' => $this->nuevoInsumo,
             'cantidad_requerida' => $this->nuevaCantidad,
         ];
-        
+
         // Limpiar campos
         $this->nuevaCategoria = '';
         $this->nuevoInsumo = '';
@@ -347,7 +442,7 @@ class GestionarPlantillas extends Component
         unset($this->insumos[$index]);
         $this->insumos = array_values($this->insumos);
     }
-    
+
     public function updatedNuevaCategoria($value)
     {
         // Limpiar el insumo seleccionado cuando cambia la categoría
@@ -377,18 +472,18 @@ class GestionarPlantillas extends Component
             if ($this->plantillaId) {
                 // Actualizar plantilla existente
                 $plantillaOriginal = PlantillaFormulario::findOrFail($this->plantillaId);
-                
+
                 // Verificar si la plantilla está en uso
                 if ($plantillaOriginal->estaEnUso()) {
                     // CREAR NUEVA VERSIÓN en lugar de modificar
                     $nuevaVersion = $plantillaOriginal->version + 1;
-                    
+
                     // Desactivar la plantilla anterior
                     $plantillaOriginal->update(['activo' => false]);
-                    
+
                     // Determinar el ID base (la primera versión de la cadena)
                     $plantillaBaseId = $plantillaOriginal->plantilla_base_id ?? $plantillaOriginal->id;
-                    
+
                     // Crear nueva versión
                     $plantilla = PlantillaFormulario::create([
                         'nombre' => $this->nombreFormulario,
@@ -400,10 +495,10 @@ class GestionarPlantillas extends Component
                         'version' => $nuevaVersion,
                         'plantilla_base_id' => $plantillaBaseId,
                     ]);
-                    
+
                     // Sincronizar insumos en la nueva versión
                     $this->sincronizarInsumos($plantilla);
-                    
+
                     $mensaje = "Se ha creado la versión {$nuevaVersion} de la plantilla. Los análisis anteriores mantienen la versión anterior.";
                 } else {
                     // Plantilla sin uso - actualizar normalmente
@@ -413,10 +508,10 @@ class GestionarPlantillas extends Component
                         'tipo_analisis_id' => $this->tipo_analisis_id ?: null,
                         'componentes' => $this->componentes,
                     ]);
-                    
+
                     // Sincronizar insumos
                     $this->sincronizarInsumos($plantillaOriginal);
-                    
+
                     $mensaje = 'Plantilla actualizada correctamente';
                 }
             } else {
@@ -431,19 +526,19 @@ class GestionarPlantillas extends Component
                     'version' => 1,
                     'plantilla_base_id' => null,
                 ]);
-                
+
                 // Sincronizar insumos
                 $this->sincronizarInsumos($plantilla);
-                
+
                 $mensaje = 'Plantilla creada correctamente';
             }
 
             session()->flash('success', $mensaje);
-            
+
             return redirect()->route('plantillas.index');
-            
+
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al guardar: ' . $e->getMessage());
+            session()->flash('error', 'Error al guardar: '.$e->getMessage());
         }
     }
 
@@ -451,15 +546,15 @@ class GestionarPlantillas extends Component
     {
         // Filtrar insumos válidos (que tengan insumo_id y cantidad)
         $insumosValidos = collect($this->insumos)
-            ->filter(function($insumo) {
-                return !empty($insumo['insumo_id']) && !empty($insumo['cantidad_requerida']);
+            ->filter(function ($insumo) {
+                return ! empty($insumo['insumo_id']) && ! empty($insumo['cantidad_requerida']);
             });
 
         // Preparar array para sync
         $syncData = [];
         foreach ($insumosValidos as $insumo) {
             $syncData[$insumo['insumo_id']] = [
-                'cantidad_requerida' => $insumo['cantidad_requerida']
+                'cantidad_requerida' => $insumo['cantidad_requerida'],
             ];
         }
 

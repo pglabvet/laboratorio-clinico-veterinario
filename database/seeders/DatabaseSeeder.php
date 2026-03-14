@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             SucursalesSeeder::class ,
             EspeciesSeeder::class ,
             VeterinariasSeeder::class ,
+            VeterinariaTelefonosSeeder::class ,
             //UnidadesMedidaSeeder::class,
             //TiposAnalisisSeeder::class ,
             //CategoriasInsumoSeeder::class,

@@ -77,7 +77,7 @@ class EstadisticasPrincipales extends Component
         
         // Muestras Pendientes (estado pendiente)
         $muestrasPendientesQuery = \App\Models\Muestra::query()
-            ->where('estado', 'Pendiente');
+            ->where('estado', Muestra::ESTADO_PENDIENTE);
         
         // Si no es admin, filtrar por sucursal del usuario automáticamente
         if (!$user->can('ver-estadisticas-completas') && $user->sucursal_id) {

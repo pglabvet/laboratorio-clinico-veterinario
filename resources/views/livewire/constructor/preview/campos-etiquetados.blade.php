@@ -1,23 +1,40 @@
 <!-- Preview de Campos Etiquetados -->
-<div class="space-y-3 p-4 border border-gray-300 dark:border-zinc-700 rounded-lg bg-gray-50 dark:bg-zinc-900">
+<div class="border border-gray-300 dark:border-zinc-700 rounded-lg overflow-hidden">
     @if(isset($props['titulo']))
-    <h4 class="font-bold text-gray-800 dark:text-zinc-100 text-center text-lg">{{ $props['titulo'] }}</h4>
+    <div class="bg-white dark:bg-zinc-800 border-b border-gray-300 dark:border-zinc-700">
+        <h4 class="font-bold text-gray-800 dark:text-zinc-100 text-center py-2">{{ $props['titulo'] }}</h4>
+    </div>
     @endif
 
-    <div class="space-y-2">
+    <table class="w-full text-sm">
+        @if(!empty($props['columnas']))
+        <thead>
+            <tr class="bg-gray-100 dark:bg-zinc-900">
+                @foreach($props['columnas'] as $columna)
+                <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 font-semibold text-gray-900 dark:text-zinc-100">
+                    {{ $columna['nombre'] ?? '' }}
+                </th>
+                @endforeach
+            </tr>
+        </thead>
+        @endif
+        <tbody>
         @if(isset($props['campos']) && count($props['campos']) > 0)
             @foreach($props['campos'] as $campo)
                 @if($campo)
-                <div class="grid grid-cols-12 gap-3 items-center py-1">
-                    <span class="col-span-4 font-semibold text-gray-700 dark:text-zinc-300 text-sm break-words">{{ $campo }}:</span>
-                    <span class="col-span-8 text-gray-400 dark:text-zinc-500 italic text-sm">(a completar)</span>
-                </div>
+                <tr>
+                    <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 font-semibold bg-gray-50 dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">{{ $campo }}</td>
+                    <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-center text-gray-400 dark:text-zinc-500 italic">(a completar)</td>
+                </tr>
                 @endif
             @endforeach
         @else
-            <p class="text-sm text-gray-400 dark:text-zinc-500 italic text-center py-4">
-                Agrega campos en las propiedades
-            </p>
+            <tr>
+                <td colspan="2" class="text-sm text-gray-400 dark:text-zinc-500 italic text-center py-4">
+                    Agrega campos en las propiedades
+                </td>
+            </tr>
         @endif
-    </div>
+        </tbody>
+    </table>
 </div>

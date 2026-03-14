@@ -1,12 +1,31 @@
 {{-- Componente de edición: Tabla Temporal con Gráfica --}}
 @php
+    $generarTextoRango = function ($fila) {
+        $tipo = $fila['rango_tipo'] ?? 'min-max';
+        $unidad = $fila['unidad'] ?? '';
+        $sufijo = $unidad ? " $unidad" : '';
+        return match($tipo) {
+            'min-max' => (!empty($fila['rango_min']) || !empty($fila['rango_max']))
+                ? ($fila['rango_min'] ?? '') . ' - ' . ($fila['rango_max'] ?? '') . $sufijo
+                : '',
+            'menor' => !empty($fila['rango_valor']) ? '< ' . $fila['rango_valor'] . $sufijo : '',
+            'menor-igual' => !empty($fila['rango_valor']) ? '<= ' . $fila['rango_valor'] . $sufijo : '',
+            'mayor' => !empty($fila['rango_valor']) ? '> ' . $fila['rango_valor'] . $sufijo : '',
+            'mayor-igual' => !empty($fila['rango_valor']) ? '>= ' . $fila['rango_valor'] . $sufijo : '',
+            default => '',
+        };
+    };
+
     // Pre-calcular todas las filas para evitar errores de sintaxis en JavaScript
     $todasFilas = [];
     foreach(($componente['propiedades']['filas'] ?? []) as $filaIndex => $fila) {
         $todasFilas[$filaIndex] = [
             'analisis' => $fila['analisis'] ?? '',
-            'hora' => '',  // El bioquímico ingresa la hora
-            'rango_referencia' => $fila['rango_referencia'] ?? '',
+            'hora' => '',
+            'rango_tipo' => $fila['rango_tipo'] ?? 'min-max',
+            'rango_min' => $fila['rango_min'] ?? '',
+            'rango_max' => $fila['rango_max'] ?? '',
+            'rango_valor' => $fila['rango_valor'] ?? '',
             'unidad' => $fila['unidad'] ?? '',
             'resultado' => ''
         ];
@@ -68,7 +87,10 @@
     },
     
     enviarDatos() {
-        $wire.set('componentesData.{{ $index }}.data', Object.values(this.filas));
+        const data = Object.values(this.filas);
+        window.__labvetData = window.__labvetData || {};
+        window.__labvetData['{{ $index }}'] = data;
+        $wire.set('componentesData.{{ $index }}.data', data);
     },
     
     // Guardar la gráfica automáticamente al servidor con reintentos
@@ -152,13 +174,23 @@
         
         // Rangos
         const rangos = Object.values(this.filas).map(f => {
-            const rango = f.rango_referencia;
-            const match = rango.match(/(\d+\.?\d*)\s*-\s*(\d+\.?\d*)/);
-            if (match) {
-                return {
-                    min: parseFloat(match[1]),
-                    max: parseFloat(match[2])
-                };
+            const tipo = f.rango_tipo || 'min-max';
+            if (tipo === 'min-max') {
+                const min = parseFloat(f.rango_min);
+                const max = parseFloat(f.rango_max);
+                if (!isNaN(min) && !isNaN(max)) {
+                    return { min, max };
+                }
+            } else if (tipo === 'menor' || tipo === 'menor-igual') {
+                const val = parseFloat(f.rango_valor);
+                if (!isNaN(val)) {
+                    return { min: 0, max: val };
+                }
+            } else if (tipo === 'mayor' || tipo === 'mayor-igual') {
+                const val = parseFloat(f.rango_valor);
+                if (!isNaN(val)) {
+                    return { min: val, max: null };
+                }
             }
             return null;
         });
@@ -271,6 +303,36 @@
         if (this.mostrarGrafica) {
             this.actualizarGrafica();
         }
+    },
+    clasificarResultado(fila) {
+        if (!fila.resultado && fila.resultado !== 0) return 'normal';
+        const res = parseFloat(fila.resultado);
+        if (isNaN(res)) return 'normal';
+        const tipo = fila.rango_tipo || 'min-max';
+        if (tipo === 'min-max') {
+            const min = parseFloat(fila.rango_min);
+            const max = parseFloat(fila.rango_max);
+            if (isNaN(min) && isNaN(max)) return 'normal';
+            const amplitud = (!isNaN(min) && !isNaN(max)) ? max - min : 0;
+            const umbral = amplitud * 0.15;
+            if (!isNaN(min) && res < min) return (amplitud > 0 && res >= min - umbral) ? 'alerta' : 'critico';
+            if (!isNaN(max) && res > max) return (amplitud > 0 && res <= max + umbral) ? 'alerta' : 'critico';
+            return 'normal';
+        }
+        const val = parseFloat(fila.rango_valor);
+        if (isNaN(val)) return 'normal';
+        const umbral = Math.abs(val) * 0.15;
+        if (tipo === 'menor' && res >= val) return res <= val + umbral ? 'alerta' : 'critico';
+        if (tipo === 'menor-igual' && res > val) return res <= val + umbral ? 'alerta' : 'critico';
+        if (tipo === 'mayor' && res <= val) return res >= val - umbral ? 'alerta' : 'critico';
+        if (tipo === 'mayor-igual' && res < val) return res >= val - umbral ? 'alerta' : 'critico';
+        return 'normal';
+    },
+    claseResultado(fila) {
+        const c = this.clasificarResultado(fila);
+        if (c === 'alerta') return 'text-blue-600 dark:text-blue-400 font-bold';
+        if (c === 'critico') return 'text-red-600 dark:text-red-400 font-bold';
+        return 'text-gray-900 dark:text-zinc-100';
     }
 }"
 x-init="init()"
@@ -320,16 +382,14 @@ class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:
                             @change="onResultadoChange()"
                             @blur="onResultadoChange()"
                             placeholder="Ingresar valor..."
-                            class="w-full px-2 py-1 border-0 focus:ring-2 focus:ring-green-500 rounded bg-transparent text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500 text-center font-semibold"
+                            :class="claseResultado(filas[{{ $filaIndex }}])"
+                            class="w-full px-2 py-1 border-0 focus:ring-2 focus:ring-green-500 rounded bg-transparent placeholder-gray-400 dark:placeholder-zinc-500 text-center font-semibold"
                         />
                     </td>
                     
                     {{-- Rangos de referencia (solo lectura) --}}
                     <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-900 dark:text-zinc-100 text-center">
-                        {{ $fila['rango_referencia'] }}
-                        @if(!empty($fila['unidad']))
-                            <span class="text-gray-500 dark:text-zinc-500 ml-2">{{ $fila['unidad'] }}</span>
-                        @endif
+                        {{ $generarTextoRango($fila) }}
                     </td>
                 </tr>
                 @endforeach

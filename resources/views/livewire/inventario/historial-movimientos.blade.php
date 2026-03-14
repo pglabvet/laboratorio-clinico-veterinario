@@ -8,7 +8,7 @@
     {{-- Estadísticas rápidas --}}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         {{-- Total Movimientos --}}
-        <div class="group block rounded-xl border border-cyan-200/60 bg-gradient-to-br from-cyan-50 via-white to-sky-50 p-6 transition-all hover:shadow-lg hover:shadow-cyan-100/50 dark:border-cyan-800/30 dark:from-cyan-950/30 dark:via-zinc-900 dark:to-sky-950/20 dark:hover:shadow-cyan-900/20">
+        <div class="group block rounded-xl border border-zinc-200 bg-white p-6 transition-all hover:border-cyan-300 hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-cyan-700">
             <div class="flex items-start justify-between">
                 <div class="flex-1">
                     <flux:heading size="sm" class="text-zinc-600 dark:text-zinc-400 font-medium">
@@ -23,14 +23,14 @@
                         Registros totales
                     </flux:subheading>
                 </div>
-                <div class="rounded-lg bg-gradient-to-br from-cyan-100 to-sky-200 p-3 transition-transform group-hover:scale-110 shadow-sm dark:from-cyan-800/30 dark:to-sky-800/20">
+                <div class="rounded-lg bg-cyan-100 p-3 transition-transform group-hover:scale-110 dark:bg-cyan-900/20">
                     <flux:icon.clipboard-document-list class="size-6 text-cyan-600 dark:text-cyan-400" />
                 </div>
             </div>
         </div>
 
         {{-- Entradas este mes --}}
-        <div class="group block rounded-xl border border-green-200/60 bg-gradient-to-br from-green-50 via-white to-emerald-50 p-6 transition-all hover:shadow-lg hover:shadow-green-100/50 dark:border-green-800/30 dark:from-green-950/30 dark:via-zinc-900 dark:to-emerald-950/20 dark:hover:shadow-green-900/20">
+        <div class="group block rounded-xl border border-zinc-200 bg-white p-6 transition-all hover:border-green-300 hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-green-700">
             <div class="flex items-start justify-between">
                 <div class="flex-1">
                     <flux:heading size="sm" class="text-zinc-600 dark:text-zinc-400 font-medium">
@@ -45,14 +45,14 @@
                         Ingresos al inventario
                     </flux:subheading>
                 </div>
-                <div class="rounded-lg bg-gradient-to-br from-green-100 to-emerald-200 p-3 transition-transform group-hover:scale-110 shadow-sm dark:from-green-800/30 dark:to-emerald-800/20">
+                <div class="rounded-lg bg-green-100 p-3 transition-transform group-hover:scale-110 dark:bg-green-900/20">
                     <flux:icon.arrow-up-tray class="size-6 text-green-600 dark:text-green-400" />
                 </div>
             </div>
         </div>
 
         {{-- Salidas este mes --}}
-        <div class="group block rounded-xl border border-red-200/60 bg-gradient-to-br from-red-50 via-white to-rose-50 p-6 transition-all hover:shadow-lg hover:shadow-red-100/50 dark:border-red-800/30 dark:from-red-950/30 dark:via-zinc-900 dark:to-rose-950/20 dark:hover:shadow-red-900/20">
+        <div class="group block rounded-xl border border-zinc-200 bg-white p-6 transition-all hover:border-red-300 hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-red-700">
             <div class="flex items-start justify-between">
                 <div class="flex-1">
                     <flux:heading size="sm" class="text-zinc-600 dark:text-zinc-400 font-medium">
@@ -67,7 +67,7 @@
                         <span class="text-red-600 dark:text-red-400">Salidas del inventario</span>
                     </flux:subheading>
                 </div>
-                <div class="rounded-lg bg-gradient-to-br from-red-100 to-rose-200 p-3 transition-transform group-hover:scale-110 shadow-sm dark:from-red-800/30 dark:to-rose-800/20">
+                <div class="rounded-lg bg-red-100 p-3 transition-transform group-hover:scale-110 dark:bg-red-900/20">
                     <flux:icon.arrow-down-tray class="size-6 text-red-600 dark:text-red-400" />
                 </div>
             </div>
@@ -75,75 +75,150 @@
     </div>
 
     {{-- Filtros --}}
-    <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
-        <div class="flex items-center justify-between mb-4">
-            <flux:heading size="lg">Filtros</flux:heading>
-            <flux:button 
-                wire:click="limpiarFiltros"
+    <div class="mb-4" x-data="{
+        mostrarFiltros: window.innerWidth >= 640,
+        get filtrosActivos() {
+            let count = 0;
+            if ($wire.buscar) count++;
+            if ($wire.filtroSucursal) count++;
+            if ($wire.filtroTipoMovimiento) count++;
+            if ($wire.filtroMotivo) count++;
+            if ($wire.filtroFechaDesde) count++;
+            if ($wire.filtroFechaHasta) count++;
+            return count;
+        }
+    }">
+        {{-- Botón para mostrar/ocultar filtros en móvil --}}
+        <div class="mb-3 sm:hidden">
+            <flux:button
+                @click="mostrarFiltros = !mostrarFiltros"
                 variant="outline"
-                icon="x-mark"
-                size="sm"
+                icon="funnel"
+                class="w-full relative"
             >
-                Limpiar
+                <span x-text="mostrarFiltros ? 'Ocultar filtros' : 'Mostrar filtros'"></span>
+                <span x-show="filtrosActivos > 0"
+                      class="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-blue-600 rounded-full"
+                      x-text="filtrosActivos"></span>
             </flux:button>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {{-- Búsqueda por insumo --}}
-            <flux:input 
-                wire:model.live.debounce.300ms="buscar"
-                placeholder="Buscar insumo..."
-                icon="magnifying-glass"
-            />
+        {{-- Contenedor de filtros --}}
+        <div x-show="mostrarFiltros"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 -translate-y-2"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 -translate-y-2"
+             class="rounded-lg border border-neutral-200 bg-neutral-50 p-3 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
 
-            {{-- Filtro por sucursal --}}
-            <flux:select 
-                wire:model.live="filtroSucursal"
-                placeholder=""
-            >
-                <option value="">Sucursales</option>
-                @foreach($this->sucursales as $sucursal)
-                    <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
-                @endforeach
-            </flux:select>
+            <div class="space-y-3">
+                {{-- Búsqueda (ancho completo) --}}
+                <div>
+                    <flux:input
+                        wire:model.live.debounce.300ms="buscar"
+                        icon="magnifying-glass"
+                        placeholder="Buscar insumo..."
+                        class="w-full"
+                    />
+                </div>
 
-            {{-- Filtro por tipo de movimiento --}}
-            <flux:select 
-                wire:model.live="filtroTipoMovimiento"
-                placeholder="Todos los tipos"
-            >
-                <option value="">Todos los tipos</option>
-                @foreach($tiposMovimiento as $key => $label)
-                    <option value="{{ $key }}">{{ $label }}</option>
-                @endforeach
-            </flux:select>
+                {{-- Dropdowns + Fechas + Limpiar --}}
+                <div class="grid grid-cols-2 gap-3 sm:flex sm:flex-row sm:flex-wrap sm:items-end">
+                    {{-- Fecha desde --}}
+                    <div>
+                        <flux:input
+                            type="date"
+                            wire:model.live="filtroFechaDesde"
+                            label="Desde"
+                        />
+                    </div>
 
-            {{-- Filtro por motivo --}}
-            <flux:select 
-                wire:model.live="filtroMotivo"
-                placeholder="Todos los motivos"
-            >
-                <option value="">Todos los motivos</option>
-                @foreach($motivos as $key => $label)
-                    <option value="{{ $key }}">{{ $label }}</option>
-                @endforeach
-            </flux:select>
+                    {{-- Fecha hasta --}}
+                    <div>
+                        <flux:input
+                            type="date"
+                            wire:model.live="filtroFechaHasta"
+                            label="Hasta"
+                        />
+                    </div>
 
-            {{-- Fecha desde --}}
-            <flux:input 
-                wire:model.live="filtroFechaDesde"
-                type="date"
-                label="Desde"
-            />
+                    {{-- Filtro por sucursal --}}
+                    <div class="w-full sm:w-auto">
+                        <flux:dropdown>
+                            <flux:button variant="outline" icon="building-office-2" icon-trailing="chevron-down">
+                                {{ $filtroSucursal ? $this->sucursales->firstWhere('id', $filtroSucursal)?->nombre : 'Sucursal' }}
+                            </flux:button>
+                            <flux:menu>
+                                <flux:menu.item wire:click="$set('filtroSucursal', '')" icon="bars-3">
+                                    Todas las sucursales
+                                </flux:menu.item>
+                                <flux:menu.separator />
+                                @foreach($this->sucursales as $sucursal)
+                                    <flux:menu.item wire:click="$set('filtroSucursal', '{{ $sucursal->id }}')" icon="building-storefront">
+                                        {{ $sucursal->nombre }}
+                                    </flux:menu.item>
+                                @endforeach
+                            </flux:menu>
+                        </flux:dropdown>
+                    </div>
 
-            {{-- Fecha hasta --}}
-            <flux:input 
-                wire:model.live="filtroFechaHasta"
-                type="date"
-                label="Hasta"
-            />
+                    {{-- Filtro por tipo de movimiento --}}
+                    <div class="w-full sm:w-auto">
+                        <flux:dropdown>
+                            <flux:button variant="outline" icon="arrows-up-down" icon-trailing="chevron-down">
+                                {{ $filtroTipoMovimiento ? ($tiposMovimiento[$filtroTipoMovimiento] ?? 'Tipo') : 'Tipo' }}
+                            </flux:button>
+                            <flux:menu>
+                                <flux:menu.item wire:click="$set('filtroTipoMovimiento', '')" icon="bars-3">
+                                    Todos los tipos
+                                </flux:menu.item>
+                                <flux:menu.separator />
+                                @foreach($tiposMovimiento as $key => $label)
+                                    <flux:menu.item wire:click="$set('filtroTipoMovimiento', '{{ $key }}')" icon="tag">
+                                        {{ $label }}
+                                    </flux:menu.item>
+                                @endforeach
+                            </flux:menu>
+                        </flux:dropdown>
+                    </div>
+
+                    {{-- Filtro por motivo --}}
+                    <div class="w-full sm:w-auto">
+                        <flux:dropdown>
+                            <flux:button variant="outline" icon="document-text" icon-trailing="chevron-down">
+                                {{ $filtroMotivo ? ($motivos[$filtroMotivo] ?? 'Motivo') : 'Motivo' }}
+                            </flux:button>
+                            <flux:menu>
+                                <flux:menu.item wire:click="$set('filtroMotivo', '')" icon="bars-3">
+                                    Todos los motivos
+                                </flux:menu.item>
+                                <flux:menu.separator />
+                                @foreach($motivos as $key => $label)
+                                    <flux:menu.item wire:click="$set('filtroMotivo', '{{ $key }}')" icon="document-text">
+                                        {{ $label }}
+                                    </flux:menu.item>
+                                @endforeach
+                            </flux:menu>
+                        </flux:dropdown>
+                    </div>
+
+                    {{-- Botón limpiar filtros --}}
+                    <div class="w-full sm:w-auto">
+                        <flux:button
+                            wire:click="limpiarFiltros"
+                            variant="outline"
+                            icon="x-mark"
+                        >
+                            Limpiar
+                        </flux:button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+
 
     {{-- Tabla de movimientos --}}
     <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700">
@@ -153,38 +228,38 @@
                     <tr>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
                             <button wire:click="ordenarPor('fecha')" class="flex items-center gap-1 hover:text-neutral-900 dark:hover:text-neutral-100">
-                                <span>Fecha</span>
+                                <span>FECHA</span>
                                 @if($sortBy === 'fecha')
                                     <flux:icon.chevron-down class="size-4 {{ $sortDirection === 'desc' ? 'rotate-180' : '' }}" />
                                 @endif
                             </button>
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-                            Sucursal
+                            SUCURSAL
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-                            Insumo
+                            INSUMO
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-                            Tipo
+                            TIPO
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-                            Cantidad
+                            CANTIDAD
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-                            Costo Unit.
+                            COSTO UNIT.
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-                            Costo Total
+                            COSTO TOTAL
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-                            Motivo
+                            MOTIVO
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-                            Usuario
+                            USUARIO
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-                            Observación
+                            OBSERVACIÓN
                         </th>
                     </tr>
                 </thead>

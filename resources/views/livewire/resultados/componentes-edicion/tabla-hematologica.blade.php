@@ -8,27 +8,31 @@
             break;
         }
     }
+
+    // Generar texto de rango desde datos estructurados (con fallback a campos antiguos)
+    $generarTextoRango = function ($item, $infijo = '') {
+        $tipo = $item['rango_' . $infijo . 'tipo'] ?? 'min-max';
+        $min = $item['rango_' . $infijo . 'min'] ?? $item['ref_' . $infijo . 'min'] ?? '';
+        $max = $item['rango_' . $infijo . 'max'] ?? $item['ref_' . $infijo . 'max'] ?? '';
+        $valor = $item['rango_' . $infijo . 'valor'] ?? '';
+        return match($tipo) {
+            'min-max' => (!empty($min) || !empty($max)) ? $min . ' - ' . $max : '',
+            'menor' => !empty($valor) ? '< ' . $valor : '',
+            'menor-igual' => !empty($valor) ? '≤ ' . $valor : '',
+            'mayor' => !empty($valor) ? '> ' . $valor : '',
+            'mayor-igual' => !empty($valor) ? '≥ ' . $valor : '',
+            default => '',
+        };
+    };
 @endphp
 <div 
     wire:ignore
     x-data="{
         datosExistentes: @js($componentesData[$index]['data'] ?? null),
         indiceLeucocitos: {{ $indiceLeucocitos !== null ? $indiceLeucocitos : 'null' }},
-        parametros: {
-            @foreach($componente['propiedades']['parametros_principales'] ?? [] as $i => $param)
-            {{ $i }}: { nombre: '{{ addslashes($param["nombre"]) }}', resultado: '', unidad: '{{ addslashes($param["unidad"]) }}' }{{ $loop->last ? '' : ',' }}
-            @endforeach
-        },
-        diferenciales: {
-            @foreach($componente['propiedades']['diferenciales'] ?? [] as $i => $dif)
-            {{ $i }}: { nombre: '{{ addslashes($dif["nombre"]) }}', valor_rel: '', valor_abs: '' }{{ $loop->last ? '' : ',' }}
-            @endforeach
-        },
-        indices: {
-            @foreach($componente['propiedades']['indices'] ?? [] as $i => $indice)
-            {{ $i }}: { nombre: '{{ addslashes($indice["nombre"]) }}', resultado: '', unidad: '{{ addslashes($indice["unidad"]) }}' }{{ $loop->last ? '' : ',' }}
-            @endforeach
-        },
+        parametros: @js(collect($componente['propiedades']['parametros_principales'] ?? [])->mapWithKeys(fn($p, $i) => [$i => ['nombre' => $p['nombre'], 'resultado' => '', 'unidad' => $p['unidad'], 'rango_tipo' => $p['rango_tipo'] ?? 'min-max', 'rango_min' => $p['rango_min'] ?? '', 'rango_max' => $p['rango_max'] ?? '', 'rango_valor' => $p['rango_valor'] ?? '']])),
+        diferenciales: @js(collect($componente['propiedades']['diferenciales'] ?? [])->mapWithKeys(fn($d, $i) => [$i => ['nombre' => $d['nombre'], 'valor_rel' => '', 'valor_abs' => '', 'rango_rel_tipo' => $d['rango_rel_tipo'] ?? 'min-max', 'rango_rel_min' => $d['rango_rel_min'] ?? '', 'rango_rel_max' => $d['rango_rel_max'] ?? '', 'rango_rel_valor' => $d['rango_rel_valor'] ?? '', 'rango_abs_tipo' => $d['rango_abs_tipo'] ?? 'min-max', 'rango_abs_min' => $d['rango_abs_min'] ?? '', 'rango_abs_max' => $d['rango_abs_max'] ?? '', 'rango_abs_valor' => $d['rango_abs_valor'] ?? '']])),
+        indices: @js(collect($componente['propiedades']['indices'] ?? [])->mapWithKeys(fn($ind, $i) => [$i => ['nombre' => $ind['nombre'], 'resultado' => '', 'unidad' => $ind['unidad'], 'rango_tipo' => $ind['rango_tipo'] ?? 'min-max', 'rango_min' => $ind['rango_min'] ?? '', 'rango_max' => $ind['rango_max'] ?? '', 'rango_valor' => $ind['rango_valor'] ?? '']])),
         getLeucocitos() {
             if (this.indiceLeucocitos === null) return 0;
             const val = this.parametros[this.indiceLeucocitos]?.resultado;
@@ -51,24 +55,36 @@
         init() {
             // Cargar datos existentes si existen
             if (this.datosExistentes && typeof this.datosExistentes === 'object') {
-                if (Array.isArray(this.datosExistentes.parametros)) {
-                    this.datosExistentes.parametros.forEach((param, i) => {
-                        if (this.parametros[i]) {
-                            this.parametros[i].resultado = param.resultado || '';
+                // Convertir a array si es objeto (ocurre cuando PHP array_filter preserva keys no secuenciales)
+                let params = this.datosExistentes.parametros;
+                if (params && !Array.isArray(params)) params = Object.values(params);
+                if (Array.isArray(params)) {
+                    params.forEach(param => {
+                        const match = Object.keys(this.parametros).find(k => this.parametros[k].nombre === param.nombre);
+                        if (match !== undefined) {
+                            this.parametros[match].resultado = param.resultado || '';
                         }
                     });
                 }
-                if (Array.isArray(this.datosExistentes.diferenciales)) {
-                    this.datosExistentes.diferenciales.forEach((dif, i) => {
-                        if (this.diferenciales[i]) {
-                            this.diferenciales[i].valor_rel = dif.valor_rel || '';
+
+                let difs = this.datosExistentes.diferenciales;
+                if (difs && !Array.isArray(difs)) difs = Object.values(difs);
+                if (Array.isArray(difs)) {
+                    difs.forEach(dif => {
+                        const match = Object.keys(this.diferenciales).find(k => this.diferenciales[k].nombre === dif.nombre);
+                        if (match !== undefined) {
+                            this.diferenciales[match].valor_rel = dif.valor_rel || '';
                         }
                     });
                 }
-                if (Array.isArray(this.datosExistentes.indices)) {
-                    this.datosExistentes.indices.forEach((ind, i) => {
-                        if (this.indices[i]) {
-                            this.indices[i].resultado = ind.resultado || '';
+
+                let inds = this.datosExistentes.indices;
+                if (inds && !Array.isArray(inds)) inds = Object.values(inds);
+                if (Array.isArray(inds)) {
+                    inds.forEach(ind => {
+                        const match = Object.keys(this.indices).find(k => this.indices[k].nombre === ind.nombre);
+                        if (match !== undefined) {
+                            this.indices[match].resultado = ind.resultado || '';
                         }
                     });
                 }
@@ -95,7 +111,11 @@
                 }
             }, { deep: true });
             
-            // Sincronizar antes de cualquier acción de Livewire
+            // Sincronizar antes de guardar
+            window.addEventListener('antes-de-guardar', () => {
+                this.sincronizarConLivewire();
+            });
+
             window.addEventListener('livewire:initialized', () => {
                 Livewire.hook('morph.updating', () => {
                     this.sincronizarConLivewire();
@@ -111,11 +131,68 @@
             this.sincronizarConLivewire();
         },
         sincronizarConLivewire() {
-            $wire.set('componentesData.{{ $index }}.data', {
+            const data = {
                 parametros: Object.values(this.parametros),
                 diferenciales: Object.values(this.diferenciales),
                 indices: Object.values(this.indices)
-            });
+            };
+            window.__labvetData = window.__labvetData || {};
+            window.__labvetData['{{ $index }}'] = data;
+            $wire.set('componentesData.{{ $index }}.data', data);
+        },
+        clasificarConRango(res, rangoTipo, rangoMin, rangoMax, rangoValor) {
+            if (isNaN(res)) return 'normal';
+            const tipo = rangoTipo || 'min-max';
+            if (tipo === 'min-max') {
+                const min = parseFloat(rangoMin);
+                const max = parseFloat(rangoMax);
+                if (isNaN(min) && isNaN(max)) return 'normal';
+                const amplitud = (!isNaN(min) && !isNaN(max)) ? max - min : 0;
+                const umbral = amplitud * 0.15;
+                if (!isNaN(min) && res < min) return (amplitud > 0 && res >= min - umbral) ? 'alerta' : 'critico';
+                if (!isNaN(max) && res > max) return (amplitud > 0 && res <= max + umbral) ? 'alerta' : 'critico';
+                return 'normal';
+            }
+            const val = parseFloat(rangoValor);
+            if (isNaN(val)) return 'normal';
+            const umbral = Math.abs(val) * 0.15;
+            if (tipo === 'menor' && res >= val) return res <= val + umbral ? 'alerta' : 'critico';
+            if (tipo === 'menor-igual' && res > val) return res <= val + umbral ? 'alerta' : 'critico';
+            if (tipo === 'mayor' && res <= val) return res >= val - umbral ? 'alerta' : 'critico';
+            if (tipo === 'mayor-igual' && res < val) return res >= val - umbral ? 'alerta' : 'critico';
+            return 'normal';
+        },
+        claseParametro(idx) {
+            const p = this.parametros[idx];
+            if (!p || !p.resultado) return 'text-gray-900 dark:text-zinc-100';
+            const c = this.clasificarConRango(parseFloat(p.resultado), p.rango_tipo, p.rango_min, p.rango_max, p.rango_valor);
+            if (c === 'alerta') return 'text-blue-600 dark:text-blue-400 font-bold';
+            if (c === 'critico') return 'text-red-600 dark:text-red-400 font-bold';
+            return 'text-gray-900 dark:text-zinc-100';
+        },
+        claseDiferencialRel(idx) {
+            const d = this.diferenciales[idx];
+            if (!d || !d.valor_rel) return 'text-gray-900 dark:text-zinc-100';
+            const c = this.clasificarConRango(parseFloat(d.valor_rel), d.rango_rel_tipo, d.rango_rel_min, d.rango_rel_max, d.rango_rel_valor);
+            if (c === 'alerta') return 'text-blue-600 dark:text-blue-400 font-bold';
+            if (c === 'critico') return 'text-red-600 dark:text-red-400 font-bold';
+            return 'text-gray-900 dark:text-zinc-100';
+        },
+        claseDiferencialAbs(idx) {
+            const d = this.diferenciales[idx];
+            if (!d || !d.valor_abs) return 'text-gray-900 dark:text-zinc-100';
+            const c = this.clasificarConRango(parseFloat(d.valor_abs), d.rango_abs_tipo, d.rango_abs_min, d.rango_abs_max, d.rango_abs_valor);
+            if (c === 'alerta') return 'text-blue-600 dark:text-blue-400 font-bold';
+            if (c === 'critico') return 'text-red-600 dark:text-red-400 font-bold';
+            return 'text-gray-900 dark:text-zinc-100';
+        },
+        claseIndice(idx) {
+            const ind = this.indices[idx];
+            if (!ind || !ind.resultado) return 'text-gray-900 dark:text-zinc-100';
+            const c = this.clasificarConRango(parseFloat(ind.resultado), ind.rango_tipo, ind.rango_min, ind.rango_max, ind.rango_valor);
+            if (c === 'alerta') return 'text-blue-600 dark:text-blue-400 font-bold';
+            if (c === 'critico') return 'text-red-600 dark:text-red-400 font-bold';
+            return 'text-gray-900 dark:text-zinc-100';
         }
     }"
     class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:bg-zinc-900">
@@ -123,20 +200,20 @@
         <table class="w-full border border-gray-300 dark:border-zinc-700 text-xs">
             <thead>
                 <tr>
-                    <th colspan="5" class="border border-gray-300 dark:border-zinc-700 px-2 py-2 font-bold text-gray-900 dark:text-zinc-100">
+                    <th colspan="3" class="border border-gray-300 dark:border-zinc-700 px-2 py-2 font-bold text-gray-900 dark:text-zinc-100">
                         {{ $componente['propiedades']['titulo'] ?? 'CUADRO HEMÁTICO' }}
                     </th>
-                    <th colspan="7" class="border border-gray-300 dark:border-zinc-700 px-2 py-2"></th>
+                    <th colspan="5" class="border border-gray-300 dark:border-zinc-700 px-2 py-2"></th>
                 </tr>
                 <tr class="bg-gray-100 dark:bg-zinc-900 text-center text-xs">
-                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100" rowspan="2">CUADRO<br>HEMÁTICO</th>
-                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1" colspan="2">RESULTADO</th>
-                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100" colspan="2">VALORES DE REF</th>
-                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1" rowspan="2"></th>
-                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100" colspan="2">VALOR REL</th>
-                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100" rowspan="2">Val ref</th>
-                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100" colspan="2">VALOR ABS</th>
-                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100" rowspan="2">Val ref</th>
+                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100">CUADRO<br>HEMÁTICO</th>
+                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100">RESULTADO</th>
+                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100">VALORES DE REF</th>
+                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1"></th>
+                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100">VALOR REL</th>
+                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100">Val ref</th>
+                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100">VALOR ABS</th>
+                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100">Val ref</th>
                 </tr>
             </thead>
             <tbody>
@@ -156,19 +233,13 @@
                             {{ $param['nombre'] }}
                         </td>
                         <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1">
-                            <input type="text" x-model="parametros[{{ $i }}].resultado" @change="onParametroChange()" @blur="onParametroChange()" class="w-full px-1 py-0.5 text-xs border-0 focus:ring-1 focus:ring-blue-500 rounded bg-transparent text-gray-900 dark:text-zinc-100" />
-                        </td>
-                        <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1 text-center text-xs text-gray-900 dark:text-zinc-100">
-                            {{ $param['unidad'] }}
+                            <input type="text" x-model="parametros[{{ $i }}].resultado" @change="onParametroChange()" @blur="onParametroChange()" :class="claseParametro({{ $i }})" class="w-full px-1 py-0.5 text-xs border-0 focus:ring-1 focus:ring-blue-500 rounded bg-transparent" />
                         </td>
                         <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1 text-center text-xs text-gray-500 dark:text-zinc-400">
-                            {{ $param['ref_min'] }}
-                        </td>
-                        <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1 text-center text-xs text-gray-500 dark:text-zinc-400">
-                            {{ $param['ref_max'] ?? '' }}
+                            {{ $generarTextoRango($param) }}@if($param['unidad']) <span class="text-gray-900 dark:text-zinc-100">{{ $param['unidad'] }}</span>@endif
                         </td>
                     @else
-                        <td class="border border-gray-300 dark:border-zinc-700" colspan="5"></td>
+                        <td class="border border-gray-300 dark:border-zinc-700" colspan="3"></td>
                     @endif
                     
                     {{-- Diferenciales (Lado Derecho) --}}
@@ -178,21 +249,19 @@
                             {{ $dif['nombre'] }}
                         </td>
                         <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1">
-                            <input type="text" x-model="diferenciales[{{ $i }}].valor_rel" @change="onValorRelChange()" @blur="onValorRelChange()" class="w-full px-1 py-0.5 text-xs border-0 focus:ring-1 focus:ring-blue-500 rounded bg-transparent text-gray-900 dark:text-zinc-100" />
+                            <input type="text" x-model="diferenciales[{{ $i }}].valor_rel" @change="onValorRelChange()" @blur="onValorRelChange()" :class="claseDiferencialRel({{ $i }})" class="w-full px-1 py-0.5 text-xs border-0 focus:ring-1 focus:ring-blue-500 rounded bg-transparent" />
                         </td>
-                        <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1 text-center text-xs text-gray-900 dark:text-zinc-100">%</td>
                         <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1 text-center text-xs text-gray-500 dark:text-zinc-400">
-                            {{ $dif['ref_rel_min'] }}-{{ $dif['ref_rel_max'] }}
+                            {{ $generarTextoRango($dif, 'rel_') }} <span class="text-gray-900 dark:text-zinc-100">%</span>
                         </td>
                         <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1">
-                            <span x-text="diferenciales[{{ $i }}].valor_abs" class="block w-full px-1 py-0.5 text-xs text-center text-green-600 dark:text-green-400 font-semibold"></span>
+                            <span x-text="diferenciales[{{ $i }}].valor_abs" :class="claseDiferencialAbs({{ $i }})" class="block w-full px-1 py-0.5 text-xs text-center"></span>
                         </td>
-                        <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1 text-center text-xs text-gray-900 dark:text-zinc-100">mm³</td>
                         <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1 text-center text-xs text-gray-500 dark:text-zinc-400">
-                            {{ $dif['ref_abs_min'] }}-{{ $dif['ref_abs_max'] }}
+                            {{ $generarTextoRango($dif, 'abs_') }} <span class="text-gray-900 dark:text-zinc-100">mm³</span>
                         </td>
                     @else
-                        <td class="border border-gray-300 dark:border-zinc-700" colspan="7"></td>
+                        <td class="border border-gray-300 dark:border-zinc-700" colspan="5"></td>
                     @endif
                 </tr>
                 @endfor
@@ -209,15 +278,12 @@
                         {{ $indice['nombre'] }}
                     </td>
                     <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1">
-                        <input type="text" x-model="indices[{{ $index }}].resultado" @change="sincronizarConLivewire()" @blur="sincronizarConLivewire()" class="w-full px-1 py-0.5 text-xs border-0 focus:ring-1 focus:ring-blue-500 rounded bg-transparent text-gray-900 dark:text-zinc-100" />
+                        <input type="text" x-model="indices[{{ $index }}].resultado" @change="sincronizarConLivewire()" @blur="sincronizarConLivewire()" :class="claseIndice({{ $index }})" class="w-full px-1 py-0.5 text-xs border-0 focus:ring-1 focus:ring-blue-500 rounded bg-transparent" />
                     </td>
-                    <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1 text-center text-xs text-gray-900 dark:text-zinc-100">
-                        {{ $indice['unidad'] }}
+                    <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-xs text-gray-500 dark:text-zinc-400">
+                        {{ $generarTextoRango($indice) ?: ($indice['referencia'] ?? '') }}@if($indice['unidad']) <span class="text-gray-900 dark:text-zinc-100">{{ $indice['unidad'] }}</span>@endif
                     </td>
-                    <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-xs text-gray-500 dark:text-zinc-400" colspan="2">
-                        {{ $indice['referencia'] }}
-                    </td>
-                    <td class="border border-gray-300 dark:border-zinc-700" colspan="7"></td>
+                    <td class="border border-gray-300 dark:border-zinc-700" colspan="5"></td>
                 </tr>
                 @endforeach
             </tbody>

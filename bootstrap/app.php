@@ -16,7 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('cleanup:archivos-antiguos')->weeklyOn(0, '02:00');
     })
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->web(append: [
+            \App\Http\Middleware\VerificarUsuarioActivo::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

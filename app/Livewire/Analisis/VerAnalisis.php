@@ -2,12 +2,13 @@
 
 namespace App\Livewire\Analisis;
 
-use Livewire\Component;
 use App\Models\Analisis;
+use Livewire\Component;
 
 class VerAnalisis extends Component
 {
     public $analisis;
+
     public $resultadosAgrupados = [];
 
     public function mount($analisisId)
@@ -19,11 +20,11 @@ class VerAnalisis extends Component
             'tipoAnalisis.plantillas',
             'bioquimico',
             'aprobador',
-            'resultados'
+            'resultados',
         ])->findOrFail($analisisId);
 
-        // Agrupar resultados por tipo
-        $this->resultadosAgrupados = $this->analisis->resultados->groupBy('tipo');
+        // Agrupar resultados por indice para acceso directo
+        $this->resultadosAgrupados = $this->analisis->resultados->keyBy('indice');
     }
 
     public function aprobar()
@@ -35,6 +36,7 @@ class VerAnalisis extends Component
         ]);
 
         session()->flash('success', 'Análisis aprobado correctamente.');
+
         return redirect()->route('analisis.revisar');
     }
 
@@ -46,6 +48,7 @@ class VerAnalisis extends Component
         ]);
 
         session()->flash('warning', 'Análisis rechazado. El bioquímico debe realizar correcciones.');
+
         return redirect()->route('analisis.revisar');
     }
 

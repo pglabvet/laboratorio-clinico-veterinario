@@ -32,11 +32,55 @@
                     </td>
                     <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-600 dark:text-zinc-400 text-xs">
                         @php
-                            $rango = is_array($analisis) ? ($analisis['rango_ref'] ?? '') : '';
+                            $rangoTipo = is_array($analisis) ? ($analisis['rango_tipo'] ?? '') : '';
                             $unidad = is_array($analisis) ? ($analisis['unidad'] ?? '') : '';
+                            $rangoDisplay = '';
+                            $rangosMultiples = [];
+
+                            if ($rangoTipo === 'min-max') {
+                                $min = is_array($analisis) ? ($analisis['rango_min'] ?? '') : '';
+                                $max = is_array($analisis) ? ($analisis['rango_max'] ?? '') : '';
+                                $rangoDisplay = ($min !== '' && $max !== '') ? "$min - $max" : '';
+                            } elseif (in_array($rangoTipo, ['menor', 'menor-igual', 'mayor', 'mayor-igual'])) {
+                                $val = is_array($analisis) ? ($analisis['rango_valor'] ?? '') : '';
+                                $prefijo = match($rangoTipo) { 'menor' => '<', 'menor-igual' => '<=', 'mayor' => '>', 'mayor-igual' => '>=' };
+                                $rangoDisplay = $val !== '' ? "$prefijo $val" : '';
+                            } elseif ($rangoTipo === 'multiple') {
+                                $rangosArr = is_array($analisis) ? ($analisis['rangos'] ?? []) : [];
+                                $unidadR = is_array($analisis) ? ($analisis['unidad'] ?? '') : '';
+                                if (!empty($rangosArr)) {
+                                    foreach ($rangosArr as $re) {
+                                        $t = $re['tipo'] ?? 'min-max';
+                                        $str = match($t) {
+                                            'min-max' => ($re['min'] ?? '') . ' - ' . ($re['max'] ?? ''),
+                                            'menor' => '< ' . ($re['valor'] ?? ''),
+                                            'menor-igual' => '<= ' . ($re['valor'] ?? ''),
+                                            'mayor' => '> ' . ($re['valor'] ?? ''),
+                                            'mayor-igual' => '>= ' . ($re['valor'] ?? ''),
+                                            default => '',
+                                        };
+                                        $parts = array_filter([$str, $unidadR, $re['etiqueta'] ?? '']);
+                                        $rangosMultiples[] = implode(' ', $parts);
+                                    }
+                                } else {
+                                    $ref = is_array($analisis) ? ($analisis['rango_ref'] ?? '') : '';
+                                    $rangosMultiples = array_filter(explode("\n", $ref), fn($r) => trim($r) !== '');
+                                }
+                            } else {
+                                $ref = is_array($analisis) ? ($analisis['rango_ref'] ?? '') : '';
+                                $lines = is_string($ref) ? array_filter(explode("\n", $ref), fn($r) => trim($r) !== '') : [];
+                                if (count($lines) > 1) { $rangosMultiples = $lines; }
+                                elseif (count($lines) === 1) { $rangoDisplay = trim($lines[0]); }
+                            }
                         @endphp
-                        @if($rango)
-                            {{ $rango }}
+                        @if(count($rangosMultiples) > 0)
+                            <div class="inline-block text-left">
+                            @foreach($rangosMultiples as $r)
+                                <div>{{ trim($r) }}</div>
+                            @endforeach
+                            </div>
+                        @elseif($rangoDisplay)
+                            {{ $rangoDisplay }}
                             @if($unidad)
                                 <span class="text-gray-500 dark:text-zinc-500 ml-2">{{ $unidad }}</span>
                             @endif

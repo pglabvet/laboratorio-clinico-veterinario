@@ -41,7 +41,7 @@
                     <tr>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
                             <button wire:click="ordenarPor('nombre')" class="flex items-center gap-1 hover:text-neutral-900 dark:hover:text-neutral-100">
-                                <span>Nombre</span>
+                                <span>NOMBRE</span>
                                 @if($sortBy === 'nombre')
                                     <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                                         @if($sortDirection === 'asc')
@@ -55,7 +55,7 @@
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
                             <button wire:click="ordenarPor('descripcion')" class="flex items-center gap-1 hover:text-neutral-900 dark:hover:text-neutral-100">
-                                <span>Descripción</span>
+                                <span>DESCRIPCIÓN</span>
                                 @if($sortBy === 'descripcion')
                                     <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                                         @if($sortDirection === 'asc')
@@ -69,7 +69,7 @@
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
                             <button wire:click="ordenarPor('estado')" class="flex items-center gap-1 hover:text-neutral-900 dark:hover:text-neutral-100">
-                                <span>Estado</span>
+                                <span>ESTADO</span>
                                 @if($sortBy === 'estado')
                                     <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                                         @if($sortDirection === 'asc')
@@ -82,7 +82,7 @@
                             </button>
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-                            Acciones
+                            ACCIONES
                         </th>
                     </tr>
                 </thead>
@@ -210,11 +210,14 @@
                 />
 
                 {{-- Estado --}}
-                <flux:checkbox 
+                <flux:select 
                     wire:model="estado"
-                    label="Especie activa"
-                    description="Indica si la especie está disponible para análisis"
-                />
+                    label="Estado de la Especie"
+                    placeholder="Selecciona el estado"
+                >
+                    <option value="1">Activa</option>
+                    <option value="0">Inactiva</option>
+                </flux:select>
             </div>
 
             {{-- Botones del modal --}}

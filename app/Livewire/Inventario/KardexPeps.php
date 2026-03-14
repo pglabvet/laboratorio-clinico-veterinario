@@ -46,6 +46,12 @@ class KardexPeps extends Component
         return $query->orderBy('nombre')->get();
     }
 
+    public function updatedSucursalId()
+    {
+        $this->paginaActual = 1;
+        $this->generarKardex();
+    }
+
     public function updatedFiltroCategoria()
     {
         $this->insumo_id = '';
@@ -56,7 +62,7 @@ class KardexPeps extends Component
 
     public function updated($propertyName)
     {
-        if (in_array($propertyName, ['sucursal_id', 'insumo_id', 'fecha_desde', 'fecha_hasta'])) {
+        if (in_array($propertyName, ['insumo_id', 'fecha_desde', 'fecha_hasta'])) {
             $this->paginaActual = 1;
             $this->generarKardex();
         }
@@ -70,10 +76,7 @@ class KardexPeps extends Component
             return;
         }
 
-        // Si no hay insumo ni categoría, no generar
-        if (!$this->insumo_id && !$this->filtro_categoria) {
-            return;
-        }
+        // Se permite generar con solo sucursal (muestra todos los insumos)
 
         try {
             $service = app(PepsInventarioService::class);
@@ -96,13 +99,16 @@ class KardexPeps extends Component
 
                 $this->kardexData = $kardex;
             } else {
-                // Kardex para todos los insumos de la categoría
-                $insumosCategoria = Insumo::where('estado', true)
-                    ->where('categoria_id', $this->filtro_categoria)
-                    ->orderBy('nombre')
-                    ->get();
+                // Kardex para múltiples insumos (por categoría o todos)
+                $queryInsumos = Insumo::where('estado', true);
 
-                if ($insumosCategoria->isEmpty()) {
+                if ($this->filtro_categoria) {
+                    $queryInsumos->where('categoria_id', $this->filtro_categoria);
+                }
+
+                $insumosListado = $queryInsumos->orderBy('nombre')->get();
+
+                if ($insumosListado->isEmpty()) {
                     return;
                 }
 
@@ -110,7 +116,7 @@ class KardexPeps extends Component
                 $saldoFinalCantidad = 0;
                 $saldoFinalCosto = 0;
 
-                foreach ($insumosCategoria as $insumo) {
+                foreach ($insumosListado as $insumo) {
                     $kardex = $service->generarKardex(
                         insumoId: $insumo->id,
                         sucursalId: (int) $this->sucursal_id,
@@ -162,7 +168,7 @@ class KardexPeps extends Component
             return 'Inventario - Categoría: ' . ($this->categorias->firstWhere('id', $this->filtro_categoria)?->nombre ?? '');
         }
 
-        return 'Inventario';
+        return 'Inventario General';
     }
 
     /**
@@ -242,7 +248,7 @@ class KardexPeps extends Component
     #[Computed]
     public function modoCategoria()
     {
-        return !$this->insumo_id && $this->filtro_categoria;
+        return !$this->insumo_id;
     }
 
     public function paginaAnterior()

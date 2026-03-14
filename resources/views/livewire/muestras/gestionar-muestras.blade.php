@@ -725,6 +725,31 @@
                     </div>
                 </div>
 
+                <div class="rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-900">
+                    <div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_320px] md:items-end">
+                        <div>
+                            <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">Número para WhatsApp</p>
+                            <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                                Puedes enviar los resultados a cualquier número de la veterinaria. Por defecto se selecciona el principal.
+                            </p>
+                        </div>
+                        <div>
+                            <flux:select wire:model="telefonoWhatsappSeleccionado" label="Número de envío" placeholder="Selecciona un número">
+                                @foreach($telefonosWhatsappDisponibles as $telefonoWhatsapp)
+                                    <option value="{{ $telefonoWhatsapp['telefono'] }}">
+                                        {{ $telefonoWhatsapp['telefono'] }}{{ $telefonoWhatsapp['nombre_contacto'] ? ' - '.$telefonoWhatsapp['nombre_contacto'] : '' }}{{ $telefonoWhatsapp['es_principal'] ? ' (Principal)' : '' }}
+                                    </option>
+                                @endforeach
+                            </flux:select>
+                        </div>
+                    </div>
+                    @if(empty($telefonosWhatsappDisponibles))
+                        <p class="mt-3 text-sm font-medium text-red-600 dark:text-red-400">
+                            Esta veterinaria no tiene números de WhatsApp registrados.
+                        </p>
+                    @endif
+                </div>
+
                 {{-- Tabla de análisis --}}
                 <div class="overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700">
                     <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
@@ -758,8 +783,8 @@
                                                 wire:click="enviarWhatsApp({{ $analisis->id }})"
                                                 variant="ghost"           
                                                 icon="device-phone-mobile"
-                                                title="{{ $analisis->puedeSerEnviado() ? 'Enviar por WhatsApp' : 'Solo se pueden enviar análisis aprobados' }}"
-                                                :disabled="!$analisis->puedeSerEnviado()"
+                                                title="{{ !$analisis->puedeSerEnviado() ? 'Solo se pueden enviar análisis aprobados' : (empty($telefonosWhatsappDisponibles) ? 'La veterinaria no tiene teléfonos registrados' : 'Enviar por WhatsApp') }}"
+                                                :disabled="!$analisis->puedeSerEnviado() || empty($telefonosWhatsappDisponibles)"
                                             >
                                                 WhatsApp
                                             </flux:button>
@@ -808,8 +833,8 @@
                         wire:click="enviarTodoWhatsApp"
                         variant="primary"
                         icon="paper-airplane"
-                        :disabled="!$muestraAnalisis->puedeEnviarTodosAnalisis()"
-                        title="{{ $muestraAnalisis->puedeEnviarTodosAnalisis() ? 'Enviar todos por WhatsApp' : 'Todos los análisis deben estar aprobados' }}"
+                        :disabled="!$muestraAnalisis->puedeEnviarTodosAnalisis() || empty($telefonosWhatsappDisponibles)"
+                        title="{{ !$muestraAnalisis->puedeEnviarTodosAnalisis() ? 'Todos los análisis deben estar aprobados' : (empty($telefonosWhatsappDisponibles) ? 'La veterinaria no tiene teléfonos registrados' : 'Enviar todos por WhatsApp') }}"
                     >
                         Enviar todo por WhatsApp
                     </flux:button>

@@ -41,7 +41,7 @@
                     <tr>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
                             <button wire:click="ordenarPor('nombre')" class="flex items-center gap-1 hover:text-neutral-900 dark:hover:text-neutral-100">
-                                <span>Nombre</span>
+                                <span>NOMBRE</span>
                                 @if($sortBy === 'nombre')
                                     <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                                         @if($sortDirection === 'asc')
@@ -55,7 +55,7 @@
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
                             <button wire:click="ordenarPor('abreviatura')" class="flex items-center gap-1 hover:text-neutral-900 dark:hover:text-neutral-100">
-                                <span>Abreviatura</span>
+                                <span>ABREVIATURA</span>
                                 @if($sortBy === 'abreviatura')
                                     <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                                         @if($sortDirection === 'asc')
@@ -69,7 +69,7 @@
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
                             <button wire:click="ordenarPor('estado')" class="flex items-center gap-1 hover:text-neutral-900 dark:hover:text-neutral-100">
-                                <span>Estado</span>
+                                <span>ESTADO</span>
                                 @if($sortBy === 'estado')
                                     <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                                         @if($sortDirection === 'asc')
@@ -82,7 +82,7 @@
                             </button>
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
-                            Acciones
+                            ACCIONES
                         </th>
                     </tr>
                 </thead>
@@ -171,28 +171,41 @@
     {{-- Modal Crear/Editar --}}
     <flux:modal wire:model="modalAbierto" class="md:w-96">
         <form wire:submit.prevent="guardar">
-            <div>
-                <flux:heading size="lg">{{ $modoEdicion ? 'Editar' : 'Nueva' }} Unidad de Medida</flux:heading>
-                <flux:subheading class="mb-4">
-                    {{ $modoEdicion ? 'Modifica los datos de la unidad de medida' : 'Completa los datos para crear una nueva unidad de medida' }}
-                </flux:subheading>
+            <flux:heading size="lg" class="mb-2">{{ $modoEdicion ? 'Editar' : 'Nueva' }} Unidad de Medida</flux:heading>
+            <flux:subheading class="mb-6">
+                {{ $modoEdicion ? 'Modifica los datos de la unidad de medida' : 'Completa los datos para crear una nueva unidad de medida' }}
+            </flux:subheading>
+
+            <div class="space-y-4">
+                <flux:input
+                    wire:model="nombre"
+                    label="Nombre"
+                    placeholder="Ej: Mililitros"
+                    required
+                    :error="$errors->first('nombre')"
+                />
+
+                <flux:input
+                    wire:model="abreviatura"
+                    label="Abreviatura"
+                    placeholder="Ej: ml"
+                    required
+                    :error="$errors->first('abreviatura')"
+                />
+
+                <div class="rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-700 dark:bg-neutral-900/50">
+                    <flux:checkbox
+                        wire:model="estado"
+                        label="Unidad de medida activa"
+                        description="Define si la unidad de medida estara disponible en el sistema"
+                    />
+                </div>
             </div>
 
-            <flux:input.group label="Nombre" :error="$errors->first('nombre')" required>
-                <flux:input wire:model="nombre" placeholder="Ej: Mililitros" />
-            </flux:input.group>
-
-            <flux:input.group label="Abreviatura" :error="$errors->first('abreviatura')" required>
-                <flux:input wire:model="abreviatura" placeholder="Ej: ml" />
-            </flux:input.group>
-
-            <flux:checkbox wire:model="estado" label="Activo" />
-
-            <div class="flex gap-2">
-                <flux:spacer />
+            <div class="mt-8 flex justify-end gap-3">
                 <flux:button type="button" wire:click="cerrarModal" variant="outline" class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950">Cancelar</flux:button>
                 @can('guardar-unidad-medida')
-                <flux:button type="submit" variant="primary">
+                <flux:button type="submit" variant="primary" icon="check">
                     {{ $modoEdicion ? 'Actualizar' : 'Guardar' }}
                 </flux:button>
                 @endcan

@@ -2,38 +2,51 @@
 
 namespace App\Livewire\Muestras;
 
-use App\Models\Muestra;
+use App\Models\Analisis;
 use App\Models\Especie;
-use App\Models\Veterinaria;
+use App\Models\Muestra;
+use App\Models\PlantillaFormulario;
 use App\Models\Sucursal;
 use App\Models\TipoAnalisis;
-use App\Models\PlantillaFormulario;
-use App\Models\Analisis;
+use App\Models\Veterinaria;
 use App\Services\MuestraService;
 use App\Services\PepsInventarioService;
-use Livewire\Component;
-use Livewire\Attributes\Computed;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Computed;
+use Livewire\Component;
 
 class FormularioMuestra extends Component
 {
     // Propiedades del formulario - Muestra
     public $muestra_id;
+
     public $codigo_muestra;
+
     public $tipo_muestra;
+
     public $fecha_recepcion;
-    public $estado = 'Pendiente';
+
+    public $estado = Muestra::ESTADO_PENDIENTE;
+
     public $observaciones = 'Sin Observaciones';
+
     public $sucursal_id;
 
     // Propiedades del formulario - Paciente
     public $paciente_nombre;
+
     public $especie_id;
+
     public $raza;
+
     public $edadCantidad;
+
     public $edadUnidad = 'años';
+
     public $sexo = 'M';
+
     public $color;
+
     public $propietario_nombre;
 
     // Propiedades del formulario - Veterinaria
@@ -41,11 +54,14 @@ class FormularioMuestra extends Component
 
     // Análisis seleccionados con sus plantillas
     public $analisisSeleccionados = []; // [{tipo_analisis_id: X, plantilla_id: Y}]
-    
+
     // Control del modal de análisis
     public $modalAnalisisAbierto = false;
+
     public $tipoAnalisisTemp;
+
     public $plantillasDisponibles = [];
+
     public $plantillaSeleccionadaTemp;
 
     // Reglas de validación
@@ -98,14 +114,14 @@ class FormularioMuestra extends Component
     public function cargarMuestra($id)
     {
         $muestra = Muestra::with('analisis.plantillaFormulario')->findOrFail($id);
-        
+
         $this->muestra_id = $muestra->id;
         $this->codigo_muestra = $muestra->codigo_muestra;
         $this->tipo_muestra = $muestra->tipo_muestra;
 
         $this->observaciones = $muestra->observaciones;
         $this->sucursal_id = $muestra->sucursal_id;
-        
+
         $this->paciente_nombre = $muestra->paciente_nombre;
         $this->especie_id = $muestra->especie_id;
         $this->raza = $muestra->raza;
@@ -168,8 +184,9 @@ class FormularioMuestra extends Component
      */
     public function agregarAnalisis()
     {
-        if (!$this->tipoAnalisisTemp || !$this->plantillaSeleccionadaTemp) {
+        if (! $this->tipoAnalisisTemp || ! $this->plantillaSeleccionadaTemp) {
             session()->flash('error', 'Debe seleccionar un tipo de análisis y una plantilla.');
+
             return;
         }
 
@@ -177,12 +194,13 @@ class FormularioMuestra extends Component
         foreach ($this->analisisSeleccionados as $analisis) {
             if ($analisis['plantilla_id'] == $this->plantillaSeleccionadaTemp) {
                 $plantilla = PlantillaFormulario::find($this->plantillaSeleccionadaTemp);
-                $mensajeError = 'La plantilla "' . ($plantilla->nombre ?? 'seleccionada') . '"';
+                $mensajeError = 'La plantilla "'.($plantilla->nombre ?? 'seleccionada').'"';
                 if ($plantilla && $plantilla->version > 1) {
-                    $mensajeError .= ' (v' . $plantilla->version . ')';
+                    $mensajeError .= ' (v'.$plantilla->version.')';
                 }
                 $mensajeError .= ' ya fue agregada a este análisis.';
                 session()->flash('error', $mensajeError);
+
                 return;
             }
         }
@@ -190,8 +208,9 @@ class FormularioMuestra extends Component
         $tipoAnalisis = TipoAnalisis::find($this->tipoAnalisisTemp);
         $plantilla = PlantillaFormulario::find($this->plantillaSeleccionadaTemp);
 
-        if (!$tipoAnalisis || !$plantilla) {
+        if (! $tipoAnalisis || ! $plantilla) {
             session()->flash('error', 'Error al cargar los datos seleccionados.');
+
             return;
         }
 
@@ -236,8 +255,8 @@ class FormularioMuestra extends Component
     {
         foreach ($this->analisisSeleccionados as $analisisData) {
             $plantilla = PlantillaFormulario::with('insumos')->find($analisisData['plantilla_id']);
-            
-            if (!$plantilla || $plantilla->insumos->isEmpty()) {
+
+            if (! $plantilla || $plantilla->insumos->isEmpty()) {
                 continue; // No hay insumos configurados
             }
 
@@ -246,12 +265,12 @@ class FormularioMuestra extends Component
 
             foreach ($plantilla->insumos as $insumo) {
                 $cantidadRequerida = $insumo->pivot->cantidad_requerida;
-                
+
                 $inventario = InventarioSucursal::where('insumo_id', $insumo->id)
                     ->where('sucursal_id', $this->sucursal_id)
                     ->first();
 
-                if (!$inventario || $inventario->stock_actual <= 0) {
+                if (! $inventario || $inventario->stock_actual <= 0) {
                     $insumosInsuficientes[] = "{$insumo->nombre} (sin stock)";
                 } elseif ($inventario->stock_actual < $cantidadRequerida) {
                     $insumosInsuficientes[] = "{$insumo->nombre} (disponible: {$inventario->stock_actual}, requerido: {$cantidadRequerida})";
@@ -260,19 +279,19 @@ class FormularioMuestra extends Component
                 }
             }
 
-            if (!empty($insumosInsuficientes)) {
+            if (! empty($insumosInsuficientes)) {
                 throw new \Exception(
-                    "Stock insuficiente para el análisis '{$plantilla->nombre}': " . 
-                    implode(', ', $insumosInsuficientes) . 
-                    ". Por favor, registre una entrada de inventario antes de continuar."
+                    "Stock insuficiente para el análisis '{$plantilla->nombre}': ".
+                    implode(', ', $insumosInsuficientes).
+                    '. Por favor, registre una entrada de inventario antes de continuar.'
                 );
             }
 
-            if (!empty($insumosStockBajo)) {
-                session()->flash('warning', 
-                    "⚠️ ADVERTENCIA: Los siguientes insumos están por debajo del stock mínimo para '{$plantilla->nombre}': " . 
-                    implode(', ', $insumosStockBajo) . 
-                    ". Se recomienda reabastecer pronto."
+            if (! empty($insumosStockBajo)) {
+                session()->flash('warning',
+                    "⚠️ ADVERTENCIA: Los siguientes insumos están por debajo del stock mínimo para '{$plantilla->nombre}': ".
+                    implode(', ', $insumosStockBajo).
+                    '. Se recomienda reabastecer pronto.'
                 );
             }
         }
@@ -293,16 +312,16 @@ class FormularioMuestra extends Component
             // UC-B05: Validar stock antes de crear
             $plantillaIds = array_column($this->analisisSeleccionados, 'plantilla_id');
             $resultado = $muestraService->validarStockDisponible($plantillaIds, $this->sucursal_id);
-            if (!empty($resultado['warnings'])) {
+            if (! empty($resultado['warnings'])) {
                 session()->flash('warning',
-                    '⚠️ ADVERTENCIA: Los siguientes insumos están por debajo del stock mínimo: ' .
-                    implode(', ', $resultado['warnings']) .
+                    '⚠️ ADVERTENCIA: Los siguientes insumos están por debajo del stock mínimo: '.
+                    implode(', ', $resultado['warnings']).
                     '. Se recomienda reabastecer pronto.'
                 );
             }
 
             // Generar código único si no existe
-            if (!$this->codigo_muestra) {
+            if (! $this->codigo_muestra) {
                 $this->codigo_muestra = $muestraService->generarCodigoMuestra($this->sucursal_id);
             }
 
@@ -314,7 +333,7 @@ class FormularioMuestra extends Component
                     'paciente_nombre' => $this->paciente_nombre,
                     'especie_id' => $this->especie_id,
                     'raza' => $this->raza,
-                    'edad' => $this->edadCantidad . ' ' . $this->edadUnidad,
+                    'edad' => $this->edadCantidad.' '.$this->edadUnidad,
                     'sexo' => $this->sexo,
                     'color' => $this->color,
                     'propietario_nombre' => $this->propietario_nombre,
@@ -341,11 +360,11 @@ class FormularioMuestra extends Component
                     'tipo_analisis_id' => $analisisData['tipo_analisis_id'],
                     'plantilla_formulario_id' => $analisisData['plantilla_id'],
                     'bioquimico_id' => auth()->id(),
-                    'estado' => 'Pendiente',
+                    'estado' => Analisis::ESTADO_PENDIENTE,
                 ]);
 
                 // Descontar insumos asociados a la plantilla (solo para nuevas muestras)
-                if (!$this->muestra_id) {
+                if (! $this->muestra_id) {
                     $plantilla = PlantillaFormulario::with('insumos')->find($analisisData['plantilla_id']);
 
                     if ($plantilla && $plantilla->insumos->isNotEmpty()) {
@@ -371,12 +390,14 @@ class FormularioMuestra extends Component
             // Si es edición, redirigir directamente
             if ($this->muestra_id) {
                 session()->flash('mensaje', 'Muestra actualizada exitosamente.');
+
                 return redirect()->route('muestras.index');
             }
 
             // Si es nueva muestra, guardar ID en sesión para mostrar modal en la vista de gestión
             session()->flash('mensaje', 'Muestra registrada exitosamente.');
             session()->flash('muestra_recien_creada_id', $muestra->id);
+
             return redirect()->route('muestras.index');
 
         } catch (\Exception $e) {
@@ -391,9 +412,10 @@ class FormularioMuestra extends Component
      */
     private function parsearEdad(?string $edad): void
     {
-        if (!$edad) {
+        if (! $edad) {
             $this->edadCantidad = null;
             $this->edadUnidad = 'años';
+
             return;
         }
 
@@ -401,7 +423,7 @@ class FormularioMuestra extends Component
         if (preg_match('/^(\d+)\s*(años?|meses?|semanas?|días?|dias?)$/i', trim($edad), $matches)) {
             $this->edadCantidad = (int) $matches[1];
             $unidad = mb_strtolower($matches[2]);
-            
+
             // Normalizar unidades
             if (str_starts_with($unidad, 'año') || str_starts_with($unidad, 'ano')) {
                 $this->edadUnidad = 'años';
@@ -459,7 +481,7 @@ class FormularioMuestra extends Component
     #[Computed]
     public function tiposAnalisis()
     {
-        return TipoAnalisis::orderBy('nombre')->get();
+        return TipoAnalisis::where('estado', true)->orderBy('nombre')->get();
     }
 
     #[Computed]

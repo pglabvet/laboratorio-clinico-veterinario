@@ -1,4 +1,7 @@
-<div class="min-h-screen bg-gray-50 dark:bg-zinc-800" x-data="gestorDescargaPDF()">
+<div class="min-h-screen bg-gray-50 dark:bg-zinc-800" 
+    x-data="gestorDescargaPDF()"
+    @keydown.ctrl.s.prevent.window="if (!{{ json_encode($modoRevision) }}) { window.__labvetData = {}; window.dispatchEvent(new Event('antes-de-guardar')); $wire.guardarBorrador(window.__labvetData); }"
+    @keydown.ctrl.enter.prevent.window="if (!{{ json_encode($modoRevision) }}) { window.__labvetData = {}; window.dispatchEvent(new Event('antes-de-guardar')); $wire.finalizarYEnviar(window.__labvetData); }">
     <div class="container mx-auto px-4 py-6">
         {{-- Header con info del análisis --}}
         <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-md p-6 mb-6">
@@ -79,7 +82,7 @@
                         <div>
                             <p class="text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase mb-1">Sexo</p>
                             <p class="text-sm text-gray-900 dark:text-zinc-100">
-                                {{ $analisis->muestra->sexo ?? 'N/A' }}
+                                {{ $analisis->muestra->sexo === 'M' ? 'Macho' : ($analisis->muestra->sexo === 'H' ? 'Hembra' : 'N/A') }}
                             </p>
                         </div>
                     </div>
@@ -126,15 +129,39 @@
             @endif
 
             {{-- Renderizado dinámico de componentes desde JSON --}}
-            <div class="space-y-6">
+            <div class="space-y-4">
                 @foreach($plantilla->componentes as $index => $componente)
                     @if(view()->exists('livewire.resultados.componentes-edicion.' . $componente['tipo']))
-                        @include('livewire.resultados.componentes-edicion.' . $componente['tipo'], [
-                            'componente' => $componente,
-                            'index' => $index,
-                            'componentesData' => $componentesData,
-                            'analisis' => $analisis
-                        ])
+                        @if($componente['tipo'] === 'subtitulo')
+                            {{-- Subtítulo no se colapsa --}}
+                            @include('livewire.resultados.componentes-edicion.' . $componente['tipo'], [
+                                'componente' => $componente,
+                                'index' => $index,
+                                'componentesData' => $componentesData,
+                                'analisis' => $analisis
+                            ])
+                        @else
+                        <div x-data="{ abierto: true }">
+                            {{-- Barra colapsable --}}
+                            <button type="button" @click="abierto = !abierto" class="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors" :class="abierto ? 'rounded-b-none border-b-0' : ''">
+                                <span class="font-semibold text-gray-700 dark:text-zinc-300 text-sm uppercase tracking-wide">
+                                    {{ $componente['propiedades']['titulo'] ?? str_replace('-', ' ', $componente['tipo']) }}
+                                </span>
+                                <svg :class="{ 'rotate-180': abierto }" class="w-4 h-4 text-gray-500 dark:text-zinc-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                            {{-- Contenido colapsable --}}
+                            <div x-show="abierto" x-collapse>
+                                @include('livewire.resultados.componentes-edicion.' . $componente['tipo'], [
+                                    'componente' => $componente,
+                                    'index' => $index,
+                                    'componentesData' => $componentesData,
+                                    'analisis' => $analisis
+                                ])
+                            </div>
+                        </div>
+                        @endif
                     @else
                         <div class="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
                             <p class="text-sm text-yellow-800 dark:text-yellow-300">
@@ -160,12 +187,19 @@
                     {{-- Botones de revisión (Aprobar/Rechazar) --}}
                     <div class="flex gap-3">
                         @if($analisis->estado === 'Aprobado' || $analisis->estado === 'Enviado')
-                            {{-- Botón PDF solo para análisis aprobados o enviados --}}
+                            {{-- Botón Ver PDF (abre en navegador) --}}
                             @can('descargar-pdf-analisis')
                             <flux:button 
-                                wire:click="descargarPdf"
+                                @click="descargarPDF('ver')"
                                 variant="primary" 
-                                icon="document-arrow-down">
+                                icon="eye">
+                                Ver PDF
+                            </flux:button>
+                            <flux:button 
+                                @click="descargarPDF('descargar')"
+                                variant="outline" 
+                                icon="arrow-down-tray"
+                                class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950">
                                 Descargar PDF
                             </flux:button>
                             @endcan
@@ -174,7 +208,7 @@
                             @can('actualizar-datos-analisis')
                             <div x-data="{ loading: false }">
                                 <flux:button 
-                                    @click="loading = true; window.dispatchEvent(new Event('antes-de-guardar')); setTimeout(() => { $wire.actualizarDatosRevision().then(() => loading = false).catch(() => loading = false) }, 100)"
+                                    @click="loading = true; window.__labvetData = {}; window.dispatchEvent(new Event('antes-de-guardar')); $wire.actualizarDatosRevision(window.__labvetData).then(() => loading = false).catch(() => loading = false)"
                                     variant="outline"
                                     class="min-w-[130px] justify-center"
                                     x-bind:disabled="loading">
@@ -196,7 +230,7 @@
                             @endcan
                             @can('aprobar-analisis')
                             <flux:button 
-                                wire:click="aprobarAnalisis"
+                                @click="window.__labvetData = {}; window.dispatchEvent(new Event('antes-de-guardar')); $wire.aprobarAnalisis(window.__labvetData)"
                                 variant="primary" 
                                 icon="check-circle">
                                 Aprobar
@@ -206,10 +240,11 @@
                     </div>
                 @else
                     {{-- Botones normales de captura --}}
-                    <div class="flex gap-3">
+                    <div class="flex gap-3 items-center">
+                        <span class="text-xs text-gray-400 dark:text-zinc-500 hidden md:inline"><kbd class="px-1.5 py-0.5 bg-gray-100 dark:bg-zinc-700 rounded text-gray-500 dark:text-zinc-400 font-mono">Ctrl+S</kbd> borrador · <kbd class="px-1.5 py-0.5 bg-gray-100 dark:bg-zinc-700 rounded text-gray-500 dark:text-zinc-400 font-mono">Ctrl+Enter</kbd> enviar</span>
                         @can('guardar-borrador-resultados')
                         <flux:button 
-                            @click="window.dispatchEvent(new Event('antes-de-guardar')); setTimeout(() => $wire.guardarBorrador(), 100)"
+                            @click="window.__labvetData = {}; window.dispatchEvent(new Event('antes-de-guardar')); $wire.guardarBorrador(window.__labvetData)"
                             variant="outline" 
                             icon="document">
                             Guardar Borrador
@@ -217,7 +252,7 @@
                         @endcan
                         @can('registrar-resultados')
                         <flux:button 
-                            @click="window.dispatchEvent(new Event('antes-de-guardar')); setTimeout(() => $wire.finalizarYEnviar(), 100)"
+                            @click="window.__labvetData = {}; window.dispatchEvent(new Event('antes-de-guardar')); $wire.finalizarYEnviar(window.__labvetData)"
                             variant="primary" 
                             icon="check">
                             Finalizar y Enviar
@@ -281,13 +316,7 @@
 <script>
     function gestorDescargaPDF() {
         return {
-            async descargarPDF() {
-                // Notificar inicio
-                const btn = document.getElementById('btn-descargar-pdf');
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generando PDF...';
-                btn.disabled = true;
-                
+            async descargarPDF(modo = 'ver') {
                 try {
                     this.graficas = [];
                     
@@ -327,19 +356,18 @@
                         }
                     }
                     
-                    // Descargar PDF
-                    const url = `{{ route('analisis.pdf', $analisis->id) }}`;
-                    window.open(url, '_blank');
+                    // Abrir PDF según el modo
+                    if (modo === 'ver') {
+                        const url = `{{ route('analisis.ver-pdf', $analisis->id) }}`;
+                        window.open(url, '_blank');
+                    } else {
+                        const url = `{{ route('analisis.pdf', $analisis->id) }}`;
+                        window.open(url, '_blank');
+                    }
                     
                 } catch (e) {
                     console.error('Error general:', e);
                     alert('Error al generar el PDF');
-                } finally {
-                    // Restaurar botón
-                    setTimeout(() => {
-                        btn.innerHTML = originalText;
-                        btn.disabled = false;
-                    }, 500);
                 }
             },
             graficas: []

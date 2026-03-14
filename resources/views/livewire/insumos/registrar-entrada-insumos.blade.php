@@ -164,71 +164,79 @@
 
     {{-- Historial reciente --}}
     <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700">
-        <div class="p-6 border-b border-neutral-200 dark:border-neutral-700">
-            <div class="flex flex-col gap-4">
+        <div class="p-4 border-b border-neutral-200 dark:border-neutral-700">
+            <div class="flex flex-col gap-3">
                 <flux:heading size="lg">Entradas Recientes</flux:heading>
-                
-                {{-- Grid de filtros: 2 columnas en móvil, flex en desktop --}}
-                <div class="grid grid-cols-2 gap-3 sm:flex sm:flex-row">
-                    {{-- Filtro de Sucursal --}}
-                    <flux:dropdown>
-                        <flux:button variant="outline" icon="building-office-2" icon-trailing="chevron-down" class="w-full sm:w-auto justify-between">
-                            {{ $filtroSucursalEntradas ? $this->sucursales->firstWhere('id', $filtroSucursalEntradas)?->nombre : 'Sucursales' }}
+
+                {{-- Panel filtros estilo muestras --}}
+                <div x-data="{
+                    mostrarFiltros: window.innerWidth >= 640,
+                    get filtrosActivos() {
+                        let count = 0;
+                        if ($wire.busquedaEntradas) count++;
+                        if ($wire.filtroSucursalEntradas) count++;
+                        if ($wire.fechaDesdeEntradas) count++;
+                        if ($wire.fechaHastaEntradas) count++;
+                        return count;
+                    }
+                }">
+                    {{-- Toggle móvil --}}
+                    <div class="mb-2 sm:hidden">
+                        <flux:button @click="mostrarFiltros = !mostrarFiltros" variant="outline" icon="funnel" class="w-full relative">
+                            <span x-text="mostrarFiltros ? 'Ocultar filtros' : 'Mostrar filtros'"></span>
+                            <span x-show="filtrosActivos > 0" class="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-blue-600 rounded-full" x-text="filtrosActivos"></span>
                         </flux:button>
+                    </div>
 
-                        <flux:menu>
-                            <flux:menu.item wire:click="$set('filtroSucursalEntradas', '')" icon="bars-3">
-                                Todas las sucursales
-                            </flux:menu.item>
-                            <flux:menu.separator />
-                            @foreach($this->sucursales as $sucursal)
-                                <flux:menu.item wire:click="$set('filtroSucursalEntradas', '{{ $sucursal->id }}')" icon="building-storefront">
-                                    {{ $sucursal->nombre }}
-                                </flux:menu.item>
-                            @endforeach
-                        </flux:menu>
-                    </flux:dropdown>
-
-                    {{-- Filtro de Período --}}
-                    <flux:dropdown>
-                        <flux:button variant="outline" icon="calendar" icon-trailing="chevron-down" class="w-full sm:w-auto justify-between">
-                            {{ match($filtroFechaEntradas) {
-                                'hoy' => 'Hoy',
-                                'ayer' => 'Ayer',
-                                'ultimos_7_dias' => 'Últimos 7 días',
-                                'esta_semana' => 'Esta semana',
-                                'este_mes' => 'Este mes',
-                                'este_año' => 'Año actual',
-                                default => 'Período'
-                            } }}
-                        </flux:button>
-
-                        <flux:menu>
-                            <flux:menu.item wire:click="$set('filtroFechaEntradas', '')" icon="bars-3">
-                                Todos
-                            </flux:menu.item>
-                            <flux:menu.separator />
-                            <flux:menu.item wire:click="$set('filtroFechaEntradas', 'hoy')" icon="sun">
-                                Hoy
-                            </flux:menu.item>
-                            <flux:menu.item wire:click="$set('filtroFechaEntradas', 'ayer')" icon="arrow-uturn-left">
-                                Ayer
-                            </flux:menu.item>
-                            <flux:menu.item wire:click="$set('filtroFechaEntradas', 'ultimos_7_dias')" icon="calendar-days">
-                                Últimos 7 días
-                            </flux:menu.item>
-                            <flux:menu.separator />
-                            <flux:menu.item wire:click="$set('filtroFechaEntradas', 'esta_semana')" icon="calendar">
-                                Esta semana
-                            </flux:menu.item>
-                            <flux:menu.item wire:click="$set('filtroFechaEntradas', 'este_mes')" icon="calendar">
-                                Este mes
-                            </flux:menu.item>
-                            <flux:menu.item wire:click="$set('filtroFechaEntradas', 'este_año')" icon="calendar">
-                                Año actual
-                            </flux:menu.item>
-                        </flux:menu>
-                    </flux:dropdown>
+                    <div x-show="mostrarFiltros"
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 -translate-y-2"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 -translate-y-2"
+                         class="rounded-lg border border-neutral-200 bg-neutral-50 p-3 shadow-sm dark:border-neutral-700 dark:bg-neutral-900">
+                        <div class="flex flex-col sm:flex-row sm:items-end gap-3">
+                            {{-- Búsqueda --}}
+                            <div class="flex-1 min-w-0">
+                                <flux:input
+                                    wire:model.live.debounce.300ms="busquedaEntradas"
+                                    icon="magnifying-glass"
+                                    placeholder="Buscar insumo, motivo..."
+                                    class="w-full"
+                                />
+                            </div>
+                            {{-- Desde --}}
+                            <div class="w-full sm:w-auto">
+                                <flux:input type="date" wire:model.live="fechaDesdeEntradas" label="Desde" />
+                            </div>
+                            {{-- Hasta --}}
+                            <div class="w-full sm:w-auto">
+                                <flux:input type="date" wire:model.live="fechaHastaEntradas" label="Hasta" />
+                            </div>
+                            {{-- Sucursal --}}
+                            <div class="w-full sm:w-auto">
+                                <flux:dropdown>
+                                    <flux:button variant="outline" icon="building-office-2" icon-trailing="chevron-down">
+                                        {{ $filtroSucursalEntradas ? $this->sucursales->firstWhere('id', $filtroSucursalEntradas)?->nombre : 'Sucursal' }}
+                                    </flux:button>
+                                    <flux:menu>
+                                        <flux:menu.item wire:click="$set('filtroSucursalEntradas', '')" icon="bars-3">Todas las sucursales</flux:menu.item>
+                                        <flux:menu.separator />
+                                        @foreach($this->sucursales as $sucursal)
+                                            <flux:menu.item wire:click="$set('filtroSucursalEntradas', '{{ $sucursal->id }}')" icon="building-storefront">{{ $sucursal->nombre }}</flux:menu.item>
+                                        @endforeach
+                                    </flux:menu>
+                                </flux:dropdown>
+                            </div>
+                            {{-- Limpiar --}}
+                            <div class="w-full sm:w-auto">
+                                <flux:button wire:click="limpiarFiltrosHistorial" variant="outline" icon="x-mark">
+                                    Limpiar
+                                </flux:button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

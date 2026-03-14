@@ -50,17 +50,23 @@ class KardexExportController extends Controller
             $saldoFinalCantidad = $kardex['saldo_final_cantidad'];
             $saldoFinalCosto = $kardex['saldo_final_costo'];
 
-        } elseif ($categoriaId) {
-            $categoria = CategoriaInsumo::findOrFail($categoriaId);
-            $titulo = 'Inventario - Categoria: ' . $categoria->nombre;
+        } else {
+            // Todos los insumos o filtrados por categoría
+            if ($categoriaId) {
+                $categoria = CategoriaInsumo::findOrFail($categoriaId);
+                $titulo = 'Inventario - Categoria: ' . $categoria->nombre;
+            } else {
+                $titulo = 'Inventario General';
+            }
             $mostrarColumnaInsumo = true;
 
-            $insumosCategoria = Insumo::where('estado', true)
-                ->where('categoria_id', $categoriaId)
-                ->orderBy('nombre')
-                ->get();
+            $queryInsumos = Insumo::where('estado', true);
+            if ($categoriaId) {
+                $queryInsumos->where('categoria_id', $categoriaId);
+            }
+            $insumosListado = $queryInsumos->orderBy('nombre')->get();
 
-            foreach ($insumosCategoria as $insumo) {
+            foreach ($insumosListado as $insumo) {
                 $kardex = $this->pepsService->generarKardex(
                     insumoId: $insumo->id,
                     sucursalId: $sucursalId,
@@ -92,12 +98,25 @@ class KardexExportController extends Controller
     }
 
     /**
+     * Genera un nombre de archivo descriptivo basado en el título y sucursal
+     */
+    private function generarNombreArchivo(array $datos, string $extension): string
+    {
+        $nombre = $datos['titulo'] . ' - ' . $datos['sucursal']->nombre;
+        // Limpiar caracteres no válidos para nombres de archivo
+        $nombre = preg_replace('/[^A-Za-z0-9áéíóúñÁÉÍÓÚÑ\s\-_]/', '', $nombre);
+        $nombre = preg_replace('/\s+/', '-', trim($nombre));
+
+        return "{$nombre}.{$extension}";
+    }
+
+    /**
      * Exportar Kardex a Excel (CSV compatible con Excel)
      */
     public function exportarExcel(Request $request)
     {
         $datos = $this->obtenerDatos($request);
-        $filename = 'kardex-peps-' . now()->format('Ymd-His') . '.csv';
+        $filename = $this->generarNombreArchivo($datos, 'csv');
 
         $headers = [
             'Content-Type' => 'text/csv; charset=UTF-8',
@@ -192,8 +211,8 @@ class KardexExportController extends Controller
         ->setPaper('a4', 'landscape')
         ->setOption(['margin-left' => 50, 'margin-right' => 50]);
 
-        $filename = 'kardex-peps-' . now()->format('Ymd-His') . '.pdf';
+        $filename = $this->generarNombreArchivo($datos, 'pdf');
 
-        return $pdf->download($filename);
+        return $pdf->stream($filename);
     }
 }

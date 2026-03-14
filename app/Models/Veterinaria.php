@@ -14,7 +14,6 @@ class Veterinaria extends Model
     protected $fillable = [
         'nombre',
         'responsable',
-        'telefono',
         'email',
         'direccion',
         'estado',
@@ -23,6 +22,14 @@ class Veterinaria extends Model
     protected $casts = [
         'estado' => 'boolean',
     ];
+
+    /**
+     * Relación con teléfonos adicionales
+     */
+    public function telefonos(): HasMany
+    {
+        return $this->hasMany(VeterinariaTelefono::class);
+    }
 
     /**
      * Relación con muestras

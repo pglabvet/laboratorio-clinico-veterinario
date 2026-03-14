@@ -264,14 +264,45 @@ class GestionarUsuarios extends Component
             
             // No permitir eliminar al usuario actual
             if ($usuario->id === Auth::id()) {
-                session()->flash('error', 'No puedes eliminar tu propio usuario');
+                session()->flash('error', 'No puedes eliminar tu propio usuario.');
+                $this->modalEliminar = false;
+                $this->usuarioAEliminar = null;
+                return;
+            }
+
+            // Verificar datos relacionados que se perderían (CASCADE)
+            $dependencias = [];
+
+            $analisisCount = \App\Models\Analisis::where('bioquimico_id', $usuario->id)->count();
+            if ($analisisCount > 0) {
+                $dependencias[] = "{$analisisCount} análisis como bioquímico";
+            }
+
+            $pdfsCount = \App\Models\Pdf::where('generado_por', $usuario->id)->count();
+            if ($pdfsCount > 0) {
+                $dependencias[] = "{$pdfsCount} PDFs generados";
+            }
+
+            $movimientosCount = \App\Models\MovimientoInventario::where('usuario_id', $usuario->id)->count();
+            if ($movimientosCount > 0) {
+                $dependencias[] = "{$movimientosCount} movimientos de inventario";
+            }
+
+            $plantillasCount = \App\Models\PlantillaFormulario::where('creado_por', $usuario->id)->count();
+            if ($plantillasCount > 0) {
+                $dependencias[] = "{$plantillasCount} plantillas creadas";
+            }
+
+            if (!empty($dependencias)) {
+                $lista = implode(', ', $dependencias);
+                session()->flash('error', "No se puede eliminar este usuario porque tiene datos asociados: {$lista}. Desactívelo en su lugar.");
                 $this->modalEliminar = false;
                 $this->usuarioAEliminar = null;
                 return;
             }
 
             $usuario->delete();
-            session()->flash('mensaje', 'Usuario eliminado correctamente');
+            session()->flash('mensaje', 'Usuario eliminado correctamente.');
             $this->resetPage();
             
             $this->modalEliminar = false;
