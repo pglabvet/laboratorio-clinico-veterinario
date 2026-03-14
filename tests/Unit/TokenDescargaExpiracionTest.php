@@ -11,3 +11,11 @@ it('uses 14 days as default expiry when creating download token', function () {
     expect($parameters[1]->isDefaultValueAvailable())->toBeTrue();
     expect($parameters[1]->getDefaultValue())->toBe(14);
 });
+
+it('generates a short code of exactly 10 alphanumeric characters', function () {
+    $codigo = \Illuminate\Support\Str::random(10);
+
+    expect($codigo)->toHaveLength(10);
+    expect($codigo)->toMatch('/^[a-zA-Z0-9]{10}$/');
+});
+

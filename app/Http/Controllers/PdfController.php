@@ -100,12 +100,12 @@ class PdfController extends Controller
     }
 
     /**
-     * Descarga un PDF usando un token de descarga (ruta pública)
+     * Descarga un PDF usando un código corto (ruta pública, URL corta)
      */
-    public function descargarPorToken(string $token)
+    public function descargarPorCodigoCorto(string $codigo)
     {
-        // Buscar token válido
-        $tokenDescarga = TokenDescarga::buscarValido($token);
+        // Buscar token válido por código corto
+        $tokenDescarga = TokenDescarga::buscarPorCodigoCorto($codigo);
 
         if (! $tokenDescarga) {
             abort(404, 'El enlace de descarga ha expirado o no es válido.');
@@ -161,3 +161,4 @@ class PdfController extends Controller
         ]);
     }
 }
+

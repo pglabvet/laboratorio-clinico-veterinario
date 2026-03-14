@@ -12,10 +12,10 @@ Route::get('/', function () {
     return redirect()->route('login');
 })->name('home');
 
-// Ruta pública para descarga de PDF por token (no requiere autenticación)
-Route::get('/descargar/{token}', [PdfController::class, 'descargarPorToken'])
+// Ruta pública corta para descarga de PDF por código corto
+Route::get('/r/{codigo}', [PdfController::class, 'descargarPorCodigoCorto'])
     ->middleware('throttle:10,1')
-    ->name('pdf.descargar.token');
+    ->name('pdf.descargar.corto');
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified', 'can:ver-dashboard'])
