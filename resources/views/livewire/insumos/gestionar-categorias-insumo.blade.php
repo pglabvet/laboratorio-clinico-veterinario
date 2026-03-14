@@ -172,7 +172,13 @@
                     />
                 </flux:input.group>
 
-                <flux:checkbox wire:model="estado" label="Activo" />
+                <div class="rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-700 dark:bg-neutral-900/50">
+                    <flux:checkbox
+                        wire:model="estado"
+                        label="Categoria activa"
+                        description="Define si la categoria estara disponible en el sistema"
+                    />
+                </div>
             </div>
 
             <div class="flex gap-2 mt-6">

@@ -3,6 +3,7 @@
 namespace App\Livewire\Veterinarias;
 
 use App\Models\Veterinaria;
+use App\Models\VeterinariaTelefono;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -11,51 +12,104 @@ class GestionarVeterinarias extends Component
     use WithPagination;
 
     // Propiedades del formulario
+
     public $veterinaria_id;
+
     public $nombre;
+
     public $responsable;
-    public $telefono;
+
     public $email;
+
     public $direccion;
+
     public $estado = true;
 
+    // Propiedades para teléfonos
+
+    public $telefonos = [];
+
+    public $nuevoTelefono = '';
+
+    public $nuevoNombreContacto = '';
+
+    public $esNuevoPrincipal = false;
+
     // Propiedades de control
+
     public $modalAbierto = false;
+
     public $modalEliminar = false;
+
     public $modalCambiarEstado = false;
+
     public $modalVer = false;
+
     public $veterinariaAEliminar = null;
+
     public $veterinariaACambiar = null;
+
     public $veterinariaAVer = null;
+
     public $estadoActual = null;
+
     public $buscar = '';
+
     public $modoEdicion = false;
 
     // Propiedades de ordenamiento
+
     public $sortBy = 'created_at';
+
     public $sortDirection = 'desc';
 
     // Reglas de validación
+
     protected function rules()
     {
+
         return [
+
             'nombre' => 'required|string|max:255',
+
             'responsable' => 'required|string|max:255',
-            'telefono' => 'required|string|max:20',
+
+            'telefonos' => 'required|array|min:1',
+
+            'telefonos.*.telefono' => 'required|string|max:20',
+
+            'telefonos.*.nombre_contacto' => 'nullable|string|max:100',
+
+            'telefonos.*.es_principal' => 'boolean',
+
             'email' => 'required|email|max:255',
+
             'direccion' => 'required|string|max:500',
+
             'estado' => 'boolean',
+
         ];
+
     }
 
     // Mensajes de validación personalizados
+
     protected $messages = [
+
         'nombre.required' => 'El nombre es obligatorio.',
+
         'responsable.required' => 'El responsable es obligatorio.',
-        'telefono.required' => 'El teléfono es obligatorio.',
+
+        'telefonos.required' => 'Debe agregar al menos un teléfono.',
+
+        'telefonos.*.telefono.required' => 'El teléfono es obligatorio.',
+
         'email.required' => 'El email es obligatorio.',
+
         'email.email' => 'El email debe ser válido.',
+
         'direccion.required' => 'La dirección es obligatoria.',
+
     ];
 
     /**
@@ -63,9 +117,13 @@ class GestionarVeterinarias extends Component
      */
     public function crear()
     {
+
         $this->resetearFormulario();
+
         $this->modoEdicion = false;
+
         $this->modalAbierto = true;
+
     }
 
     /**
@@ -73,8 +131,11 @@ class GestionarVeterinarias extends Component
      */
     public function ver($id)
     {
-        $this->veterinariaAVer = Veterinaria::findOrFail($id);
+
+        $this->veterinariaAVer = Veterinaria::with('telefonos')->findOrFail($id);
+
         $this->modalVer = true;
+
     }
 
     /**
@@ -82,8 +143,11 @@ class GestionarVeterinarias extends Component
      */
     public function cerrarModalVer()
     {
+
         $this->modalVer = false;
+
         $this->veterinariaAVer = null;
+
     }
 
     /**
@@ -91,18 +155,43 @@ class GestionarVeterinarias extends Component
      */
     public function editar($id)
     {
-        $veterinaria = Veterinaria::findOrFail($id);
-        
+
+        $veterinaria = Veterinaria::with('telefonos')->findOrFail($id);
+
         $this->veterinaria_id = $veterinaria->id;
+
         $this->nombre = $veterinaria->nombre;
+
         $this->responsable = $veterinaria->responsable;
-        $this->telefono = $veterinaria->telefono;
+
         $this->email = $veterinaria->email;
+
         $this->direccion = $veterinaria->direccion;
+
         $this->estado = $veterinaria->estado;
-        
+
+        // Cargar teléfonos con su información completa
+
+        $this->telefonos = $veterinaria->telefonos
+
+            ->map(fn ($t) => [
+
+                'id' => $t->id,
+
+                'telefono' => $t->telefono,
+
+                'nombre_contacto' => $t->nombre_contacto ?? '',
+
+                'es_principal' => $t->es_principal,
+
+            ])
+
+            ->toArray();
+
         $this->modoEdicion = true;
+
         $this->modalAbierto = true;
+
     }
 
     /**
@@ -110,38 +199,254 @@ class GestionarVeterinarias extends Component
      */
     public function guardar()
     {
+
+        $this->normalizarTelefonosPrincipales();
+
         $this->validate();
 
         try {
+
             if ($this->modoEdicion) {
+
                 $veterinaria = Veterinaria::findOrFail($this->veterinaria_id);
+
                 $veterinaria->update([
+
                     'nombre' => $this->nombre,
+
                     'responsable' => $this->responsable,
-                    'telefono' => $this->telefono,
+
                     'email' => $this->email,
+
                     'direccion' => $this->direccion,
+
                     'estado' => $this->estado,
+
                 ]);
+
+                // Actualizar teléfonos
+
+                // Primero, eliminar teléfonos que no están en el formulario
+
+                $idsTeléfonosFormulario = array_filter(
+
+                    array_map(fn ($t) => $t['id'] ?? null, $this->telefonos)
+
+                );
+
+                $veterinaria->telefonos()
+
+                    ->whereNotIn('id', $idsTeléfonosFormulario)
+
+                    ->delete();
+
+                // Luego, crear o actualizar teléfonos
+
+                foreach ($this->telefonos as $index => $telefonoData) {
+
+                    if (! empty($telefonoData['telefono'])) {
+
+                        if (isset($telefonoData['id'])) {
+
+                            // Actualizar teléfono existente
+
+                            VeterinariaTelefono::findOrFail($telefonoData['id'])->update([
+
+                                'telefono' => $telefonoData['telefono'],
+
+                                'nombre_contacto' => $telefonoData['nombre_contacto'],
+
+                                'es_principal' => $telefonoData['es_principal'],
+
+                            ]);
+
+                        } else {
+
+                            // Crear nuevo teléfono
+
+                            $veterinaria->telefonos()->create([
+
+                                'telefono' => $telefonoData['telefono'],
+
+                                'nombre_contacto' => $telefonoData['nombre_contacto'],
+
+                                'es_principal' => $telefonoData['es_principal'],
+
+                            ]);
+
+                        }
+
+                    }
+
+                }
 
                 session()->flash('mensaje', 'Veterinaria actualizada exitosamente.');
+
             } else {
-                Veterinaria::create([
+
+                $veterinaria = Veterinaria::create([
+
                     'nombre' => $this->nombre,
+
                     'responsable' => $this->responsable,
-                    'telefono' => $this->telefono,
+
                     'email' => $this->email,
+
                     'direccion' => $this->direccion,
+
                     'estado' => $this->estado,
+
                 ]);
 
+                // Crear teléfonos iniciales
+
+                foreach ($this->telefonos as $telefonoData) {
+
+                    if (! empty($telefonoData['telefono'])) {
+
+                        $veterinaria->telefonos()->create([
+
+                            'telefono' => $telefonoData['telefono'],
+
+                            'nombre_contacto' => $telefonoData['nombre_contacto'],
+
+                            'es_principal' => $telefonoData['es_principal'],
+
+                        ]);
+
+                    }
+
+                }
+
                 session()->flash('mensaje', 'Veterinaria creada exitosamente.');
+
             }
 
             $this->cerrarModal();
+
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al guardar la veterinaria: ' . $e->getMessage());
+
+            session()->flash('error', 'Error al guardar la veterinaria: '.$e->getMessage());
+
         }
+
+    }
+
+    /**
+     * Agregar un nuevo teléfono a la lista
+     */
+    public function agregarTelefono()
+    {
+
+        if (! empty($this->nuevoTelefono)) {
+
+            $yaExistePrincipal = collect($this->telefonos)
+                ->contains(fn ($telefono) => (bool) ($telefono['es_principal'] ?? false));
+
+            $nuevoEsPrincipal = $yaExistePrincipal ? (bool) $this->esNuevoPrincipal : true;
+
+            $this->telefonos[] = [
+
+                'telefono' => $this->nuevoTelefono,
+
+                'nombre_contacto' => $this->nuevoNombreContacto,
+
+                'es_principal' => $nuevoEsPrincipal,
+
+            ];
+
+            // Si es principal, desmarcar los otros
+
+            if ($nuevoEsPrincipal) {
+
+                foreach ($this->telefonos as $i => &$t) {
+
+                    if ($i !== count($this->telefonos) - 1) {
+
+                        $t['es_principal'] = false;
+
+                    }
+
+                }
+
+            }
+
+            $this->nuevoTelefono = '';
+
+            $this->nuevoNombreContacto = '';
+
+            $this->esNuevoPrincipal = false;
+
+        }
+
+    }
+
+    /**
+     * Eliminar un teléfono de la lista
+     */
+    public function eliminarTelefono($indice)
+    {
+
+        if (isset($this->telefonos[$indice]['id'])) {
+
+            VeterinariaTelefono::destroy($this->telefonos[$indice]['id']);
+
+        }
+
+        unset($this->telefonos[$indice]);
+
+        $this->telefonos = array_values($this->telefonos);
+
+    }
+
+    /**
+     * Hacer que un teléfono sea el principal
+     */
+    public function hacerPrincipal($indice)
+    {
+
+        foreach ($this->telefonos as &$t) {
+
+            $t['es_principal'] = false;
+
+        }
+
+        $this->telefonos[$indice]['es_principal'] = true;
+
+    }
+
+    /**
+     * Garantiza que solo exista un telefono principal en el formulario.
+     */
+    private function normalizarTelefonosPrincipales(): void
+    {
+
+        $principalAsignado = false;
+
+        foreach ($this->telefonos as $indice => $telefono) {
+
+            $esPrincipal = (bool) ($telefono['es_principal'] ?? false);
+
+            if ($esPrincipal && ! $principalAsignado) {
+
+                $this->telefonos[$indice]['es_principal'] = true;
+
+                $principalAsignado = true;
+
+                continue;
+
+            }
+
+            $this->telefonos[$indice]['es_principal'] = false;
+
+        }
+
+        if (! $principalAsignado && count($this->telefonos) > 0) {
+
+            $this->telefonos[0]['es_principal'] = true;
+
+        }
+
     }
 
     /**
@@ -149,8 +454,11 @@ class GestionarVeterinarias extends Component
      */
     public function confirmarEliminar($id)
     {
+
         $this->veterinariaAEliminar = $id;
+
         $this->modalEliminar = true;
+
     }
 
     /**
@@ -158,8 +466,11 @@ class GestionarVeterinarias extends Component
      */
     public function cancelarEliminar()
     {
+
         $this->modalEliminar = false;
+
         $this->veterinariaAEliminar = null;
+
     }
 
     /**
@@ -167,31 +478,49 @@ class GestionarVeterinarias extends Component
      */
     public function eliminar()
     {
+
         try {
-            if (!$this->veterinariaAEliminar) {
+
+            if (! $this->veterinariaAEliminar) {
+
                 return;
+
             }
 
             $veterinaria = Veterinaria::findOrFail($this->veterinariaAEliminar);
-            
+
             // Verificar si tiene muestras asociadas
+
             if ($veterinaria->muestras()->count() > 0) {
+
                 session()->flash('error', 'No se puede eliminar la veterinaria porque tiene muestras asociadas.');
+
                 $this->modalEliminar = false;
+
                 $this->veterinariaAEliminar = null;
+
                 return;
+
             }
 
             $veterinaria->delete();
+
             session()->flash('mensaje', 'Veterinaria eliminada exitosamente.');
-            
+
             $this->modalEliminar = false;
+
             $this->veterinariaAEliminar = null;
+
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al eliminar la veterinaria: ' . $e->getMessage());
+
+            session()->flash('error', 'Error al eliminar la veterinaria: '.$e->getMessage());
+
             $this->modalEliminar = false;
+
             $this->veterinariaAEliminar = null;
+
         }
+
     }
 
     /**
@@ -199,10 +528,15 @@ class GestionarVeterinarias extends Component
      */
     public function confirmarCambiarEstado($id)
     {
+
         $veterinaria = Veterinaria::findOrFail($id);
+
         $this->veterinariaACambiar = $id;
+
         $this->estadoActual = $veterinaria->estado;
+
         $this->modalCambiarEstado = true;
+
     }
 
     /**
@@ -210,10 +544,15 @@ class GestionarVeterinarias extends Component
      */
     public function updatedModalCambiarEstado($value)
     {
-        if (!$value) {
+
+        if (! $value) {
+
             $this->veterinariaACambiar = null;
+
             $this->estadoActual = null;
+
         }
+
     }
 
     /**
@@ -221,9 +560,13 @@ class GestionarVeterinarias extends Component
      */
     public function cancelarCambiarEstado()
     {
+
         $this->modalCambiarEstado = false;
+
         $this->veterinariaACambiar = null;
+
         $this->estadoActual = null;
+
     }
 
     /**
@@ -231,28 +574,45 @@ class GestionarVeterinarias extends Component
      */
     public function cambiarEstado()
     {
+
         try {
-            if (!$this->veterinariaACambiar) {
+
+            if (! $this->veterinariaACambiar) {
+
                 return;
+
             }
 
             $veterinaria = Veterinaria::findOrFail($this->veterinariaACambiar);
-            $nuevoEstado = !$veterinaria->estado;
+
+            $nuevoEstado = ! $veterinaria->estado;
+
             $veterinaria->estado = $nuevoEstado;
+
             $veterinaria->save();
-            
+
             $mensaje = $nuevoEstado ? 'Veterinaria activada exitosamente.' : 'Veterinaria desactivada exitosamente.';
+
             session()->flash('mensaje', $mensaje);
 
             $this->modalCambiarEstado = false;
+
             $this->veterinariaACambiar = null;
+
             $this->estadoActual = null;
+
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al cambiar el estado: ' . $e->getMessage());
+
+            session()->flash('error', 'Error al cambiar el estado: '.$e->getMessage());
+
             $this->modalCambiarEstado = false;
+
             $this->veterinariaACambiar = null;
+
             $this->estadoActual = null;
+
         }
+
     }
 
     /**
@@ -260,9 +620,13 @@ class GestionarVeterinarias extends Component
      */
     public function cerrarModal()
     {
+
         $this->modalAbierto = false;
+
         $this->resetearFormulario();
+
         $this->resetValidation();
+
     }
 
     /**
@@ -270,13 +634,35 @@ class GestionarVeterinarias extends Component
      */
     private function resetearFormulario()
     {
+
         $this->veterinaria_id = null;
+
         $this->nombre = '';
+
         $this->responsable = '';
-        $this->telefono = '';
+
+        $this->telefonos = [[
+
+            'telefono' => '',
+
+            'nombre_contacto' => '',
+
+            'es_principal' => true,
+
+        ]];
+
+        $this->nuevoTelefono = '';
+
+        $this->nuevoNombreContacto = '';
+
+        $this->esNuevoPrincipal = false;
+
         $this->email = '';
+
         $this->direccion = '';
+
         $this->estado = true;
+
     }
 
     /**
@@ -284,7 +670,9 @@ class GestionarVeterinarias extends Component
      */
     public function updatingBuscar()
     {
+
         $this->resetPage();
+
     }
 
     /**
@@ -292,12 +680,19 @@ class GestionarVeterinarias extends Component
      */
     public function ordenarPor($field)
     {
+
         if ($this->sortBy === $field) {
+
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+
         } else {
+
             $this->sortBy = $field;
+
             $this->sortDirection = 'asc';
+
         }
+
     }
 
     /**
@@ -305,8 +700,11 @@ class GestionarVeterinarias extends Component
      */
     public function limpiarBuscar()
     {
+
         $this->buscar = '';
+
         $this->resetPage();
+
     }
 
     /**
@@ -314,20 +712,32 @@ class GestionarVeterinarias extends Component
      */
     public function render()
     {
+
         $veterinarias = Veterinaria::query()
+
+            ->with('telefonos')
+
             ->when($this->buscar, function ($query) {
-                $query->where('nombre', 'ilike', '%' . $this->buscar . '%')
-                    ->orWhere('responsable', 'ilike', '%' . $this->buscar . '%')
-                    ->orWhere('email', 'ilike', '%' . $this->buscar . '%')
-                    ->orWhere('telefono', 'ilike', '%' . $this->buscar . '%')
-                    ->orWhere('direccion', 'ilike', '%' . $this->buscar . '%');
+
+                $query->where('nombre', 'ilike', '%'.$this->buscar.'%')
+
+                    ->orWhere('responsable', 'ilike', '%'.$this->buscar.'%')
+
+                    ->orWhere('email', 'ilike', '%'.$this->buscar.'%')
+
+                    ->orWhere('direccion', 'ilike', '%'.$this->buscar.'%');
+
             })
+
             ->orderBy($this->sortBy, $this->sortDirection)
+
             ->paginate(10);
 
         return view('livewire.veterinarias.gestionar-veterinarias', [
+
             'veterinarias' => $veterinarias,
+
         ]);
+
     }
 }
- //este es un comentario para saber si los cambios se guardan en esta rama 

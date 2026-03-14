@@ -2,22 +2,20 @@
 
 namespace App\Livewire\Muestras;
 
-use App\Models\Muestra;
+use App\Models\Analisis;
 use App\Models\Especie;
-use App\Models\Veterinaria;
+use App\Models\MovimientoInventario;
+use App\Models\Muestra;
 use App\Models\Sucursal;
 use App\Models\TipoAnalisis;
-use App\Models\Analisis;
-use App\Models\InventarioSucursal;
+use App\Models\Veterinaria;
+use App\Services\EnvioResultadosService;
 use App\Services\MuestraService;
 use App\Services\PepsInventarioService;
-use App\Models\MovimientoInventario;
-use App\Models\PlantillaFormulario;
-use App\Services\EnvioResultadosService;
+use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Livewire\Attributes\Computed;
-use Illuminate\Support\Facades\DB;
 
 class GestionarMuestras extends Component
 {
@@ -25,50 +23,84 @@ class GestionarMuestras extends Component
 
     // Propiedades del formulario - Muestra
     public $muestra_id;
+
     public $codigo_muestra;
+
     public $tipo_muestra;
+
     public $fecha_recepcion;
+
     public $estado = 'Pendiente';
+
     public $observaciones;
+
     public $sucursal_id;
 
     // Propiedades del formulario - Paciente
     public $paciente_nombre;
+
     public $especie_id;
+
     public $raza;
+
     public $edad;
+
     public $sexo = 'M';
+
     public $color;
+
     public $propietario_nombre;
 
     // Propiedades del formulario - Veterinaria y Análisis
     public $veterinaria_id;
+
     public $tipos_analisis_seleccionados = [];
 
     // Propiedades de control
     public $modalAbierto = false;
+
     public $modalEliminar = false;
+
     public $modalVer = false;
+
     public $modalCodigoBarras = false;
+
     public $modalAnalisis = false;
+
     public $muestraAEliminar = null;
+
     public $muestraAVer = null;
+
     public $muestraCodigoBarras = null;
+
     public $muestraAnalisis = null;
+
+    public $telefonoWhatsappSeleccionado = '';
+
+    public $telefonosWhatsappDisponibles = [];
+
     public $buscar = '';
+
     public $modoEdicion = false;
 
     // Propiedades de filtros
     public $filtroEstado = '';
+
     public $filtroEspecie = '';
+
     public $filtroVeterinaria = '';
+
     public $filtroSucursal = '';
+
     public $filtroFechaDesde = '';
+
     public $filtroFechaHasta = '';
+
     public $filtroPeriodo = '';
 
     // Propiedades de ordenamiento
     public $sortBy = 'created_at';
+
     public $sortDirection = 'desc';
 
     // Reglas de validación
@@ -140,7 +172,7 @@ class GestionarMuestras extends Component
             'veterinaria',
             'sucursal',
             'analisis.tipoAnalisis',
-            'analisis.plantillaFormulario'
+            'analisis.plantillaFormulario',
         ])->findOrFail($id);
         $this->modalVer = true;
     }
@@ -162,7 +194,7 @@ class GestionarMuestras extends Component
         $this->muestraCodigoBarras = Muestra::with([
             'especie',
             'veterinaria',
-            'sucursal'
+            'sucursal',
         ])->findOrFail($id);
         $this->modalCodigoBarras = true;
     }
@@ -183,10 +215,12 @@ class GestionarMuestras extends Component
     {
         $this->muestraAnalisis = Muestra::with([
             'especie',
-            'veterinaria',
+            'veterinaria.telefonos',
             'analisis.tipoAnalisis',
-            'analisis.resultados'
+            'analisis.resultados',
         ])->findOrFail($id);
+
+        $this->cargarTelefonosWhatsappDisponibles();
         $this->modalAnalisis = true;
     }
 
@@ -197,6 +231,8 @@ class GestionarMuestras extends Component
     {
         $this->modalAnalisis = false;
         $this->muestraAnalisis = null;
+        $this->telefonoWhatsappSeleccionado = '';
+        $this->telefonosWhatsappDisponibles = [];
     }
 
     /**
@@ -206,20 +242,21 @@ class GestionarMuestras extends Component
     {
         try {
             $service = app(EnvioResultadosService::class);
-            $resultado = $service->prepararWhatsApp($analisisId);
+            $resultado = $service->prepararWhatsApp($analisisId, $this->telefonoWhatsappSeleccionado ?: null);
 
             $this->dispatch('abrir-whatsapp', url: $resultado['url']);
 
             if ($this->muestraAnalisis) {
-                $this->muestraAnalisis->load('analisis.tipoAnalisis');
+                $this->muestraAnalisis->load('analisis.tipoAnalisis', 'veterinaria.telefonos');
+                $this->cargarTelefonosWhatsappDisponibles();
             }
 
             session()->flash('mensaje', $resultado['mensaje']);
         } catch (\Exception $e) {
-            \Log::error('Error al generar enlace de WhatsApp para análisis ' . $analisisId . ': ' . $e->getMessage(), [
+            \Log::error('Error al generar enlace de WhatsApp para análisis '.$analisisId.': '.$e->getMessage(), [
                 'exception' => $e,
             ]);
-            session()->flash('error', 'No se pudo generar el enlace de WhatsApp. El análisis no ha sido marcado como enviado. Detalle técnico: ' . $e->getMessage());
+            session()->flash('error', 'No se pudo generar el enlace de WhatsApp. El análisis no ha sido marcado como enviado. Detalle técnico: '.$e->getMessage());
         }
     }
 
@@ -228,21 +265,23 @@ class GestionarMuestras extends Component
      */
     public function enviarTodoWhatsApp()
     {
-        if (!$this->muestraAnalisis) {
+        if (! $this->muestraAnalisis) {
             session()->flash('error', 'No hay muestra seleccionada.');
+
             return;
         }
 
         try {
             $service = app(EnvioResultadosService::class);
-            $resultado = $service->prepararWhatsAppMasivo($this->muestraAnalisis);
+            $resultado = $service->prepararWhatsAppMasivo($this->muestraAnalisis, $this->telefonoWhatsappSeleccionado ?: null);
 
-            $this->muestraAnalisis->load('analisis.tipoAnalisis');
+            $this->muestraAnalisis->load('analisis.tipoAnalisis', 'veterinaria.telefonos');
+            $this->cargarTelefonosWhatsappDisponibles();
             $this->dispatch('abrir-whatsapp', url: $resultado['url']);
 
             session()->flash('mensaje', $resultado['mensaje']);
         } catch (\Exception $e) {
-            session()->flash('error', 'Error al generar enlaces: ' . $e->getMessage());
+            session()->flash('error', 'Error al generar enlaces: '.$e->getMessage());
         }
     }
 
@@ -261,10 +300,10 @@ class GestionarMuestras extends Component
 
             session()->flash('mensaje', $mensaje);
         } catch (\Exception $e) {
-            \Log::error('Error al enviar email para análisis ' . $analisisId . ': ' . $e->getMessage(), [
+            \Log::error('Error al enviar email para análisis '.$analisisId.': '.$e->getMessage(), [
                 'exception' => $e,
             ]);
-            session()->flash('error', 'No se pudo enviar el correo electrónico. Detalle: ' . $e->getMessage());
+            session()->flash('error', 'No se pudo enviar el correo electrónico. Detalle: '.$e->getMessage());
         }
     }
 
@@ -273,8 +312,9 @@ class GestionarMuestras extends Component
      */
     public function enviarTodoEmail()
     {
-        if (!$this->muestraAnalisis) {
+        if (! $this->muestraAnalisis) {
             session()->flash('error', 'No hay muestra seleccionada.');
+
             return;
         }
 
@@ -286,11 +326,33 @@ class GestionarMuestras extends Component
 
             session()->flash('mensaje', $mensaje);
         } catch (\Exception $e) {
-            \Log::error('Error al enviar todos los análisis por email: ' . $e->getMessage(), [
+            \Log::error('Error al enviar todos los análisis por email: '.$e->getMessage(), [
                 'exception' => $e,
             ]);
-            session()->flash('error', 'Error al enviar los resultados por correo: ' . $e->getMessage());
+            session()->flash('error', 'Error al enviar los resultados por correo: '.$e->getMessage());
         }
+    }
+
+    /**
+     * Carga los teléfonos de WhatsApp disponibles y preselecciona el principal.
+     */
+    private function cargarTelefonosWhatsappDisponibles(): void
+    {
+        $telefonos = collect($this->muestraAnalisis?->veterinaria?->telefonos ?? [])
+            ->sortByDesc(fn ($telefono) => (int) $telefono->es_principal)
+            ->values();
+
+        $this->telefonosWhatsappDisponibles = $telefonos
+            ->map(fn ($telefono) => [
+                'telefono' => $telefono->telefono,
+                'nombre_contacto' => $telefono->nombre_contacto,
+                'es_principal' => (bool) $telefono->es_principal,
+            ])
+            ->all();
+
+        $telefonoPrincipal = $telefonos->firstWhere('es_principal', true) ?? $telefonos->first();
+
+        $this->telefonoWhatsappSeleccionado = $telefonoPrincipal?->telefono ?? '';
     }
 
     /**
@@ -304,11 +366,11 @@ class GestionarMuestras extends Component
             DB::beginTransaction();
 
             // UC-B05: Validar stock antes de crear análisis
-            if (!$this->modoEdicion) {
+            if (! $this->modoEdicion) {
                 $muestraService = app(MuestraService::class);
                 $resultado = $muestraService->validarStockPorTiposAnalisis($this->tipos_analisis_seleccionados, $this->sucursal_id);
-                if (!empty($resultado['warnings'])) {
-                    session()->flash('warning', '⚠️ ADVERTENCIA: Los siguientes insumos tienen stock bajo: ' . implode(', ', $resultado['warnings']) . '. Se recomienda reabastecer pronto.');
+                if (! empty($resultado['warnings'])) {
+                    session()->flash('warning', '⚠️ ADVERTENCIA: Los siguientes insumos tienen stock bajo: '.implode(', ', $resultado['warnings']).'. Se recomienda reabastecer pronto.');
                 }
             }
 
@@ -373,11 +435,9 @@ class GestionarMuestras extends Component
             $this->cerrarModal();
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'Error al guardar la muestra: ' . $e->getMessage());
+            session()->flash('error', 'Error al guardar la muestra: '.$e->getMessage());
         }
     }
-
-
 
     /**
      * Abrir modal de confirmación para eliminar
@@ -403,7 +463,7 @@ class GestionarMuestras extends Component
     public function eliminar()
     {
         try {
-            if (!$this->muestraAEliminar) {
+            if (! $this->muestraAEliminar) {
                 return;
             }
 
@@ -417,6 +477,7 @@ class GestionarMuestras extends Component
                 $this->modalEliminar = false;
                 $this->muestraAEliminar = null;
                 DB::rollBack();
+
                 return;
             }
 
@@ -456,7 +517,7 @@ class GestionarMuestras extends Component
             $this->muestraAEliminar = null;
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'Error al eliminar la muestra: ' . $e->getMessage());
+            session()->flash('error', 'Error al eliminar la muestra: '.$e->getMessage());
             $this->modalEliminar = false;
             $this->muestraAEliminar = null;
         }
@@ -613,11 +674,11 @@ class GestionarMuestras extends Component
             ->with(['especie', 'veterinaria', 'sucursal'])
             ->withCount('analisis')
             // Filtrar por sucursal del usuario si no tiene vista general
-            ->when(!auth()->user()->can('vista-general-sistema'), function ($query) {
+            ->when(! auth()->user()->can('vista-general-sistema'), function ($query) {
                 $query->where('sucursal_id', auth()->user()->sucursal_id);
             })
             ->when($this->buscar, function ($query) {
-                $searchTerm = '%' . $this->buscar . '%';
+                $searchTerm = '%'.$this->buscar.'%';
                 $query->where(function ($q) use ($searchTerm) {
                     $q->where('muestras.codigo_muestra', 'ilike', $searchTerm)
                         ->orWhere('muestras.paciente_nombre', 'ilike', $searchTerm)

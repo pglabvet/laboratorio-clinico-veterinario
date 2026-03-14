@@ -82,7 +82,7 @@
                         <div>
                             <p class="text-xs font-medium text-gray-500 dark:text-zinc-400 uppercase mb-1">Sexo</p>
                             <p class="text-sm text-gray-900 dark:text-zinc-100">
-                                {{ $analisis->muestra->sexo ?? 'N/A' }}
+                                {{ $analisis->muestra->sexo === 'M' ? 'Macho' : ($analisis->muestra->sexo === 'H' ? 'Hembra' : 'N/A') }}
                             </p>
                         </div>
                     </div>

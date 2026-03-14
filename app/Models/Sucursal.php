@@ -23,6 +23,7 @@ class Sucursal extends Model
         'codigo',
         'direccion',
         'telefono',
+        'telefono_2',
         'estado',
     ];
 

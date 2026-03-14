@@ -141,7 +141,12 @@
                                 {{ $sucursal->direccion }}
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-700 dark:text-neutral-300">
-                                {{ $sucursal->telefono }}
+                                <div class="flex flex-col gap-1">
+                                    <span>{{ $sucursal->telefono }}</span>
+                                    @if($sucursal->telefono_2)
+                                        <span class="text-xs text-neutral-500 dark:text-neutral-400">{{ $sucursal->telefono_2 }}</span>
+                                    @endif
+                                </div>
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
                                 @can('editar-sucursales')
@@ -274,14 +279,22 @@
                     :error="$errors->first('telefono')"
                 />
 
+                {{-- Teléfono 2 --}}
+                <flux:input 
+                    wire:model="telefono_2"
+                    label="Teléfono 2 (Opcional)"
+                    placeholder="Ej: 555-5678"
+                    :error="$errors->first('telefono_2')"
+                />
+
                 {{-- Estado --}}
-                <flux:select 
-                    wire:model="estado"
-                    label="Estado"
-                >
-                    <option value="1">Activo</option>
-                    <option value="0">Inactivo</option>
-                </flux:select>
+                <div class="rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-700 dark:bg-neutral-900/50">
+                    <flux:checkbox
+                        wire:model="estado"
+                        label="Sucursal activa"
+                        description="Define si la sucursal estara disponible en el sistema"
+                    />
+                </div>
             </div>
 
             {{-- Botones del modal --}}
@@ -341,8 +354,13 @@
                     <div class="flex items-start gap-3 px-4 py-3.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
                         <svg class="w-5 h-5 text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z" /></svg>
                         <div class="flex-1 min-w-0">
-                            <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-0.5">Teléfono</p>
-                            <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $sucursalAVer->telefono }}</p>
+                            <p class="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-0.5">Teléfonos</p>
+                            <div class="flex flex-col gap-1">
+                                <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">{{ $sucursalAVer->telefono }}</p>
+                                @if($sucursalAVer->telefono_2)
+                                    <p class="text-sm font-medium text-neutral-700 dark:text-neutral-300">{{ $sucursalAVer->telefono_2 }}</p>
+                                @endif
+                            </div>
                         </div>
                     </div>
                     <div class="flex items-start gap-3 px-4 py-3.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
