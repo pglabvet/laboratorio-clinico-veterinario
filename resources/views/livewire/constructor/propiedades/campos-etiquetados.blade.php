@@ -10,6 +10,23 @@
             class="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
     </div>
 
+    <!-- Columnas (encabezados) -->
+    <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">Columnas</label>
+        <div class="space-y-2">
+            @foreach($props['columnas'] ?? [] as $colIndex => $columna)
+            <div class="p-2 bg-gray-50 dark:bg-zinc-900 rounded border border-gray-200 dark:border-zinc-700">
+                <span class="text-xs font-medium text-gray-600 dark:text-zinc-400">Columna {{ $colIndex + 1 }}</span>
+                <input 
+                    type="text"
+                    wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.columnas.{{ $colIndex }}.nombre"
+                    placeholder="Ej: CAMPO, RESULTADO"
+                    class="w-full px-2 py-1 border border-gray-300 dark:border-zinc-700 rounded text-xs bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 mt-1">
+            </div>
+            @endforeach
+        </div>
+    </div>
+
     <!-- Campos -->
     <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">Campos (etiquetas)</label>

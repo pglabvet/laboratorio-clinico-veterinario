@@ -247,6 +247,17 @@
                                     $itemsCE = $resultado->valor['campos'] ?? [];
                                 @endphp
                                 <table class="w-full text-sm">
+                                    @if(!empty($propiedadesComponente['columnas']))
+                                    <thead>
+                                        <tr class="bg-gray-100 dark:bg-zinc-900">
+                                            @foreach($propiedadesComponente['columnas'] as $columna)
+                                            <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 font-semibold text-gray-900 dark:text-zinc-100">
+                                                {{ $columna['nombre'] ?? '' }}
+                                            </th>
+                                            @endforeach
+                                        </tr>
+                                    </thead>
+                                    @endif
                                     <tbody>
                                         @foreach($itemsCE as $item)
                                         <tr class="border-b border-gray-200 dark:border-zinc-700 last:border-0">

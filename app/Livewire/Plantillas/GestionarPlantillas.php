@@ -245,6 +245,10 @@ class GestionarPlantillas extends Component
             'serologia' => [
                 'titulo' => 'SEROLOGIA',
                 'descripcion' => '',
+                'columnas' => [
+                    ['nombre' => 'PRUEBA'],
+                    ['nombre' => 'RESULTADO'],
+                ],
                 'campos' => [
                     'Dirofilaria Immitis',
                     'Erlichia Canis',
@@ -254,6 +258,10 @@ class GestionarPlantillas extends Component
             ],
             'campos-etiquetados' => [
                 'titulo' => 'CULTIVO',
+                'columnas' => [
+                    ['nombre' => 'CAMPO'],
+                    ['nombre' => 'RESULTADO'],
+                ],
                 'campos' => [
                     'MUESTRA',
                     'COLOR',
@@ -284,9 +292,6 @@ class GestionarPlantillas extends Component
             ],
             'campo-texto' => [
                 'titulo' => '',
-                'label' => 'Campo',
-                'placeholder' => '',
-                'tipo' => 'texto', // texto, numero, fecha
                 'tipo_uso' => 'editable', // editable, nota
                 'contenido' => '',
             ],

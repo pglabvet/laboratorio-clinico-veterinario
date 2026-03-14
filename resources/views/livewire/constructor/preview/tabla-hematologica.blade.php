@@ -20,18 +20,18 @@
     <table class="w-full border border-gray-300 dark:border-zinc-700 text-xs">
         <thead>
             <tr>
-                <th colspan="5" class="border border-gray-300 dark:border-zinc-700 px-2 py-2 font-bold text-gray-900 dark:text-zinc-100">{{ $props['titulo'] ?? 'CUADRO HEMÁTICO' }}</th>
-                <th colspan="7" class="border border-gray-300 dark:border-zinc-700 px-2 py-2"></th>
+                <th colspan="3" class="border border-gray-300 dark:border-zinc-700 px-2 py-2 font-bold text-gray-900 dark:text-zinc-100">{{ $props['titulo'] ?? 'CUADRO HEMÁTICO' }}</th>
+                <th colspan="5" class="border border-gray-300 dark:border-zinc-700 px-2 py-2"></th>
             </tr>
             <tr class="bg-gray-100 dark:bg-zinc-900 text-center text-xs">
-                <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100" rowspan="2">CUADRO<br>HEMÁTICO</th>
-                <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1" colspan="2"></th>
-                <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100" colspan="2">VALORES DE REF</th>
-                <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1" rowspan="2"></th>
-                <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100" colspan="2">VALOR REL</th>
-                <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100" rowspan="2">Val ref</th>
-                <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100" colspan="2">VALOR ABS</th>
-                <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100" rowspan="2">Val ref</th>
+                <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100">CUADRO<br>HEMÁTICO</th>
+                <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1" colspan="1"></th>
+                <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100">VALORES DE REF</th>
+                <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1" rowspan="1"></th>
+                <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100">VALOR REL</th>
+                <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100">Val ref</th>
+                <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100">VALOR ABS</th>
+                <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100">Val ref</th>
             </tr>
         </thead>
         <tbody>
@@ -45,23 +45,20 @@
                     @php $param = $props['parametros_principales'][$i]; @endphp
                     <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 font-semibold text-xs text-gray-900 dark:text-zinc-100">{{ $param['nombre'] }}</td>
                     <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-400 dark:text-zinc-500 italic text-xs">(valor)</td>
-                    <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-center text-xs text-gray-900 dark:text-zinc-100">{{ $param['unidad'] }}</td>
-                    <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-center text-xs text-gray-900 dark:text-zinc-100" colspan="2">{{ $generarTextoRango($param) }}</td>
+                    <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1 text-center text-xs text-gray-900 dark:text-zinc-100">{{ $generarTextoRango($param) }}@if($param['unidad']) {{ $param['unidad'] }}@endif</td>
                 @else
-                    <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1" colspan="5"></td>
+                    <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1" colspan="3"></td>
                 @endif
                 
                 @if($i < count($props['diferenciales'] ?? []))
                     @php $dif = $props['diferenciales'][$i]; @endphp
                     <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 font-semibold text-xs text-gray-900 dark:text-zinc-100">{{ $dif['nombre'] }}</td>
                     <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-400 dark:text-zinc-500 italic text-xs">(val)</td>
-                    <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1 text-center text-xs text-gray-900 dark:text-zinc-100">%</td>
-                    <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-center text-xs text-gray-900 dark:text-zinc-100">{{ $generarTextoRango($dif, 'rel_') }}</td>
+                    <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-center text-xs text-gray-900 dark:text-zinc-100">{{ $generarTextoRango($dif, 'rel_') }} %</td>
                     <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-400 dark:text-zinc-500 italic text-xs">(val)</td>
-                    <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1 text-center text-xs text-gray-900 dark:text-zinc-100">mm³</td>
-                    <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-center text-xs text-gray-900 dark:text-zinc-100">{{ $generarTextoRango($dif, 'abs_') }}</td>
+                    <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-center text-xs text-gray-900 dark:text-zinc-100">{{ $generarTextoRango($dif, 'abs_') }} mm³</td>
                 @else
-                    <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1" colspan="7"></td>
+                    <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1" colspan="5"></td>
                 @endif
             </tr>
             @endfor
@@ -74,9 +71,8 @@
                 @endif
                 <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-center text-xs text-gray-900 dark:text-zinc-100">{{ $indice['nombre'] }}</td>
                 <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-400 dark:text-zinc-500 italic text-xs">(valor)</td>
-                <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-center text-xs text-gray-900 dark:text-zinc-100">{{ $indice['unidad'] }}</td>
-                <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-xs text-gray-900 dark:text-zinc-100" colspan="2">{{ $generarTextoRango($indice) ?: ($indice['referencia'] ?? '') }}</td>
-                <td class="border border-gray-300 dark:border-zinc-700" colspan="7"></td>
+                <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-center text-xs text-gray-900 dark:text-zinc-100">{{ $generarTextoRango($indice) ?: ($indice['referencia'] ?? '') }}@if($indice['unidad']) {{ $indice['unidad'] }}@endif</td>
+                <td class="border border-gray-300 dark:border-zinc-700" colspan="5"></td>
             </tr>
             @endforeach
         </tbody>

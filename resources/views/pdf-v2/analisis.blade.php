@@ -1,5 +1,5 @@
 {{-- PDF V2 - Vista principal del reporte de análisis --}}
-{{-- Este archivo reemplaza a pdf/analisis.blade.php con un diseño completamente nuevo --}}
+{{-- Diseño moderno inspirado en PG LABVET --}}
 
 <!DOCTYPE html>
 <html lang="es">
@@ -10,12 +10,11 @@
 
   <style>
     /* ===========================
-       ESTILOS PDF V2
-       Escribe aquí tu nuevo diseño
+       ESTILOS PDF V2 - DISEÑO MODERNO
        =========================== */
 
     @page {
-      margin: 70pt 70pt 120pt 25pt;
+      margin: 115pt 55pt 130pt 55pt;
     }
 
     * { box-sizing: border-box; }
@@ -23,75 +22,486 @@
     body {
       margin: 0;
       padding: 0;
-      font-family: Arial, sans-serif;
+      font-family: Arial, Helvetica, sans-serif;
       font-size: 10px;
+      line-height: 1.5;
+      color: #1a1a1a;
+    }
+
+    /* === FONDO FULL-BLEED === */
+    .page-background {
+      position: fixed;
+      top: -115pt;
+      left: -55pt;
+      width: 612pt;
+      height: 792pt;
+      z-index: 0;
+    }
+
+    .page-background img {
+      width: 612pt;
+      height: 792pt;
+    }
+
+    /* === LOGO FIJO (todas las páginas) === */
+    .header-logo {
+      position: fixed;
+      top: -85pt;
+      left: 0pt;
+      z-index: 3;
+    }
+
+    .header-logo img {
+      height: 50pt;
+      width: auto;
+    }
+
+    /* === BARCODE (solo primera página, via CSS) === */
+    .header-barcode {
+      position: fixed;
+      top: -85pt;
+      right: 0pt;
+      text-align: right;
+      z-index: 3;
+    }
+
+    .barcode-text {
+      font-size: 12px;
+      color: #1e3a5f;
+      text-transform: uppercase;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      margin-bottom: 2pt;
+    }
+
+    .barcode-img {
+      margin-top: 2pt;
+    }
+
+    .barcode-img img {
+      width: 100%;
+      height: 25pt;
+    }
+
+    /* === FIRMA FIJA (todas las páginas) === */
+    .fixed-signature {
+      position: fixed;
+      bottom: -55pt;
+      left: 0;
+      right: 0;
+      text-align: center;
+      z-index: 3;
+    }
+
+    .fixed-signature img {
+      max-width: 160px;
+      max-height: 80px;
+    }
+
+    /* === QR FIJO (todas las páginas) === */
+    .fixed-qr {
+      position: fixed;
+      bottom: -75pt;
+      left: -10pt;
+      z-index: 3;
+    }
+
+    .fixed-qr img {
+      width: 70pt;
+      height: 70pt;
+    }
+
+    .qr-label {
+      font-size: 6px;
+      color: #1e3a5f;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 2pt;
+      text-align: center;
+    }
+
+    .qr-sublabel {
+      font-size: 5px;
+      color: #718096;
+      margin-top: 1pt;
+      text-align: center;
+    }
+
+    /* === BARRA AZUL INFERIOR (todas las páginas) === */
+    .footer-bar {
+      position: fixed;
+      bottom: -130pt;
+      left: -55pt;
+      width: 612pt;
+      height: 42pt;
+      background-color: #1e3a5f;
+      z-index: 2;
+    }
+
+    .footer-bar-content {
+      position: fixed;
+      bottom: -125pt;
+      left: 0;
+      right: 0;
+      z-index: 3;
+      color: white;
+      font-size: 8px;
+      letter-spacing: 0.2px;
       line-height: 1.4;
-      color: #333;
+    }
+
+    .footer-bar-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0;
+    }
+
+    .footer-bar-content table td {
+      padding: 2px 12px;
+      border: none !important;
+      border-bottom: none !important;
+      color: white;
+      font-size: 8px;
+      vertical-align: middle;
+    }
+
+    .footer-bar-content table tr:last-child td {
+      border-bottom: none !important;
+    }
+
+    /* === CONTENIDO PRINCIPAL === */
+    .container {
+      position: relative;
+      z-index: 1;
+      padding: 0;
+    }
+
+    /* === TÍTULO DEL ANÁLISIS === */
+    .analysis-title {
+      color: #1e3a5f;
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 18px;
+      padding-bottom: 8px;
+    }
+
+    /* === CONTENEDOR DATOS DEL PACIENTE === */
+    .patient-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 10px 8px;
+      margin-bottom: 18px;
+      background-color: #fbfcfd;
+    }
+
+    /* === DATOS DEL PACIENTE === */
+    .patient-grid {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 0;
+    }
+
+    .patient-grid td {
+      padding: 4px 6px;
+      border: none;
+      vertical-align: top;
+      width: 25%;
+    }
+
+    .patient-label {
+      font-size: 7px;
+      color: #718096;
+      text-transform: uppercase;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 1px;
+    }
+
+    .patient-value {
+      font-size: 10px;
+      color: #1a1a1a;
+      font-weight: 600;
+    }
+
+    .patient-value-highlight {
+      font-size: 10px;
+      color: #1e3a5f;
+      font-weight: bold;
+    }
+
+    /* === SEPARADOR === */
+    .separator {
+      border: none;
+      border-top: 1px solid #cbd5e0;
+      margin: 10px 0;
+    }
+
+    /* === COMPONENTES === */
+    .component {
+      margin-bottom: 24px;
+      page-break-inside: auto;
+    }
+
+    /* Componentes pequeños que no deben cortarse entre páginas */
+    .component-no-break {
+      margin-bottom: 24px;
+      page-break-inside: avoid;
+    }
+
+    .component-title {
+      font-size: 11px;
+      font-weight: bold;
+      color: #1e3a5f;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 8px;
+      padding-bottom: 4px;
+    }
+
+    /* === TABLAS SIN BORDES (estilo datos sueltos) === */
+    table {
+      width: 100%;
+      max-width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      background: transparent;
+      margin-bottom: 8px;
+    }
+
+    table th {
+      font-size: 9px;
+      font-weight: bold;
+      color: #1e3a5f;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 6px 8px;
+      border-bottom: none;
+      text-align: left;
+      background: transparent;
+    }
+
+    table td {
+      padding: 5px 8px;
+      border: none;
+      font-size: 9px;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      background: transparent;
+    }
+
+    table tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* Color classes para resultados */
+    .resultado-normal { color: #1a1a1a; }
+    .resultado-alerta { color: #2563eb; font-weight: bold; }
+    .resultado-critico { color: #dc2626; font-weight: bold; }
+    .ref-text { color: #718096; font-size: 9px; }
+
+    /* === TEXTO CONTENIDO === */
+    .text-content {
+      padding: 8px 0;
+      margin: 0;
+      background-color: transparent;
+      border: none;
+      white-space: normal;
+      font-size: 9px;
+      line-height: 1.6;
+    }
+
+    .text-content strong, .text-content b { font-weight: bold; }
+    .text-content em, .text-content i { font-style: italic; }
+    .text-content u { text-decoration: underline; }
+    .text-content s { text-decoration: line-through; }
+
+    /* === IMÁGENES === */
+    .images-container {
+      display: table;
+      width: 100%;
+      margin: 8px 0;
+    }
+
+    .image-cell {
+      display: table-cell;
+      width: 50%;
+      padding: 5px;
+      text-align: center;
+      vertical-align: top;
+    }
+
+    .image-cell img {
+      max-width: 95%;
+      height: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 3px;
+    }
+
+    /* === PAGINACIÓN === */
+    table { page-break-inside: auto; }
+    tr { page-break-inside: avoid; page-break-after: auto; }
+    thead { display: table-header-group; }
+    tfoot { display: table-footer-group; }
+
+    /* === COMENTARIO DEL PROFESIONAL === */
+    .comment-section {
+      margin-top: 12px;
+      padding-top: 8px;
+      border-top: 1px solid #cbd5e0;
+    }
+
+    .comment-label {
+      font-size: 9px;
+      font-weight: bold;
+      color: #1a1a1a;
+      margin-bottom: 4px;
     }
   </style>
 </head>
 
 <body>
-
-  {{-- === FONDO DE HOJA === --}}
-  {{-- Descomenta si quieres usar la imagen de fondo --}}
-  {{--
+  {{-- === FONDO FULL-BLEED (todas las páginas) === --}}
   @if(isset($fondoHojaBase64) && $fondoHojaBase64)
-    <div style="position: fixed; top: -70pt; left: -25pt; width: 612pt; height: 792pt; z-index: 0;">
-      <img src="{{ $fondoHojaBase64 }}" style="width: 612pt; height: 792pt;">
+    <div class="page-background">
+      <img src="{{ $fondoHojaBase64 }}" alt="">
     </div>
   @endif
-  --}}
 
-  {{-- === FIRMA FIJA === --}}
-  {{-- Descomenta si quieres la firma en cada página --}}
-  {{--
+  {{-- === LOGO FIJO (todas las páginas) === --}}
+  @if(isset($logoBase64) && $logoBase64)
+    <div class="header-logo">
+      <img src="{{ $logoBase64 }}" alt="Logo">
+    </div>
+  @endif
+
+  {{-- === BARCODE (solo primera página) === --}}
+  @if(isset($barcodeBase64) && $barcodeBase64)
+    <div class="header-barcode">
+      <div class="barcode-text">MUESTRA ID: {{ $codigoMuestra }}</div>
+      <div class="barcode-img">
+        <img src="{{ $barcodeBase64 }}" alt="Barcode">
+      </div>
+    </div>
+  @endif
+
+  {{-- === FIRMA FIJA (todas las páginas) === --}}
   @if(isset($firmaBase64) && $firmaBase64)
-    <div style="position: fixed; bottom: -20pt; left: 0; right: 0; text-align: center; z-index: 2;">
-      <img src="{{ $firmaBase64 }}" alt="Firma" style="max-width: 180px; max-height: 100px;">
+    <div class="fixed-signature">
+      <img src="{{ $firmaBase64 }}" alt="Firma">
     </div>
   @endif
-  --}}
 
-  <div>
-    {{-- === TÍTULO DEL ANÁLISIS === --}}
-    <h1>{{ $analisis->tipoAnalisis->nombre }}</h1>
+  {{-- === QR FIJO (todas las páginas) === --}}
+  @if(isset($qrBase64) && $qrBase64)
+    <div class="fixed-qr">
+      <img src="{{ $qrBase64 }}" alt="QR">
+      <div class="qr-label">REPORTE DIGITAL</div>
+      <div class="qr-sublabel">Escanee para verificar</div>
+    </div>
+  @endif
 
-    {{-- === DATOS DEL PACIENTE === --}}
-    {{-- Variables disponibles: $muestra->paciente_nombre, $muestra->especie->nombre,
-         $muestra->raza, $muestra->edad, $muestra->propietario_nombre,
-         $muestra->sexo, $muestra->codigo_muestra, $muestra->veterinaria->nombre --}}
+  {{-- === BARRA AZUL INFERIOR (todas las páginas) === --}}
+  <div class="footer-bar"></div>
+  <div class="footer-bar-content">
+    <table>
+      <tr>
+        <td style="width: 25%; text-align: left;">
+          <strong>ZONA SUR</strong><br>
+          Calacoto C. 23 Bolívar<br>
+          Torre Faith - PB
+        </td>
+        <td style="width: 50%; text-align: center;">
+          <strong>PGLABORATORIOBIOLOGICOCLINICO@GMAIL.COM</strong><br>
+          75091961 - 64176776
+        </td>
+        <td style="width: 25%; text-align: right;">
+          <strong>ZONA CENTRO</strong><br>
+          Calle Coroico N 1551<br>
+          Zona Bárbara
+        </td>
+      </tr>
+    </table>
+  </div>
 
-    {{-- === COMPONENTES DINÁMICOS === --}}
+  {{-- === CONTENIDO PRINCIPAL === --}}
+  <div class="container">
+    {{-- Título del análisis --}}
+    <div class="analysis-title">
+      {{ $analisis->tipoAnalisis->nombre }}
+    </div>
+
+    {{-- Datos del paciente (envueltos en tarjeta redondeada) --}}
+    <div class="patient-card">
+      <table class="patient-grid">
+        <tr>
+          <td>
+            <span class="patient-label">Paciente</span>
+            <span class="patient-value">{{ $muestra->paciente_nombre ?? 'N/A' }}</span>
+          </td>
+          <td>
+            <span class="patient-label">Edad</span>
+            <span class="patient-value">{{ $muestra->eedad ?? 'N/A' }}</span>
+          </td>
+          <td>
+            <span class="patient-label">Especie / Raza</span>
+            <span class="patient-value">{{ ($muestra->especie->nombre ?? '') }} / {{ $muestra->raza ?? 'SRD' }}</span>
+          </td>
+          <td>
+            <span class="patient-label">Código</span>
+            <span class="patient-value-highlight">{{ $muestra->codigo_muestra ?? 'N/A' }}</span>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <span class="patient-label">Propietario</span>
+            <span class="patient-value">{{ $muestra->propietario_nombre ?? 'N/A' }}</span>
+          </td>
+          <td>
+            <span class="patient-label">Solicitado por</span>
+            <span class="patient-value">{{ $muestra->veterinaria->nombre ?? 'N/A' }}</span>
+          </td>
+          <td>
+            <span class="patient-label">Color / Sexo</span>
+            <span class="patient-value">{{ $muestra->color ?? '' }} / {{ $muestra->sexo ?? 'N/A' }}</span>
+          </td>
+          <td>
+            <span class="patient-label">Fecha</span>
+            <span class="patient-value">{{ $muestra->created_at ? $muestra->created_at->format('d/m/Y') : 'N/A' }}</span>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <hr class="separator">
+
+    {{-- Componentes dinámicos --}}
     @foreach($componentesConDatos as $index => $item)
       @php
         $componente = $item['componente'];
         $resultado = $item['resultado'];
         $tipo = $item['tipo'];
         $chartImage = $item['chartImage'] ?? null;
+
+        // Componentes pequeños que NO deben cortarse entre páginas
+        $componentesPequenos = ['subtitulo', 'campo-texto', 'texto-libre', 'campo-imagenes'];
+        $cssClass = in_array($tipo, $componentesPequenos) ? 'component-no-break' : 'component';
       @endphp
 
-      <div>
+      <div class="{{ $cssClass }}">
         @if(view()->exists('pdf-v2.componentes.' . $tipo))
           @include('pdf-v2.componentes.' . $tipo, [
             'componente' => $componente,
             'resultado' => $resultado,
             'chartImage' => $chartImage
           ])
-        @else
-          {{-- Fallback: si el componente v2 no existe, usa el original --}}
-          @if(view()->exists('pdf.componentes.' . $tipo))
-            @include('pdf.componentes.' . $tipo, [
-              'componente' => $componente,
-              'resultado' => $resultado,
-              'chartImage' => $chartImage
-            ])
-          @endif
         @endif
       </div>
     @endforeach
-
-    {{-- === FOOTER / FIRMAS === --}}
 
   </div>
 </body>

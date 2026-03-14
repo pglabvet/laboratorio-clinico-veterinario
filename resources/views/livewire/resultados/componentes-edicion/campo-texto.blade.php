@@ -1,10 +1,11 @@
 {{-- Componente de edición: Campo de Texto Simple --}}
 @php
     $tipoUso = $componente['propiedades']['tipo_uso'] ?? 'editable';
+    $titulo = $componente['propiedades']['titulo'] ?? '';
 @endphp
 
 @if($tipoUso === 'nota')
-{{-- Modo Nota Fija: texto predefinido de solo lectura --}}
+{{-- Modo Nota Fija: caja con borde, título inline bold --}}
 <div 
     wire:ignore
     x-data="{
@@ -24,41 +25,34 @@
             });
         }
     }"
-    class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:bg-zinc-900"
+    class="border border-gray-300 dark:border-zinc-600 rounded-lg p-4 bg-white dark:bg-zinc-900"
 >
-    @if(!empty($componente['propiedades']['titulo']))
-    <h4 class="font-bold text-gray-800 dark:text-zinc-100 text-lg mb-3">
-        {{ $componente['propiedades']['titulo'] }}
-    </h4>
-    @endif
-
-    <div class="p-3 bg-amber-50 dark:bg-amber-900/20 rounded border border-amber-200 dark:border-amber-800">
-        <p class="text-sm text-amber-900 dark:text-amber-200 whitespace-pre-line leading-relaxed">{{ $componente['propiedades']['contenido'] ?? '' }}</p>
-    </div>
+    <p class="text-sm text-gray-700 dark:text-zinc-300 leading-relaxed">
+        @if(!empty($titulo))
+            <strong class="text-gray-900 dark:text-zinc-100">{{ $titulo }}:</strong>
+        @endif
+        {{ $componente['propiedades']['contenido'] ?? '' }}
+    </p>
 </div>
 
 @else
-{{-- Modo Editable --}}
+{{-- Modo Editable: caja con borde, título inline bold + textarea --}}
 <div x-data="{
     datoExistente: @js($componentesData[$index]['data'] ?? null),
     valor: '',
     init() {
-        // Cargar dato existente
         if (this.datoExistente && typeof this.datoExistente === 'object' && this.datoExistente.valor) {
             this.valor = this.datoExistente.valor;
         } else if (typeof this.datoExistente === 'string') {
             this.valor = this.datoExistente;
         }
         
-        // Escuchar evento de guardado para forzar sincronización
         window.addEventListener('antes-de-guardar', () => {
             this.enviarDatos();
         });
     },
     enviarDatos() {
         const data = {
-            label: '{{ $componente["propiedades"]["label"] ?? "Campo" }}',
-            tipo: '{{ $componente["propiedades"]["tipo"] ?? "texto" }}',
             valor: this.valor
         };
         window.__labvetData = window.__labvetData || {};
@@ -66,40 +60,19 @@
         $wire.set('componentesData.{{ $index }}.data', data);
     }
 }"
-class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:bg-zinc-900">
-    @if(!empty($componente['propiedades']['titulo']))
-    <h4 class="font-bold text-gray-800 dark:text-zinc-100 text-center text-lg mb-4">
-        {{ $componente['propiedades']['titulo'] }}
-    </h4>
+class="border border-gray-300 dark:border-zinc-600 rounded-lg p-4 bg-white dark:bg-zinc-900">
+    @if(!empty($titulo))
+    <label class="block text-sm font-bold text-gray-900 dark:text-zinc-100 mb-2">
+        {{ $titulo }}:
+    </label>
     @endif
 
-    <label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">
-        {{ $componente['propiedades']['label'] ?? 'Campo' }}
-    </label>
-    
-    @if(($componente['propiedades']['tipo'] ?? 'texto') === 'numero')
-        <input 
-            type="number" 
-            x-model="valor"
-            @blur="enviarDatos()"
-            placeholder="{{ $componente['propiedades']['placeholder'] ?? 'Ingrese un número' }}"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500"
-        />
-    @elseif(($componente['propiedades']['tipo'] ?? 'texto') === 'fecha')
-        <input 
-            type="date" 
-            x-model="valor"
-            @blur="enviarDatos()"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
-        />
-    @else
-        <textarea 
-            rows="3"
-            x-model="valor"
-            @blur="enviarDatos()"
-            placeholder="{{ $componente['propiedades']['placeholder'] ?? 'Ingrese texto' }}"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500"
-        ></textarea>
-    @endif
+    <textarea 
+        rows="3"
+        x-model="valor"
+        @blur="enviarDatos()"
+        placeholder="Ingrese texto"
+        class="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500"
+    ></textarea>
 </div>
 @endif

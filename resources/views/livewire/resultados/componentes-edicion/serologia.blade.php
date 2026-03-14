@@ -62,6 +62,17 @@
 
     <div class="overflow-x-auto">
         <table class="w-full border border-gray-300 dark:border-zinc-700 text-sm">
+            @if(!empty($componente['propiedades']['columnas']))
+            <thead>
+                <tr class="bg-gray-100 dark:bg-zinc-900">
+                    @foreach($componente['propiedades']['columnas'] as $columna)
+                    <th class="border border-gray-300 dark:border-zinc-700 px-3 py-2 font-semibold text-gray-900 dark:text-zinc-100">
+                        {{ $columna['nombre'] ?? '' }}
+                    </th>
+                    @endforeach
+                </tr>
+            </thead>
+            @endif
             @foreach($campos as $i => $campo)
             <tr class="hover:bg-gray-50 dark:hover:bg-zinc-800">
                 <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 font-semibold bg-gray-50 dark:bg-zinc-900 w-2/3 text-gray-900 dark:text-zinc-100">
