@@ -210,11 +210,14 @@
                 />
 
                 {{-- Estado --}}
-                <flux:checkbox 
+                <flux:select 
                     wire:model="estado"
-                    label="Especie activa"
-                    description="Indica si la especie está disponible para análisis"
-                />
+                    label="Estado de la Especie"
+                    placeholder="Selecciona el estado"
+                >
+                    <option value="1">Activa</option>
+                    <option value="0">Inactiva</option>
+                </flux:select>
             </div>
 
             {{-- Botones del modal --}}
