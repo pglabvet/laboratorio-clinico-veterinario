@@ -1,8 +1,7 @@
-{{-- Componente PDF: Examen Microscópico --}}
+{{-- Componente PDF V2: Examen Diferencial (datos sueltos) --}}
 @php
     $filasPlantilla = $componente['propiedades']['filas'] ?? [];
 
-    // Generar texto de rango desde datos estructurados
     $generarTextoRango = function ($fila) {
         $tipo = $fila['rango_tipo'] ?? 'min-max';
         $unidad = $fila['unidad'] ?? '';
@@ -19,10 +18,11 @@
         };
     };
 
-    // Indexar filas de plantilla por nombre para búsqueda rápida
-    $filasPlantillaByName = collect($filasPlantilla)->keyBy('parametro');
+    $filasPlantillaByName = collect($filasPlantilla)->keyBy('nombre');
 
-    $tieneRangos = collect($filasPlantilla)->contains(fn($f) => $generarTextoRango($f) !== '');
+    $tieneRangos = collect($filasPlantilla)->contains(function ($f) use ($generarTextoRango) {
+        return ($f['tipo_fila'] ?? '3col') === '3col' && $generarTextoRango($f) !== '';
+    });
 @endphp
 
 @if(isset($componente['propiedades']['titulo']))
@@ -33,7 +33,7 @@
 <table>
     <thead>
         <tr>
-            <th style="text-align: left; width: {{ $tieneRangos ? '35%' : '40%' }};">{{ $componente['propiedades']['columna_parametro'] ?? 'PARÁMETRO' }}</th>
+            <th style="text-align: left; width: {{ $tieneRangos ? '35%' : '40%' }};">{{ $componente['propiedades']['columna_analisis'] ?? 'ANÁLISIS' }}</th>
             <th style="text-align: center;">{{ $componente['propiedades']['columna_resultado'] ?? 'RESULTADO' }}</th>
             @if($tieneRangos)
             <th style="text-align: center; width: 20%;">{{ $componente['propiedades']['columna_rango'] ?? 'RANGO REF.' }}</th>
@@ -44,13 +44,13 @@
         @foreach($resultado as $fila)
             @if(is_array($fila) && !empty($fila['resultado']))
             @php
-                $estiloResultado = '';
+                $tipoFila = $fila['tipo_fila'] ?? '3col';
+                $claseColor = 'resultado-normal';
                 $rangoTexto = '';
 
-                // Buscar la fila de plantilla correspondiente por nombre de parámetro
-                $filaTemplate = $filasPlantillaByName->get($fila['parametro'] ?? '');
+                $filaTemplate = $filasPlantillaByName->get($fila['nombre'] ?? '');
 
-                if ($filaTemplate) {
+                if ($filaTemplate && $tipoFila === '3col') {
                     $rangoTexto = $generarTextoRango($filaTemplate);
                     $clasificacion = 'normal';
 
@@ -91,24 +91,25 @@
                         }
                     }
 
-                    $estiloResultado = match($clasificacion) {
-                        'alerta' => 'color: #2563eb; font-weight: bold;',
-                        'critico' => 'color: #dc2626; font-weight: bold;',
-                        default => '',
+                    $claseColor = match($clasificacion) {
+                        'alerta' => 'resultado-alerta',
+                        'critico' => 'resultado-critico',
+                        default => 'resultado-normal',
                     };
                 }
             @endphp
             <tr>
-                <td style="font-weight: bold;">
-                    {{ $fila['parametro'] ?? '' }}
-                </td>
-                <td style="text-align: center; {{ $estiloResultado }}">
-                    {{ $fila['resultado'] ?? '' }}
-                </td>
-                @if($tieneRangos)
-                <td style="text-align: center; font-size: 9px; color: #718096;">
-                    {{ $rangoTexto }}
-                </td>
+                <td>{{ $fila['nombre'] ?? '' }}</td>
+                @if($tipoFila === '2col')
+                    <td style="text-align: center;">{{ $fila['resultado'] ?? '' }}</td>
+                    @if($tieneRangos)
+                    <td></td>
+                    @endif
+                @else
+                    <td style="text-align: center;" class="{{ $claseColor }}">{{ $fila['resultado'] ?? '' }}</td>
+                    @if($tieneRangos)
+                    <td style="text-align: center;" class="ref-text">{{ $rangoTexto }}</td>
+                    @endif
                 @endif
             </tr>
             @endif

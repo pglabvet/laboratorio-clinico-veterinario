@@ -6,7 +6,10 @@ use App\Models\Analisis;
 use App\Models\Pdf;
 use App\Models\PlantillaFormulario;
 use Barryvdh\DomPDF\Facade\Pdf as DomPDF;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
 use Illuminate\Support\Facades\Storage;
+use Picqer\Barcode\BarcodeGeneratorPNG;
 
 class AnalisisPdfService
 {
@@ -53,9 +56,8 @@ class AnalisisPdfService
         // Preparar datos para la vista
         $datos = $this->prepararDatos($analisis, $plantilla);
 
-        // Generar el PDF (usa la plantilla configurada en .env: PDF_TEMPLATE)
-        $template = config('app.pdf_template', 'pdf');
-        $pdf = DomPDF::loadView($template.'.analisis', $datos);
+        // Generar el PDF
+        $pdf = DomPDF::loadView('pdf-v2.analisis', $datos);
 
         // Configurar PDF
         $pdf->setPaper('letter', 'portrait');
@@ -135,18 +137,62 @@ class AnalisisPdfService
             ];
         }
 
-        // Ruta del fondo de hoja
-        $fondoHojaPath = public_path('images/FONDO-HOJA.png');
+        // ===== FONDO DE HOJA (fondo-pdf.png) =====
+        $fondoPdfPath = public_path('images/fondo-pdf.png');
         $fondoHojaBase64 = null;
-        if (file_exists($fondoHojaPath)) {
-            $fondoHojaBase64 = 'data:image/png;base64,'.base64_encode(file_get_contents($fondoHojaPath));
+        if (file_exists($fondoPdfPath)) {
+            $fondoHojaBase64 = 'data:image/png;base64,'.base64_encode(file_get_contents($fondoPdfPath));
+        } else {
+            // Fallback al fondo original
+            $fondoHojaPath = public_path('images/FONDO-HOJA.png');
+            if (file_exists($fondoHojaPath)) {
+                $fondoHojaBase64 = 'data:image/png;base64,'.base64_encode(file_get_contents($fondoHojaPath));
+            }
         }
 
-        // Ruta de la firma (sin fondo para transparencia)
+        // ===== LOGO =====
+        $logoPath = public_path('images/LOGO.png');
+        $logoBase64 = null;
+        if (file_exists($logoPath)) {
+            $logoBase64 = 'data:image/png;base64,'.base64_encode(file_get_contents($logoPath));
+        }
+
+        // ===== FIRMA =====
         $firmaPath = public_path('images/firma-sin_fondo.png');
         $firmaBase64 = null;
         if (file_exists($firmaPath)) {
             $firmaBase64 = 'data:image/png;base64,'.base64_encode(file_get_contents($firmaPath));
+        }
+
+        // ===== CÓDIGO DE BARRAS (picqer) =====
+        $codigoMuestra = $analisis->muestra->codigo_muestra ?? '';
+        $barcodeBase64 = null;
+        if ($codigoMuestra) {
+            try {
+                $generator = new BarcodeGeneratorPNG;
+                $barcodeData = $generator->getBarcode($codigoMuestra, $generator::TYPE_CODE_128, 2, 50);
+                $barcodeBase64 = 'data:image/png;base64,'.base64_encode($barcodeData);
+            } catch (\Exception $e) {
+                // Si falla la generación del barcode, continuar sin él
+            }
+        }
+
+        // ===== CÓDIGO QR (chillerlan) =====
+        $qrBase64 = null;
+        if ($codigoMuestra) {
+            try {
+                $qrUrl = url('/resultados/'.$codigoMuestra);
+                $options = new QROptions([
+                    'outputType' => QRCode::OUTPUT_IMAGE_PNG,
+                    'scale' => 5,
+                    'imageBase64' => false,
+                    'imageTransparent' => true,
+                ]);
+                $qrData = (new QRCode($options))->render($qrUrl);
+                $qrBase64 = 'data:image/png;base64,'.base64_encode($qrData);
+            } catch (\Exception $e) {
+                // Si falla la generación del QR, continuar sin él
+            }
         }
 
         return [
@@ -155,7 +201,11 @@ class AnalisisPdfService
             'plantilla' => $plantilla,
             'componentesConDatos' => $componentesConDatos,
             'fondoHojaBase64' => $fondoHojaBase64,
+            'logoBase64' => $logoBase64,
             'firmaBase64' => $firmaBase64,
+            'barcodeBase64' => $barcodeBase64,
+            'codigoMuestra' => $codigoMuestra,
+            'qrBase64' => $qrBase64,
             'fechaGeneracion' => now()->format('d/m/Y H:i'),
         ];
     }

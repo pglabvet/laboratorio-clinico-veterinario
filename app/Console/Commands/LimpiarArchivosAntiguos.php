@@ -2,9 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Pdf;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
-use Carbon\Carbon;
 
 class LimpiarArchivosAntiguos extends Command
 {
@@ -38,29 +39,39 @@ class LimpiarArchivosAntiguos extends Command
 
         $this->newLine();
 
-        // Limpiar PDFs
-        $pdfsEliminados = $this->limpiarDirectorio('pdfs', $fechaLimite, $dryRun);
+        // === 1. PDFs: usar fecha_generacion de la base de datos ===
+        $resultadoPdfs = $this->limpiarPdfsDesdeBaseDeDatos($fechaLimite, $dryRun);
 
-        // Limpiar Charts (nueva estructura año/mes)
-        $chartsEliminados = $this->limpiarDirectorio('charts', $fechaLimite, $dryRun);
+        // === 2. PDFs huérfanos: archivos en disco sin registro en BD ===
+        $pdfsHuerfanos = $this->limpiarPdfsHuerfanos($fechaLimite, $dryRun);
 
-        // Limpiar Charts (estructura antigua plana)
+        // === 3. Registros huérfanos: tuplas en BD sin archivo en disco ===
+        $registrosHuerfanos = $this->limpiarRegistrosHuerfanos($dryRun);
+
+        // === 4. Charts: usar filemtime (no tienen tabla en BD) ===
+        $chartsEliminados = $this->limpiarChartsPorFecha('charts', $fechaLimite, $dryRun);
         $chartsPlanos = $this->limpiarArchivosPlanos('charts', $fechaLimite, $dryRun);
 
         $this->newLine();
         $this->info('📊 Resumen:');
         $this->table(
-            ['Tipo', 'Archivos eliminados'],
+            ['Tipo', 'Archivos eliminados', 'Registros BD'],
             [
-                ['PDFs', $pdfsEliminados],
-                ['Charts (año/mes)', $chartsEliminados],
-                ['Charts (planos)', $chartsPlanos],
-                ['Total', $pdfsEliminados + $chartsEliminados + $chartsPlanos],
+                ['PDFs (por fecha_generacion)', $resultadoPdfs['archivos'], $resultadoPdfs['registros']],
+                ['PDFs huérfanos (sin registro BD)', $pdfsHuerfanos, '-'],
+                ['Registros huérfanos (sin archivo)', '-', $registrosHuerfanos],
+                ['Charts (año/mes)', $chartsEliminados, '-'],
+                ['Charts (planos)', $chartsPlanos, '-'],
+                [
+                    'TOTAL',
+                    $resultadoPdfs['archivos'] + $pdfsHuerfanos + $chartsEliminados + $chartsPlanos,
+                    $resultadoPdfs['registros'] + $registrosHuerfanos,
+                ],
             ]
         );
 
         // Limpiar carpetas vacías
-        if (!$dryRun) {
+        if (! $dryRun) {
             $this->limpiarCarpetasVacias('pdfs');
             $this->limpiarCarpetasVacias('charts');
             $this->info('🗂️  Carpetas vacías eliminadas.');
@@ -73,19 +84,142 @@ class LimpiarArchivosAntiguos extends Command
     }
 
     /**
-     * Limpia archivos dentro de la estructura año/mes (ej: pdfs/2024/01/)
+     * Limpia PDFs usando la fecha_generacion de la tabla pdfs (fuente confiable).
      */
-    private function limpiarDirectorio(string $directorio, Carbon $fechaLimite, bool $dryRun): int
+    private function limpiarPdfsDesdeBaseDeDatos(Carbon $fechaLimite, bool $dryRun): array
+    {
+        $disk = Storage::disk('public');
+        $archivosEliminados = 0;
+        $registrosEliminados = 0;
+
+        $pdfsAntiguos = Pdf::where('fecha_generacion', '<', $fechaLimite)->get();
+
+        foreach ($pdfsAntiguos as $pdf) {
+            $ruta = $pdf->ruta_archivo;
+            $existeArchivo = $disk->exists($ruta);
+            $tamaño = $existeArchivo ? $this->formatearTamaño($disk->size($ruta)) : 'N/A';
+            $fecha = $pdf->fecha_generacion->format('d/m/Y H:i');
+
+            if ($dryRun) {
+                $estado = $existeArchivo ? 'archivo + registro' : 'solo registro (archivo no existe)';
+                $this->line("   [SIMULAR] {$ruta} ({$tamaño}) - Generado: {$fecha} - {$estado}");
+            } else {
+                // Eliminar archivo físico si existe
+                if ($existeArchivo) {
+                    $disk->delete($ruta);
+                    $archivosEliminados++;
+                }
+
+                // Eliminar registro de la BD siempre
+                $pdf->delete();
+                $registrosEliminados++;
+
+                $this->line("   [ELIMINADO] {$ruta} ({$tamaño}) - Generado: {$fecha}");
+            }
+
+            if ($dryRun) {
+                $archivosEliminados += $existeArchivo ? 1 : 0;
+                $registrosEliminados++;
+            }
+        }
+
+        $accion = $dryRun ? 'encontrados' : 'eliminados';
+        $this->info("📁 PDFs (base de datos): {$registrosEliminados} registros {$accion}");
+
+        return ['archivos' => $archivosEliminados, 'registros' => $registrosEliminados];
+    }
+
+    /**
+     * Limpia archivos PDF en disco que NO tienen registro en la tabla pdfs.
+     * Usa filemtime como fallback ya que no hay fecha en BD.
+     */
+    private function limpiarPdfsHuerfanos(Carbon $fechaLimite, bool $dryRun): int
+    {
+        $disk = Storage::disk('public');
+        $eliminados = 0;
+
+        // Obtener todas las rutas registradas en BD
+        $rutasEnBd = Pdf::pluck('ruta_archivo')->toArray();
+
+        // Obtener todos los archivos PDF en disco
+        $archivosEnDisco = $disk->allFiles('pdfs');
+
+        foreach ($archivosEnDisco as $archivo) {
+            // Solo procesar archivos dentro de estructura año/mes
+            if (! preg_match('#^pdfs/\d{4}/\d{2}/#', $archivo)) {
+                continue;
+            }
+
+            // Si tiene registro en BD, ya fue procesado arriba
+            if (in_array($archivo, $rutasEnBd)) {
+                continue;
+            }
+
+            // Es huérfano: usar filemtime como fallback
+            $ultimaModificacion = Carbon::createFromTimestamp($disk->lastModified($archivo));
+
+            if ($ultimaModificacion->lt($fechaLimite)) {
+                $tamaño = $this->formatearTamaño($disk->size($archivo));
+
+                if ($dryRun) {
+                    $this->line("   [SIMULAR] Huérfano: {$archivo} ({$tamaño}) - Modificado: {$ultimaModificacion->format('d/m/Y')}");
+                } else {
+                    $disk->delete($archivo);
+                    $this->line("   [ELIMINADO] Huérfano: {$archivo} ({$tamaño})");
+                }
+
+                $eliminados++;
+            }
+        }
+
+        $accion = $dryRun ? 'encontrados' : 'eliminados';
+        $this->info("📁 PDFs huérfanos (sin registro BD): {$eliminados} archivos {$accion}");
+
+        return $eliminados;
+    }
+
+    /**
+     * Limpia registros en la tabla pdfs cuyo archivo físico no existe en disco.
+     */
+    private function limpiarRegistrosHuerfanos(bool $dryRun): int
+    {
+        $disk = Storage::disk('public');
+        $eliminados = 0;
+
+        $todosPdfs = Pdf::all();
+
+        foreach ($todosPdfs as $pdf) {
+            if (! $disk->exists($pdf->ruta_archivo)) {
+                if ($dryRun) {
+                    $this->line("   [SIMULAR] Registro huérfano ID={$pdf->id}: {$pdf->ruta_archivo} (archivo no existe)");
+                } else {
+                    $pdf->delete();
+                    $this->line("   [ELIMINADO] Registro huérfano ID={$pdf->id}: {$pdf->ruta_archivo}");
+                }
+
+                $eliminados++;
+            }
+        }
+
+        $accion = $dryRun ? 'encontrados' : 'eliminados';
+        $this->info("🗃️  Registros huérfanos (sin archivo): {$eliminados} {$accion}");
+
+        return $eliminados;
+    }
+
+    /**
+     * Limpia charts dentro de la estructura año/mes usando filemtime.
+     */
+    private function limpiarChartsPorFecha(string $directorio, Carbon $fechaLimite, bool $dryRun): int
     {
         $eliminados = 0;
         $disk = Storage::disk('public');
 
-        // Obtener todos los archivos recursivamente
         $archivos = $disk->allFiles($directorio);
 
         foreach ($archivos as $archivo) {
             // Solo procesar archivos dentro de subdirectorios año/mes
-            if (!preg_match('#^' . $directorio . '/\d{4}/\d{2}/#', $archivo)) {
+            if (! preg_match('#^' . $directorio . '/\d{4}/\d{2}/#', $archivo)) {
                 continue;
             }
 
@@ -112,7 +246,7 @@ class LimpiarArchivosAntiguos extends Command
     }
 
     /**
-     * Limpia archivos planos en el directorio raíz (estructura antigua de charts)
+     * Limpia archivos planos en el directorio raíz (estructura antigua de charts).
      */
     private function limpiarArchivosPlanos(string $directorio, Carbon $fechaLimite, bool $dryRun): int
     {
@@ -145,7 +279,7 @@ class LimpiarArchivosAntiguos extends Command
     }
 
     /**
-     * Elimina carpetas vacías de año/mes que quedaron después de la limpieza
+     * Elimina carpetas vacías que quedaron después de la limpieza.
      */
     private function limpiarCarpetasVacias(string $directorio): void
     {
@@ -163,7 +297,7 @@ class LimpiarArchivosAntiguos extends Command
     }
 
     /**
-     * Formatea el tamaño del archivo para mostrar
+     * Formatea el tamaño del archivo para mostrar.
      */
     private function formatearTamaño(int $bytes): string
     {

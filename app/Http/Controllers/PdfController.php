@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Analisis;
-use App\Models\TokenDescarga;
 use App\Models\LogDescarga;
+use App\Models\Muestra;
+use App\Models\TokenDescarga;
 use App\Services\AnalisisPdfService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -29,13 +30,13 @@ class PdfController extends Controller
             'tipoAnalisis.plantillas',
             'bioquimico',
             'aprobador',
-            'resultados'
+            'resultados',
         ])->findOrFail($analisisId);
 
         // Verificar que esté aprobado o enviado
         $estadosValidos = [Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO];
-        if (!in_array($analisis->estado, $estadosValidos)) {
-            abort(403, 'Solo se pueden generar PDFs de análisis aprobados o enviados. Estado actual: ' . $analisis->estado);
+        if (! in_array($analisis->estado, $estadosValidos)) {
+            abort(403, 'Solo se pueden generar PDFs de análisis aprobados o enviados. Estado actual: '.$analisis->estado);
         }
 
         try {
@@ -44,9 +45,9 @@ class PdfController extends Controller
             \Log::error('Error generando PDF:', [
                 'analisis_id' => $analisisId,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
-            abort(500, 'Error al generar el PDF: ' . $e->getMessage());
+            abort(500, 'Error al generar el PDF: '.$e->getMessage());
         }
     }
 
@@ -61,19 +62,20 @@ class PdfController extends Controller
             'tipoAnalisis',
             'bioquimico',
             'aprobador',
-            'resultados'
+            'resultados',
         ])->findOrFail($analisisId);
 
         $estadosValidos = [Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO];
-        if (!in_array($analisis->estado, $estadosValidos)) {
+        if (! in_array($analisis->estado, $estadosValidos)) {
             return back()->with('error', 'Solo se pueden ver PDFs de análisis aprobados o enviados.');
         }
 
         try {
             $resultado = $this->pdfService->generar($analisis);
+
             return $resultado['pdf']->stream($resultado['nombre']);
         } catch (\Exception $e) {
-            return back()->with('error', 'Error al generar el PDF: ' . $e->getMessage());
+            return back()->with('error', 'Error al generar el PDF: '.$e->getMessage());
         }
     }
 
@@ -88,7 +90,7 @@ class PdfController extends Controller
         ]);
 
         $analisis = Analisis::findOrFail($analisisId);
-        
+
         // Decodificar imagen base64
         $image = $request->input('image');
         $image = str_replace('data:image/png;base64,', '', $image);
@@ -96,7 +98,7 @@ class PdfController extends Controller
         $imageData = base64_decode($image);
 
         // Guardar archivo con estructura año/mes
-        $path = "charts/" . date('Y/m') . "/{$analisisId}_{$request->input('component_index')}.png";
+        $path = 'charts/'.date('Y/m')."/{$analisisId}_{$request->input('component_index')}.png";
         \Storage::disk('public')->put($path, $imageData);
 
         return response()->json(['success' => true, 'path' => $path]);
@@ -110,21 +112,21 @@ class PdfController extends Controller
         // Buscar token válido
         $tokenDescarga = TokenDescarga::buscarValido($token);
 
-        if (!$tokenDescarga) {
+        if (! $tokenDescarga) {
             abort(404, 'El enlace de descarga ha expirado o no es válido.');
         }
 
         // Cargar relaciones
         $tokenDescarga->load('pdf.analisis.muestra');
-        
+
         $pdf = $tokenDescarga->pdf;
-        
-        if (!$pdf) {
+
+        if (! $pdf) {
             abort(404, 'El PDF no fue encontrado.');
         }
 
         // Verificar que el archivo existe, si no, regenerarlo
-        if (!Storage::disk('public')->exists($pdf->ruta_archivo)) {
+        if (! Storage::disk('public')->exists($pdf->ruta_archivo)) {
             // Intentar regenerar el PDF
             try {
                 $analisis = $pdf->analisis;
@@ -137,7 +139,7 @@ class PdfController extends Controller
                     abort(404, 'El archivo PDF no existe y no se puede regenerar.');
                 }
             } catch (\Exception $e) {
-                abort(404, 'El archivo PDF no existe: ' . $e->getMessage());
+                abort(404, 'El archivo PDF no existe: '.$e->getMessage());
             }
         }
 
@@ -156,9 +158,40 @@ class PdfController extends Controller
 
         // Generar nombre de archivo
         $analisis = $pdf->analisis;
-        $nombreArchivo = 'Resultado_' . ($analisis->muestra->codigo_muestra ?? 'PDF') . '_' . $analisis->id . '.pdf';
+        $nombreArchivo = 'Resultado_'.($analisis->muestra->codigo_muestra ?? 'PDF').'_'.$analisis->id.'.pdf';
 
         // Descargar el archivo
         return Storage::disk('public')->download($pdf->ruta_archivo, $nombreArchivo);
+    }
+
+    /**
+     * Ver el PDF en el navegador buscando por código de muestra (ruta pública)
+     */
+    public function verPorCodigoMuestra(string $codigoMuestra)
+    {
+        // Buscar la muestra por código
+        $muestra = Muestra::where('codigo_muestra', $codigoMuestra)->first();
+
+        if (! $muestra) {
+            abort(404, 'No se encontró una muestra con el código proporcionado.');
+        }
+
+        // Buscar el análisis más reciente aprobado o enviado
+        $analisis = $muestra->analisis()
+            ->whereIn('estado', [Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO])
+            ->latest()
+            ->first();
+
+        if (! $analisis) {
+            abort(404, 'No se encontraron resultados disponibles para esta muestra.');
+        }
+
+        try {
+            $resultado = $this->pdfService->generar($analisis);
+
+            return $resultado['pdf']->stream($resultado['nombre']);
+        } catch (\Exception $e) {
+            abort(500, 'Error al generar el PDF: '.$e->getMessage());
+        }
     }
 }

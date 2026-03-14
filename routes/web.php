@@ -8,13 +8,19 @@ Route::get('/', function () {
     if (auth()->check()) {
         return redirect()->route('dashboard');
     }
+
     return redirect()->route('login');
 })->name('home');
 
 // Ruta pública para descarga de PDF por token (no requiere autenticación)
-Route::get('/descargar/{token}', [PdfController::class , 'descargarPorToken'])
+Route::get('/descargar/{token}', [PdfController::class, 'descargarPorToken'])
     ->middleware('throttle:60,1')
     ->name('pdf.descargar.token');
+
+// Ruta pública para ver PDF por código de muestra (QR code)
+Route::get('/resultados/{codigoMuestra}', [PdfController::class, 'verPorCodigoMuestra'])
+    ->middleware('throttle:60,1')
+    ->name('resultados.ver');
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified', 'can:ver-dashboard'])
@@ -50,121 +56,120 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Ruta para imprimir etiqueta de muestra
     Route::get('/muestras/{muestra}/etiqueta', function (\App\Models\Muestra $muestra) {
-            return response()
+        return response()
             ->view('components.etiqueta-muestra', ['muestra' => $muestra])
             ->header('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0')
             ->header('Pragma', 'no-cache')
             ->header('Expires', '0');
-        }
-        )->name('muestras.etiqueta');
+    }
+    )->name('muestras.etiqueta');
 
-        // Ruta
-    
-        Route::view('/especies', 'especies.index')
-            ->middleware('can:ver-especies')
-            ->name('especies.index');
+    // Ruta
 
-        Route::view('/unidades-medida', 'unidades-medida.index')
-            ->middleware('can:ver-unidades-medida')
-            ->name('unidades-medida.index');
+    Route::view('/especies', 'especies.index')
+        ->middleware('can:ver-especies')
+        ->name('especies.index');
 
-        Route::view('/insumos', 'insumos.index')
-            ->middleware('can:ver-insumos')
-            ->name('insumos.index');
+    Route::view('/unidades-medida', 'unidades-medida.index')
+        ->middleware('can:ver-unidades-medida')
+        ->name('unidades-medida.index');
 
-        Route::view('/categorias-insumo', 'categorias-insumo.index')
-            ->middleware('can:ver-categorias-insumo')
-            ->name('categorias-insumo.index');
+    Route::view('/insumos', 'insumos.index')
+        ->middleware('can:ver-insumos')
+        ->name('insumos.index');
 
-        // Rutas de inventario
-        Route::view('/inventario/entradas', 'inventario.entradas')
-            ->middleware('can:ver-registrar-entrada')
-            ->name('inventario.entradas');
+    Route::view('/categorias-insumo', 'categorias-insumo.index')
+        ->middleware('can:ver-categorias-insumo')
+        ->name('categorias-insumo.index');
 
-        Route::get('/inventario/salidas', \App\Livewire\Inventario\RegistrarSalida::class)
-            ->middleware('can:ver-salidas-manuales')
-            ->name('inventario.salidas');
+    // Rutas de inventario
+    Route::view('/inventario/entradas', 'inventario.entradas')
+        ->middleware('can:ver-registrar-entrada')
+        ->name('inventario.entradas');
 
-        Route::get('/inventario/historial', \App\Livewire\Inventario\HistorialMovimientos::class)
-            ->middleware('can:ver-historial-inventario')
-            ->name('inventario.historial');
+    Route::get('/inventario/salidas', \App\Livewire\Inventario\RegistrarSalida::class)
+        ->middleware('can:ver-salidas-manuales')
+        ->name('inventario.salidas');
 
-        Route::view('/inventario/kardex', 'inventario.kardex')
-            ->middleware('can:ver-kardex-peps')
-            ->name('inventario.kardex');
+    Route::get('/inventario/historial', \App\Livewire\Inventario\HistorialMovimientos::class)
+        ->middleware('can:ver-historial-inventario')
+        ->name('inventario.historial');
 
-        Route::get('/inventario/kardex/exportar/excel', [KardexExportController::class , 'exportarExcel'])
-            ->middleware('can:ver-kardex-peps')
-            ->name('inventario.kardex.excel');
+    Route::view('/inventario/kardex', 'inventario.kardex')
+        ->middleware('can:ver-kardex-peps')
+        ->name('inventario.kardex');
 
-        Route::get('/inventario/kardex/exportar/pdf', [KardexExportController::class , 'exportarPdf'])
-            ->middleware('can:ver-kardex-peps')
-            ->name('inventario.kardex.pdf');
+    Route::get('/inventario/kardex/exportar/excel', [KardexExportController::class, 'exportarExcel'])
+        ->middleware('can:ver-kardex-peps')
+        ->name('inventario.kardex.excel');
 
-        Route::get('/usuarios', \App\Livewire\Usuarios\GestionarUsuarios::class)
-            ->middleware('can:ver-usuarios')
-            ->name('usuarios.index');
+    Route::get('/inventario/kardex/exportar/pdf', [KardexExportController::class, 'exportarPdf'])
+        ->middleware('can:ver-kardex-peps')
+        ->name('inventario.kardex.pdf');
 
-        Route::view('/roles', 'roles.index')
-            ->middleware('can:ver-roles')
-            ->name('roles.index');
+    Route::get('/usuarios', \App\Livewire\Usuarios\GestionarUsuarios::class)
+        ->middleware('can:ver-usuarios')
+        ->name('usuarios.index');
 
-        // Permisos deshabilitado - se gestionan desde el seeder
-        // Route::view('/permisos', 'permisos.index')
-        //     ->name('permisos.index');
-    
-        // Constructor de formularios dinámicos (Admin)
-        Route::get('/plantillas', \App\Livewire\Plantillas\ListarPlantillas::class)
-            ->middleware('can:ver-plantillas')
-            ->name('plantillas.index');
+    Route::view('/roles', 'roles.index')
+        ->middleware('can:ver-roles')
+        ->name('roles.index');
 
-        Route::get('/plantillas/crear', \App\Livewire\Plantillas\GestionarPlantillas::class)
-            ->middleware('can:crear-plantillas')
-            ->name('plantillas.crear');
+    // Permisos deshabilitado - se gestionan desde el seeder
+    // Route::view('/permisos', 'permisos.index')
+    //     ->name('permisos.index');
 
-        Route::get('/plantillas/{plantilla}/editar', \App\Livewire\Plantillas\GestionarPlantillas::class)
-            ->middleware('can:editar-plantillas')
-            ->name('plantillas.editar');
+    // Constructor de formularios dinámicos (Admin)
+    Route::get('/plantillas', \App\Livewire\Plantillas\ListarPlantillas::class)
+        ->middleware('can:ver-plantillas')
+        ->name('plantillas.index');
 
+    Route::get('/plantillas/crear', \App\Livewire\Plantillas\GestionarPlantillas::class)
+        ->middleware('can:crear-plantillas')
+        ->name('plantillas.crear');
 
-        // Capturar resultados de análisis (Bioquímico)
-        Route::get('/analisis/{analisisId}/resultados', \App\Livewire\Resultados\CapturarResultados::class)
-            ->name('analisis.capturar-resultados');
+    Route::get('/plantillas/{plantilla}/editar', \App\Livewire\Plantillas\GestionarPlantillas::class)
+        ->middleware('can:editar-plantillas')
+        ->name('plantillas.editar');
 
-        // Editar resultados de análisis (Admin/Bioquímico)
-        Route::get('/analisis/{analisisId}/editar', \App\Livewire\Resultados\CapturarResultados::class)
-            ->name('analisis.editar');
+    // Capturar resultados de análisis (Bioquímico)
+    Route::get('/analisis/{analisisId}/resultados', \App\Livewire\Resultados\CapturarResultados::class)
+        ->name('analisis.capturar-resultados');
 
-        //  PREVIEW: Vista de captura de resultados (frontend temporal)
-        Route::view('/resultados/preview', 'livewire.resultados.capturar-resultados')
-            ->name('resultados.preview');
+    // Editar resultados de análisis (Admin/Bioquímico)
+    Route::get('/analisis/{analisisId}/editar', \App\Livewire\Resultados\CapturarResultados::class)
+        ->name('analisis.editar');
 
-        // Revisar análisis finalizados (Admin)
-        Route::get('/analisis/revisar', \App\Livewire\Analisis\RevisarAnalisis::class)
-            ->middleware('can:ver-analisis')
-            ->name('analisis.revisar');
+    //  PREVIEW: Vista de captura de resultados (frontend temporal)
+    Route::view('/resultados/preview', 'livewire.resultados.capturar-resultados')
+        ->name('resultados.preview');
 
-        // Ver detalles de análisis (Admin)
-        Route::get('/analisis/{analisisId}/ver', \App\Livewire\Analisis\VerAnalisis::class)
-            ->middleware('can:ver-analisis')
-            ->name('analisis.ver');
+    // Revisar análisis finalizados (Admin)
+    Route::get('/analisis/revisar', \App\Livewire\Analisis\RevisarAnalisis::class)
+        ->middleware('can:ver-analisis')
+        ->name('analisis.revisar');
 
-        // Generar y descargar PDF de análisis aprobado
-        Route::get('/analisis/{analisisId}/pdf', [PdfController::class , 'descargar'])
-            ->name('analisis.pdf');
+    // Ver detalles de análisis (Admin)
+    Route::get('/analisis/{analisisId}/ver', \App\Livewire\Analisis\VerAnalisis::class)
+        ->middleware('can:ver-analisis')
+        ->name('analisis.ver');
 
-        // Guardar gráfica de análisis
-        Route::post('/analisis/{analisisId}/guardar-grafica', [PdfController::class , 'guardarGrafica'])
-            ->name('analisis.guardar-grafica');
+    // Generar y descargar PDF de análisis aprobado
+    Route::get('/analisis/{analisisId}/pdf', [PdfController::class, 'descargar'])
+        ->name('analisis.pdf');
 
-        // Auditorías del sistema
-        Route::get('/auditorias', \App\Livewire\Auditorias\ListarAuditorias::class)
-            ->middleware('can:ver-auditorias')
-            ->name('auditorias.index');
+    // Guardar gráfica de análisis
+    Route::post('/analisis/{analisisId}/guardar-grafica', [PdfController::class, 'guardarGrafica'])
+        ->name('analisis.guardar-grafica');
 
-        // Guía del Sistema (accesible para todos los usuarios autenticados)
-        Route::get('/guia-del-sistema', \App\Livewire\GuiaDelSistema::class)
-            ->name('guia.index');
-    });
+    // Auditorías del sistema
+    Route::get('/auditorias', \App\Livewire\Auditorias\ListarAuditorias::class)
+        ->middleware('can:ver-auditorias')
+        ->name('auditorias.index');
 
-require __DIR__ . '/settings.php';
+    // Guía del Sistema (accesible para todos los usuarios autenticados)
+    Route::get('/guia-del-sistema', \App\Livewire\GuiaDelSistema::class)
+        ->name('guia.index');
+});
+
+require __DIR__.'/settings.php';
