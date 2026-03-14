@@ -173,8 +173,8 @@ class GestionarTiposAnalisis extends Component
                 return;
             }
 
-            if ($tipoAnalisis->parametros()->count() > 0) {
-                session()->flash('error', 'No se puede eliminar el tipo de análisis porque tiene parámetros asociados.');
+            if ($tipoAnalisis->plantillas()->count() > 0) {
+                session()->flash('error', 'No se puede eliminar el tipo de análisis porque tiene plantillas asociadas.');
                 $this->modalEliminar = false;
                 $this->tipoAnalisisAEliminar = null;
                 return;
