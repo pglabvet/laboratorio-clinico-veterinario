@@ -294,10 +294,10 @@ class RegistrarSalida extends Component
             $busqueda = $this->busquedaSalidas;
             $movimientosQuery->where(function ($q) use ($busqueda) {
                 $q->whereHas('insumo', function ($qi) use ($busqueda) {
-                    $qi->where('nombre', 'like', "%{$busqueda}%");
+                    $qi->where('nombre', 'ilike', "%{$busqueda}%");
                 })
-                ->orWhere('motivo', 'like', "%{$busqueda}%")
-                ->orWhere('observacion', 'like', "%{$busqueda}%");
+                ->orWhere('motivo', 'ilike', "%{$busqueda}%")
+                ->orWhere('observacion', 'ilike', "%{$busqueda}%");
             });
         }
 

@@ -187,13 +187,20 @@
                     {{-- Botones de revisión (Aprobar/Rechazar) --}}
                     <div class="flex gap-3">
                         @if($analisis->estado === 'Aprobado' || $analisis->estado === 'Enviado')
-                            {{-- Botón PDF solo para análisis aprobados o enviados --}}
+                            {{-- Botón Ver PDF (abre en navegador) --}}
                             @can('descargar-pdf-analisis')
                             <flux:button 
-                                wire:click="descargarPdf"
+                                @click="descargarPDF('ver')"
                                 variant="primary" 
                                 icon="eye">
                                 Ver PDF
+                            </flux:button>
+                            <flux:button 
+                                @click="descargarPDF('descargar')"
+                                variant="outline" 
+                                icon="arrow-down-tray"
+                                class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950">
+                                Descargar PDF
                             </flux:button>
                             @endcan
                         @else
@@ -309,13 +316,7 @@
 <script>
     function gestorDescargaPDF() {
         return {
-            async descargarPDF() {
-                // Notificar inicio
-                const btn = document.getElementById('btn-descargar-pdf');
-                const originalText = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generando PDF...';
-                btn.disabled = true;
-                
+            async descargarPDF(modo = 'ver') {
                 try {
                     this.graficas = [];
                     
@@ -355,19 +356,18 @@
                         }
                     }
                     
-                    // Descargar PDF
-                    const url = `{{ route('analisis.pdf', $analisis->id) }}`;
-                    window.open(url, '_blank');
+                    // Abrir PDF según el modo
+                    if (modo === 'ver') {
+                        const url = `{{ route('analisis.ver-pdf', $analisis->id) }}`;
+                        window.open(url, '_blank');
+                    } else {
+                        const url = `{{ route('analisis.pdf', $analisis->id) }}`;
+                        window.open(url, '_blank');
+                    }
                     
                 } catch (e) {
                     console.error('Error general:', e);
                     alert('Error al generar el PDF');
-                } finally {
-                    // Restaurar botón
-                    setTimeout(() => {
-                        btn.innerHTML = originalText;
-                        btn.disabled = false;
-                    }, 500);
                 }
             },
             graficas: []

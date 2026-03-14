@@ -77,7 +77,7 @@ class CapturarResultados extends Component
         }
 
         // Detectar si es modo revisión (análisis en revisión, aprobado o enviado)
-        if (in_array($this->analisis->estado, ['En revision', 'Aprobado', 'Enviado'])) {
+        if (in_array($this->analisis->estado, [Analisis::ESTADO_EN_REVISION, Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO])) {
             $this->modoRevision = true;
         }
     }

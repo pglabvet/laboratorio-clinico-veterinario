@@ -26,7 +26,7 @@ class FormularioMuestra extends Component
 
     public $fecha_recepcion;
 
-    public $estado = 'Pendiente';
+    public $estado = Muestra::ESTADO_PENDIENTE;
 
     public $observaciones = 'Sin Observaciones';
 
@@ -360,7 +360,7 @@ class FormularioMuestra extends Component
                     'tipo_analisis_id' => $analisisData['tipo_analisis_id'],
                     'plantilla_formulario_id' => $analisisData['plantilla_id'],
                     'bioquimico_id' => auth()->id(),
-                    'estado' => 'Pendiente',
+                    'estado' => Analisis::ESTADO_PENDIENTE,
                 ]);
 
                 // Descontar insumos asociados a la plantilla (solo para nuevas muestras)

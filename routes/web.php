@@ -14,13 +14,8 @@ Route::get('/', function () {
 
 // Ruta pública para descarga de PDF por token (no requiere autenticación)
 Route::get('/descargar/{token}', [PdfController::class, 'descargarPorToken'])
-    ->middleware('throttle:60,1')
+    ->middleware('throttle:10,1')
     ->name('pdf.descargar.token');
-
-// Ruta pública para ver PDF por código de muestra (QR code)
-Route::get('/resultados/{codigoMuestra}', [PdfController::class, 'verPorCodigoMuestra'])
-    ->middleware('throttle:60,1')
-    ->name('resultados.ver');
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified', 'can:ver-dashboard'])
@@ -154,7 +149,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('can:ver-analisis')
         ->name('analisis.ver');
 
-    // Generar y descargar PDF de análisis aprobado
+    // Ver PDF de análisis en el navegador (inline)
+    Route::get('/analisis/{analisisId}/ver-pdf', [PdfController::class, 'ver'])
+        ->name('analisis.ver-pdf');
+
+    // Descargar PDF de análisis aprobado
     Route::get('/analisis/{analisisId}/pdf', [PdfController::class, 'descargar'])
         ->name('analisis.pdf');
 

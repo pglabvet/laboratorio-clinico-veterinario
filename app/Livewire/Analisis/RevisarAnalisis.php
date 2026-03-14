@@ -15,7 +15,7 @@ class RevisarAnalisis extends Component
     use WithPagination;
 
     public $busqueda = '';
-    public $filtroEstado = 'En revision';
+    public $filtroEstado = Analisis::ESTADO_EN_REVISION;
     public $filtroTipoAnalisis = '';
     public $filtroFechaDesde = '';
     public $filtroFechaHasta = '';
@@ -33,7 +33,7 @@ class RevisarAnalisis extends Component
 
     protected $queryString = [
         'busqueda' => ['except' => ''],
-        'filtroEstado' => ['except' => 'En revision'],
+        'filtroEstado' => ['except' => Analisis::ESTADO_EN_REVISION],
         'filtroTipoAnalisis' => ['except' => ''],
         'ordenarPor' => ['except' => 'fecha_finalizacion'],
         'filtroSucursal' => ['except' => ''],
@@ -57,7 +57,7 @@ class RevisarAnalisis extends Component
     public function limpiarFiltros()
     {
         $this->busqueda = '';
-        $this->filtroEstado = 'En revision';
+        $this->filtroEstado = Analisis::ESTADO_EN_REVISION;
         $this->filtroTipoAnalisis = '';
         $this->filtroSucursal = '';
         $this->filtroFechaDesde = '';

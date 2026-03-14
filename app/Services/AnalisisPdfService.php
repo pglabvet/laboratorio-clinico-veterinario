@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Analisis;
 use App\Models\Pdf;
 use App\Models\PlantillaFormulario;
+use App\Models\TokenDescarga;
 use Barryvdh\DomPDF\Facade\Pdf as DomPDF;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
@@ -14,9 +15,12 @@ use Picqer\Barcode\BarcodeGeneratorPNG;
 class AnalisisPdfService
 {
     /**
-     * Genera un PDF para un análisis aprobado
+     * Genera un PDF completo: renderiza, guarda en storage, crea registro en BD y token de descarga.
+     * Usar este método solo cuando se necesita un PDF NUEVO (primera vez o regeneración explícita).
+     *
+     * @return array{pdf: \Barryvdh\DomPDF\PDF, modelo: Pdf, ruta: string, nombre: string, token: TokenDescarga}
      */
-    public function generar(Analisis $analisis): array
+    public function generar(Analisis $analisis, ?string $qrUrl = null): array
     {
         // Validar que el análisis esté aprobado o enviado
         $estadosValidos = [Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO];
@@ -24,6 +28,46 @@ class AnalisisPdfService
             throw new \Exception('Solo se pueden generar PDFs de análisis aprobados o enviados.');
         }
 
+        // Generar nombre único y ruta
+        $nombreArchivo = $this->generarNombreArchivo($analisis);
+        $rutaRelativa = 'pdfs/'.date('Y/m').'/'.$nombreArchivo;
+
+        // Crear registro del PDF en la BD
+        $pdfModel = Pdf::create([
+            'analisis_id' => $analisis->id,
+            'ruta_archivo' => $rutaRelativa,
+            'generado_por' => auth()->id(),
+            'fecha_generacion' => now(),
+        ]);
+
+        // Crear token de descarga
+        $tokenDescarga = TokenDescarga::crearParaPdf($pdfModel->id);
+
+        // Si no se proporcionó URL para el QR, usar la del token recién creado
+        if (! $qrUrl) {
+            $qrUrl = $tokenDescarga->getUrlDescarga();
+        }
+
+        // Renderizar y guardar el PDF
+        $pdf = $this->renderizarPdf($analisis, $rutaRelativa, $qrUrl);
+
+        return [
+            'pdf' => $pdf,
+            'modelo' => $pdfModel,
+            'ruta' => $rutaRelativa,
+            'nombre' => $nombreArchivo,
+            'token' => $tokenDescarga,
+        ];
+    }
+
+    /**
+     * Renderiza el PDF y lo guarda en storage. NO crea registros en BD ni tokens.
+     * Usar este método para regenerar el archivo de un PDF que ya existe en la BD.
+     *
+     * @return \Barryvdh\DomPDF\PDF El objeto PDF renderizado
+     */
+    public function renderizarPdf(Analisis $analisis, string $rutaRelativa, ?string $qrUrl = null): \Barryvdh\DomPDF\PDF
+    {
         // Cargar relaciones necesarias
         $analisis->load([
             'muestra.especie',
@@ -35,31 +79,26 @@ class AnalisisPdfService
             'resultados',
         ]);
 
-        // Primero intentar usar la plantilla específica asignada al análisis
+        // Resolver plantilla
         $plantilla = null;
         if ($analisis->plantilla_formulario_id) {
             $plantilla = PlantillaFormulario::find($analisis->plantilla_formulario_id);
         }
-
-        // Si no hay plantilla asignada, buscar una plantilla activa del tipo de análisis (fallback)
         if (! $plantilla) {
             $plantilla = $analisis->tipoAnalisis
                 ->plantillas()
                 ->where('activo', true)
                 ->first();
         }
-
         if (! $plantilla) {
             throw new \Exception('No se encontró una plantilla activa para este tipo de análisis.');
         }
 
         // Preparar datos para la vista
-        $datos = $this->prepararDatos($analisis, $plantilla);
+        $datos = $this->prepararDatos($analisis, $plantilla, $qrUrl);
 
         // Generar el PDF
         $pdf = DomPDF::loadView('pdf-v2.analisis', $datos);
-
-        // Configurar PDF
         $pdf->setPaper('letter', 'portrait');
         $pdf->setOptions([
             'isHtml5ParserEnabled' => true,
@@ -67,33 +106,69 @@ class AnalisisPdfService
             'defaultFont' => 'sans-serif',
         ]);
 
-        // Generar nombre único
-        $nombreArchivo = $this->generarNombreArchivo($analisis);
-
         // Guardar en storage
-        $rutaRelativa = 'pdfs/'.date('Y/m').'/'.$nombreArchivo;
         Storage::disk('public')->put($rutaRelativa, $pdf->output());
 
-        // Registrar en base de datos
-        $pdfModel = Pdf::create([
-            'analisis_id' => $analisis->id,
-            'ruta_archivo' => $rutaRelativa,
-            'generado_por' => auth()->id(),
-            'fecha_generacion' => now(),
-        ]);
+        return $pdf;
+    }
+
+    /**
+     * Obtiene un PDF existente o genera uno nuevo si no existe.
+     * Uso principal: cuando el admin da click en "Ver PDF" o "Descargar PDF".
+     *
+     * @return array{modelo: Pdf, ruta: string, nombre: string, fullPath: string}
+     */
+    public function obtenerOGenerar(Analisis $analisis): array
+    {
+        // Buscar PDF existente
+        $pdfModel = $analisis->pdfs()->latest()->first();
+
+        if ($pdfModel && Storage::disk('public')->exists($pdfModel->ruta_archivo)) {
+            // PDF existe en BD y en disco: reutilizar sin generar nada nuevo
+            return [
+                'ruta' => $pdfModel->ruta_archivo,
+                'modelo' => $pdfModel,
+                'nombre' => basename($pdfModel->ruta_archivo),
+                'fullPath' => Storage::disk('public')->path($pdfModel->ruta_archivo),
+            ];
+        }
+
+        if ($pdfModel && ! Storage::disk('public')->exists($pdfModel->ruta_archivo)) {
+            // Registro existe pero archivo no: regenerar solo el archivo
+            $token = $pdfModel->tokenVigente();
+            $qrUrl = $token ? $token->getUrlDescarga() : null;
+
+            // Si no hay token vigente, crear uno
+            if (! $qrUrl) {
+                $token = TokenDescarga::crearParaPdf($pdfModel->id);
+                $qrUrl = $token->getUrlDescarga();
+            }
+
+            $this->renderizarPdf($analisis, $pdfModel->ruta_archivo, $qrUrl);
+
+            return [
+                'ruta' => $pdfModel->ruta_archivo,
+                'modelo' => $pdfModel,
+                'nombre' => basename($pdfModel->ruta_archivo),
+                'fullPath' => Storage::disk('public')->path($pdfModel->ruta_archivo),
+            ];
+        }
+
+        // No existe PDF: generar uno nuevo completo
+        $resultado = $this->generar($analisis);
 
         return [
-            'pdf' => $pdf,
-            'modelo' => $pdfModel,
-            'ruta' => $rutaRelativa,
-            'nombre' => $nombreArchivo,
+            'ruta' => $resultado['ruta'],
+            'modelo' => $resultado['modelo'],
+            'nombre' => $resultado['nombre'],
+            'fullPath' => Storage::disk('public')->path($resultado['ruta']),
         ];
     }
 
     /**
      * Prepara los datos para la vista del PDF
      */
-    private function prepararDatos(Analisis $analisis, PlantillaFormulario $plantilla): array
+    private function prepararDatos(Analisis $analisis, PlantillaFormulario $plantilla, ?string $qrUrl = null): array
     {
         // Indexar resultados por indice para acceso directo
         $resultadosPorIndice = $analisis->resultados->keyBy('indice');
@@ -143,7 +218,6 @@ class AnalisisPdfService
         if (file_exists($fondoPdfPath)) {
             $fondoHojaBase64 = 'data:image/png;base64,'.base64_encode(file_get_contents($fondoPdfPath));
         } else {
-            // Fallback al fondo original
             $fondoHojaPath = public_path('images/FONDO-HOJA.png');
             if (file_exists($fondoHojaPath)) {
                 $fondoHojaBase64 = 'data:image/png;base64,'.base64_encode(file_get_contents($fondoHojaPath));
@@ -179,9 +253,8 @@ class AnalisisPdfService
 
         // ===== CÓDIGO QR (chillerlan) =====
         $qrBase64 = null;
-        if ($codigoMuestra) {
+        if ($qrUrl) {
             try {
-                $qrUrl = url('/resultados/'.$codigoMuestra);
                 $options = new QROptions([
                     'outputType' => QRCode::OUTPUT_IMAGE_PNG,
                     'scale' => 5,
@@ -247,15 +320,5 @@ class AnalisisPdfService
 
             default => count($valor) > 0,
         };
-    }
-
-    /**
-     * Descarga directamente el PDF sin guardar
-     */
-    public function descargarDirecto(Analisis $analisis)
-    {
-        $resultado = $this->generar($analisis);
-
-        return $resultado['pdf']->stream($resultado['nombre']);
     }
 }
