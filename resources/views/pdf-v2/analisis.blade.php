@@ -412,17 +412,17 @@
       <tr>
         <td style="width: 25%; text-align: left;">
           <strong>ZONA SUR</strong><br>
-          Calacoto C. 23 Bolívar<br>
-          Torre Faith - PB
+          Calacoto Calle 23 Av. Ballivian<br>
+          "Torre Faith" Planta Baja Nº10
         </td>
         <td style="width: 50%; text-align: center;">
-          <strong>PGLABORATORIOBIOLOGICOCLINICO@GMAIL.COM</strong><br>
+          <strong>pglaboratoriobiologicoclinico@gmail.com</strong><br>
           75091961 - 64176776
         </td>
         <td style="width: 25%; text-align: right;">
           <strong>ZONA CENTRO</strong><br>
-          Calle Coroico N 1551<br>
-          Zona Bárbara
+          Calle Coroico Nº 1551 Zona Barbara<br>
+          Edif. Los Laureles (Detras del Mercado Yungas)
         </td>
       </tr>
     </table>

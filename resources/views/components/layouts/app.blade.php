@@ -33,6 +33,14 @@
             .dark body.app-bg > [data-flux-header] {
                 z-index: 10;
             }
+
+            /* Ensure Livewire navigate progress bar is visible above the sticky header */
+            #nprogress {
+                z-index: 50 !important;
+            }
+            #nprogress .bar {
+                z-index: 50 !important;
+            }
         </style>
     </head>
     <body class="min-h-screen bg-gray-100 dark:bg-zinc-800 app-bg">
