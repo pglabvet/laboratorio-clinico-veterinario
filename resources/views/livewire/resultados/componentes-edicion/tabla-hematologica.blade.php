@@ -149,7 +149,7 @@
                 const max = parseFloat(rangoMax);
                 if (isNaN(min) && isNaN(max)) return 'normal';
                 const amplitud = (!isNaN(min) && !isNaN(max)) ? max - min : 0;
-            const umbral = amplitud * this.umbralPorcentaje;
+                const umbral = amplitud * this.umbralPorcentaje;
                 if (!isNaN(min) && res < min) return (amplitud > 0 && res >= min - umbral) ? 'alerta' : 'critico';
                 if (!isNaN(max) && res > max) return (amplitud > 0 && res <= max + umbral) ? 'alerta' : 'critico';
                 return 'normal';
