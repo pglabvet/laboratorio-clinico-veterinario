@@ -66,7 +66,7 @@
                         // Copiar todos los valores excepto 'nombre'
                         Object.keys(fila).forEach(key => {
                             if (key !== 'nombre') {
-                                this.datos[filaIndex][key] = fila[key] || '';
+                                this.datos[filaIndex][key] = fila[key] ?? '';
                             }
                         });
                     }

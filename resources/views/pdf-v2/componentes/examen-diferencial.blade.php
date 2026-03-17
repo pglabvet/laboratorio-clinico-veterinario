@@ -42,7 +42,7 @@
     </thead>
     <tbody>
         @foreach($resultado as $fila)
-            @if(is_array($fila) && !empty($fila['resultado']))
+            @if(is_array($fila) && isset($fila['resultado']) && $fila['resultado'] !== '' && $fila['resultado'] !== null)
             @php
                 $tipoFila = $fila['tipo_fila'] ?? '3col';
                 $claseColor = 'resultado-normal';

@@ -62,7 +62,7 @@
                     params.forEach(param => {
                         const match = Object.keys(this.parametros).find(k => this.parametros[k].nombre === param.nombre);
                         if (match !== undefined) {
-                            this.parametros[match].resultado = param.resultado || '';
+                            this.parametros[match].resultado = param.resultado ?? '';
                         }
                     });
                 }
@@ -73,7 +73,7 @@
                     difs.forEach(dif => {
                         const match = Object.keys(this.diferenciales).find(k => this.diferenciales[k].nombre === dif.nombre);
                         if (match !== undefined) {
-                            this.diferenciales[match].valor_rel = dif.valor_rel || '';
+                            this.diferenciales[match].valor_rel = dif.valor_rel ?? '';
                         }
                     });
                 }
@@ -84,7 +84,7 @@
                     inds.forEach(ind => {
                         const match = Object.keys(this.indices).find(k => this.indices[k].nombre === ind.nombre);
                         if (match !== undefined) {
-                            this.indices[match].resultado = ind.resultado || '';
+                            this.indices[match].resultado = ind.resultado ?? '';
                         }
                     });
                 }

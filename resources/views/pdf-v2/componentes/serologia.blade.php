@@ -19,7 +19,7 @@
     </thead>
     <tbody>
         @foreach($resultado as $fila)
-            @if(is_array($fila) && !empty($fila['valor']))
+            @if(is_array($fila) && isset($fila['valor']) && $fila['valor'] !== '' && $fila['valor'] !== null)
                 @php
                     $esPositivo = str_contains($fila['valor'], 'Positivo');
                 @endphp

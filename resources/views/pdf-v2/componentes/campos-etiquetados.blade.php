@@ -23,7 +23,7 @@
     </thead>
     <tbody>
         @foreach($camposResultado as $campo)
-            @if(is_array($campo) && (!empty($campo['valor']) || !empty($campo['resultado'])))
+            @if(is_array($campo) && ((isset($campo['valor']) && $campo['valor'] !== '' && $campo['valor'] !== null) || (isset($campo['resultado']) && $campo['resultado'] !== '' && $campo['resultado'] !== null)))
             <tr>
                 <td style="width: 40%; color: #1a1a1a;">
                     {{ $campo['etiqueta'] ?? $campo['nombre'] ?? '' }}

@@ -24,7 +24,7 @@
             </thead>
             <tbody>
                 @foreach($resultado as $fila)
-                    @if(is_array($fila) && !empty($fila['valor']))
+                    @if(is_array($fila) && isset($fila['valor']) && $fila['valor'] !== '' && $fila['valor'] !== null)
                     <tr>
                         <td>
                             {{ $fila['campo'] ?? $fila['nombre'] ?? $fila['etiqueta'] ?? '' }}
@@ -44,7 +44,7 @@
                 if (is_array($fila) && !empty($fila['seccion'])) {
                     $currentSec = $fila['seccion'];
                 }
-                if (is_array($fila) && !empty($fila['valor'])) {
+                if (is_array($fila) && isset($fila['valor']) && $fila['valor'] !== '' && $fila['valor'] !== null) {
                     $secciones[$currentSec][] = $fila;
                 }
             }
