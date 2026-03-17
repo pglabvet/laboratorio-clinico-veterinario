@@ -51,6 +51,7 @@
     x-data="{
         filas: @js($filas),
         columnas: @js($columnas),
+        umbralPorcentaje: {{ config('labvet.umbral_resultado') }},
         datosExistentes: @js($componentesData[$index]['data'] ?? []),
         datos: @js(collect($filas)->mapWithKeys(fn($analisis, $rowIndex) => [$rowIndex => [
             'nombre' => is_array($analisis) ? ($analisis['nombre'] ?? '') : $analisis,
@@ -128,14 +129,14 @@
                 const min = parseFloat(rangoMin); const max = parseFloat(rangoMax);
                 if (isNaN(min) && isNaN(max)) return 'normal';
                 const amplitud = (!isNaN(min) && !isNaN(max)) ? max - min : 0;
-                const umbral = amplitud * 0.15;
+                const umbral = amplitud * this.umbralPorcentaje;
                 if (!isNaN(min) && res < min) return (amplitud > 0 && res >= min - umbral) ? 'alerta' : 'critico';
                 if (!isNaN(max) && res > max) return (amplitud > 0 && res <= max + umbral) ? 'alerta' : 'critico';
                 return 'normal';
             }
             const val = parseFloat(rangoValor);
             if (isNaN(val)) return 'normal';
-            const umbral = Math.abs(val) * 0.15;
+            const umbral = Math.abs(val) * this.umbralPorcentaje;
             if (tipo === 'menor' && res >= val) return res <= val + umbral ? 'alerta' : 'critico';
             if (tipo === 'menor-igual' && res > val) return res <= val + umbral ? 'alerta' : 'critico';
             if (tipo === 'mayor' && res <= val) return res >= val - umbral ? 'alerta' : 'critico';

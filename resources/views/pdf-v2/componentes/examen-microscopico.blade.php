@@ -59,7 +59,7 @@
                             $max = is_numeric($filaTemplate['rango_max'] ?? '') ? floatval($filaTemplate['rango_max']) : null;
                             if ($min !== null || $max !== null) {
                                 $amplitud = ($min !== null && $max !== null) ? $max - $min : 0;
-                                $umbral = $amplitud * 0.15;
+                                $umbral = $amplitud * config('labvet.umbral_resultado');
                                 if ($min !== null && $res < $min) {
                                     $clasificacion = ($amplitud > 0 && $res >= $min - $umbral) ? 'alerta' : 'critico';
                                 } elseif ($max !== null && $res > $max) {
@@ -68,7 +68,7 @@
                             }
                         } elseif (is_numeric($filaTemplate['rango_valor'] ?? '')) {
                             $val = floatval($filaTemplate['rango_valor']);
-                            $umbral = abs($val) * 0.15;
+                            $umbral = abs($val) * config('labvet.umbral_resultado');
                             $fuera = match($rtipo) {
                                 'menor' => $res >= $val,
                                 'menor-igual' => $res > $val,
