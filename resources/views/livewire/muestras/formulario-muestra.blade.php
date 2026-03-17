@@ -23,30 +23,81 @@
     <form wire:submit="guardar">
         <div class="space-y-6">
             
-            {{-- Sección 1: Información del Paciente --}}
+            {{-- Sección 1: Datos del Paciente y Muestra --}}
             <div class="rounded-lg border border-neutral-200 bg-white p-6 shadow dark:border-neutral-700 dark:bg-neutral-900">
                 <h3 class="mb-4 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
                     Información del Paciente
                 </h3>
                 
-                <div class="grid grid-cols-1 items-start gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {{-- Fila 1: Fecha | Veterinaria | Código --}}
+                <div class="grid grid-cols-1 items-start gap-6 md:grid-cols-3 mb-6">
                     <flux:input 
-                        wire:model="paciente_nombre"
-                        label="Nombre del Paciente "
-                        placeholder="Ej: Max"
-                        :error="$errors->first('paciente_nombre')"
+                        type="date"
+                        label="Fecha"
+                        :value="date('Y-m-d')"
+                        disabled
                     />
 
-                    <flux:select 
-                        wire:model="especie_id"
-                        label="Especie "
-                        :error="$errors->first('especie_id')"
-                    >
-                        <option value="">Seleccione una especie</option>
-                        @foreach($this->especies as $especie)
-                            <option value="{{ $especie->id }}">{{ $especie->nombre }}</option>
-                        @endforeach
-                    </flux:select>
+                    <div>
+                        <flux:label>Veterinaria <span class="text-red-500">*</span></flux:label>
+                        <flux:select 
+                            wire:model="veterinaria_id"
+                            :error="$errors->first('veterinaria_id')"
+                            class="mt-1"
+                        >
+                            <option value="">Seleccione una veterinaria</option>
+                            @foreach($this->veterinarias as $veterinaria)
+                                <option value="{{ $veterinaria->id }}">{{ $veterinaria->nombre }}</option>
+                            @endforeach
+                        </flux:select>
+                    </div>
+
+                    <flux:input 
+                        wire:model="codigo_muestra"
+                        label="Código de Muestra"
+                        placeholder="Se genera automáticamente"
+                        disabled
+                    />
+                </div>
+
+                {{-- Fila 2: Nombre Paciente | Nombre Propietario --}}
+                <div class="grid grid-cols-1 items-start gap-6 md:grid-cols-2 mb-6">
+                    <div>
+                        <flux:label>Nombre del Paciente <span class="text-red-500">*</span></flux:label>
+                        <flux:input 
+                            wire:model="paciente_nombre"
+                            placeholder="Ej: Max"
+                            :error="$errors->first('paciente_nombre')"
+                            class="mt-1"
+                        />
+                    </div>
+
+                    <div>
+                        <flux:label>Nombre del Propietario <span class="text-red-500">*</span></flux:label>
+                        <flux:input 
+                            wire:model="propietario_nombre"
+                            placeholder="Ej: Juan Pérez"
+                            :error="$errors->first('propietario_nombre')"
+                            class="mt-1"
+                        />
+                    </div>
+                </div>
+
+                {{-- Fila 3: Especie | Raza | Edad | Sexo | Color --}}
+                <div class="grid grid-cols-1 items-start gap-6 md:grid-cols-2 lg:grid-cols-5 mb-6">
+                    <div>
+                        <flux:label>Especie <span class="text-red-500">*</span></flux:label>
+                        <flux:select 
+                            wire:model="especie_id"
+                            :error="$errors->first('especie_id')"
+                            class="mt-1"
+                        >
+                            <option value="">Seleccione una especie</option>
+                            @foreach($this->especies as $especie)
+                                <option value="{{ $especie->id }}">{{ $especie->nombre }}</option>
+                            @endforeach
+                        </flux:select>
+                    </div>
 
                     <flux:input 
                         wire:model="raza"
@@ -81,14 +132,17 @@
                         </div>
                     </div>
 
-                    <flux:select 
-                        wire:model="sexo"
-                        label="Sexo "
-                        :error="$errors->first('sexo')"
-                    >
-                        <option value="M">Macho</option>
-                        <option value="H">Hembra</option>
-                    </flux:select>
+                    <div>
+                        <flux:label>Sexo <span class="text-red-500">*</span></flux:label>
+                        <flux:select 
+                            wire:model="sexo"
+                            :error="$errors->first('sexo')"
+                            class="mt-1"
+                        >
+                            <option value="M">Macho</option>
+                            <option value="H">Hembra</option>
+                        </flux:select>
+                    </div>
 
                     <flux:input 
                         wire:model="color"
@@ -98,64 +152,36 @@
                 </div>
             </div>
 
-            {{-- Sección 2: Información del Propietario --}}
-            <div class="rounded-lg border border-neutral-200 bg-white p-6 shadow dark:border-neutral-700 dark:bg-neutral-900">
-                <h3 class="mb-4 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
-                    Información del Propietario
-                </h3>
-                
-                <div class="grid grid-cols-1 items-start gap-6 md:grid-cols-2">
-                    <flux:input 
-                        wire:model="propietario_nombre"
-                        label="Nombre del Propietario "
-                        placeholder="Ej: Juan Pérez"
-                        :error="$errors->first('propietario_nombre')"
-                    />
-
-                    <flux:select 
-                        wire:model="veterinaria_id"
-                        label="Veterinaria "
-                        :error="$errors->first('veterinaria_id')"
-                    >
-                        <option value="">Seleccione una veterinaria</option>
-                        @foreach($this->veterinarias as $veterinaria)
-                            <option value="{{ $veterinaria->id }}">{{ $veterinaria->nombre }}</option>
-                        @endforeach
-                    </flux:select>
-                </div>
-            </div>
-
-            {{-- Sección 3: Información de la Muestra --}}
+            {{-- Sección 2: Información de la Muestra --}}
             <div class="rounded-lg border border-neutral-200 bg-white p-6 shadow dark:border-neutral-700 dark:bg-neutral-900">
                 <h3 class="mb-4 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
                     Información de la Muestra
                 </h3>
                 
                 <div class="grid grid-cols-1 items-start gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    <flux:input 
-                        wire:model="codigo_muestra"
-                        label="Código de Muestra"
-                        placeholder="Se genera automáticamente"
-                        disabled
-                    />
+                    <div>
+                        <flux:label>Sucursal <span class="text-red-500">*</span></flux:label>
+                        <flux:select 
+                            wire:model="sucursal_id"
+                            :error="$errors->first('sucursal_id')"
+                            :disabled="!$this->puedeSeleccionarSucursal"
+                            class="mt-1"
+                        >
+                            @foreach($this->sucursales as $sucursal)
+                                <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
+                            @endforeach
+                        </flux:select>
+                    </div>
 
-                    <flux:select 
-                        wire:model="sucursal_id"
-                        label="Sucursal "
-                        :error="$errors->first('sucursal_id')"
-                        :disabled="!$this->puedeSeleccionarSucursal"
-                    >
-                        @foreach($this->sucursales as $sucursal)
-                            <option value="{{ $sucursal->id }}">{{ $sucursal->nombre }}</option>
-                        @endforeach
-                    </flux:select>
-
-                    <flux:input 
-                        wire:model="tipo_muestra"
-                        label="Tipo de Muestra "
-                        placeholder="Ej: Sangre, Orina, Heces"
-                        :error="$errors->first('tipo_muestra')"
-                    />
+                    <div>
+                        <flux:label>Tipo de Muestra <span class="text-red-500">*</span></flux:label>
+                        <flux:input 
+                            wire:model="tipo_muestra"
+                            placeholder="Ej: Sangre, Orina, Heces"
+                            :error="$errors->first('tipo_muestra')"
+                            class="mt-1"
+                        />
+                    </div>
 
                     <div class="md:col-span-2 lg:col-span-3">
                         <flux:textarea 
