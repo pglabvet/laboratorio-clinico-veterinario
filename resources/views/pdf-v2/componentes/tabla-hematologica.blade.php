@@ -51,7 +51,7 @@
             $maxF = ($max !== null && $max !== '') ? floatval(str_replace(',', '', $max)) : null;
             if ($minF === null && $maxF === null) return 'normal';
             $amplitud = ($minF !== null && $maxF !== null) ? $maxF - $minF : 0;
-            $umbral = $amplitud * 0.15;
+            $umbral = $amplitud * config('labvet.umbral_resultado');
             if ($minF !== null && $resultadoNum < $minF) return ($amplitud > 0 && $resultadoNum >= $minF - $umbral) ? 'alerta' : 'critico';
             if ($maxF !== null && $resultadoNum > $maxF) return ($amplitud > 0 && $resultadoNum <= $maxF + $umbral) ? 'alerta' : 'critico';
             return 'normal';
@@ -59,7 +59,7 @@
 
         if ($valor === null || $valor === '') return 'normal';
         $valorF = floatval(str_replace(',', '', $valor));
-        $umbral = abs($valorF) * 0.15;
+        $umbral = abs($valorF) * config('labvet.umbral_resultado');
         $fuera = match($tipo) {
             'menor' => $resultadoNum >= $valorF,
             'menor-igual' => $resultadoNum > $valorF,

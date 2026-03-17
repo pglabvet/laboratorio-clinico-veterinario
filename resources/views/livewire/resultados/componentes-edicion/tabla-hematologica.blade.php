@@ -30,6 +30,7 @@
     x-data="{
         datosExistentes: @js($componentesData[$index]['data'] ?? null),
         indiceLeucocitos: {{ $indiceLeucocitos !== null ? $indiceLeucocitos : 'null' }},
+        umbralPorcentaje: {{ config('labvet.umbral_resultado') }},
         parametros: @js(collect($componente['propiedades']['parametros_principales'] ?? [])->mapWithKeys(fn($p, $i) => [$i => ['nombre' => $p['nombre'], 'resultado' => '', 'unidad' => $p['unidad'], 'rango_tipo' => $p['rango_tipo'] ?? 'min-max', 'rango_min' => $p['rango_min'] ?? '', 'rango_max' => $p['rango_max'] ?? '', 'rango_valor' => $p['rango_valor'] ?? '']])),
         diferenciales: @js(collect($componente['propiedades']['diferenciales'] ?? [])->mapWithKeys(fn($d, $i) => [$i => ['nombre' => $d['nombre'], 'valor_rel' => '', 'valor_abs' => '', 'rango_rel_tipo' => $d['rango_rel_tipo'] ?? 'min-max', 'rango_rel_min' => $d['rango_rel_min'] ?? '', 'rango_rel_max' => $d['rango_rel_max'] ?? '', 'rango_rel_valor' => $d['rango_rel_valor'] ?? '', 'rango_abs_tipo' => $d['rango_abs_tipo'] ?? 'min-max', 'rango_abs_min' => $d['rango_abs_min'] ?? '', 'rango_abs_max' => $d['rango_abs_max'] ?? '', 'rango_abs_valor' => $d['rango_abs_valor'] ?? '']])),
         indices: @js(collect($componente['propiedades']['indices'] ?? [])->mapWithKeys(fn($ind, $i) => [$i => ['nombre' => $ind['nombre'], 'resultado' => '', 'unidad' => $ind['unidad'], 'rango_tipo' => $ind['rango_tipo'] ?? 'min-max', 'rango_min' => $ind['rango_min'] ?? '', 'rango_max' => $ind['rango_max'] ?? '', 'rango_valor' => $ind['rango_valor'] ?? '']])),
@@ -62,7 +63,7 @@
                     params.forEach(param => {
                         const match = Object.keys(this.parametros).find(k => this.parametros[k].nombre === param.nombre);
                         if (match !== undefined) {
-                            this.parametros[match].resultado = param.resultado || '';
+                            this.parametros[match].resultado = param.resultado ?? '';
                         }
                     });
                 }
@@ -73,7 +74,7 @@
                     difs.forEach(dif => {
                         const match = Object.keys(this.diferenciales).find(k => this.diferenciales[k].nombre === dif.nombre);
                         if (match !== undefined) {
-                            this.diferenciales[match].valor_rel = dif.valor_rel || '';
+                            this.diferenciales[match].valor_rel = dif.valor_rel ?? '';
                         }
                     });
                 }
@@ -84,7 +85,7 @@
                     inds.forEach(ind => {
                         const match = Object.keys(this.indices).find(k => this.indices[k].nombre === ind.nombre);
                         if (match !== undefined) {
-                            this.indices[match].resultado = ind.resultado || '';
+                            this.indices[match].resultado = ind.resultado ?? '';
                         }
                     });
                 }
@@ -148,14 +149,14 @@
                 const max = parseFloat(rangoMax);
                 if (isNaN(min) && isNaN(max)) return 'normal';
                 const amplitud = (!isNaN(min) && !isNaN(max)) ? max - min : 0;
-                const umbral = amplitud * 0.15;
+                const umbral = amplitud * this.umbralPorcentaje;
                 if (!isNaN(min) && res < min) return (amplitud > 0 && res >= min - umbral) ? 'alerta' : 'critico';
                 if (!isNaN(max) && res > max) return (amplitud > 0 && res <= max + umbral) ? 'alerta' : 'critico';
                 return 'normal';
             }
             const val = parseFloat(rangoValor);
             if (isNaN(val)) return 'normal';
-            const umbral = Math.abs(val) * 0.15;
+            const umbral = Math.abs(val) * this.umbralPorcentaje;
             if (tipo === 'menor' && res >= val) return res <= val + umbral ? 'alerta' : 'critico';
             if (tipo === 'menor-igual' && res > val) return res <= val + umbral ? 'alerta' : 'critico';
             if (tipo === 'mayor' && res <= val) return res >= val - umbral ? 'alerta' : 'critico';

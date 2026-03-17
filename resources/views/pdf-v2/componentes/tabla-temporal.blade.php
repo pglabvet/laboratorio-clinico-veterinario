@@ -25,7 +25,7 @@
             $min = !empty($fila['rango_min']) ? floatval($fila['rango_min']) : null;
             $max = !empty($fila['rango_max']) ? floatval($fila['rango_max']) : null;
             $amplitud = ($min !== null && $max !== null) ? $max - $min : 0;
-            $umbral = $amplitud * 0.15;
+            $umbral = $amplitud * config('labvet.umbral_resultado');
             if ($min !== null && $resultadoNumerico < $min) {
                 return ($amplitud > 0 && $resultadoNumerico >= $min - $umbral) ? 'alerta' : 'critico';
             }
@@ -37,7 +37,7 @@
 
         if (empty($fila['rango_valor'])) return 'normal';
         $val = floatval($fila['rango_valor']);
-        $umbral = abs($val) * 0.15;
+        $umbral = abs($val) * config('labvet.umbral_resultado');
         $fuera = match($tipo) {
             'menor' => $resultadoNumerico >= $val,
             'menor-igual' => $resultadoNumerico > $val,
