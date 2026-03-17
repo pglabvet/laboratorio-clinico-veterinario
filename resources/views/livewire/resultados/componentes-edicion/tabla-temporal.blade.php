@@ -42,6 +42,7 @@
     chartInstance: null,
     canvasId: 'chart-{{ $index }}-' + Date.now(),
     index: {{ $index }},
+    umbralPorcentaje: {{ config('labvet.umbral_resultado') }},
     graficaGuardada: null,
     intentosGuardado: 0,
     
@@ -314,14 +315,14 @@
             const max = parseFloat(fila.rango_max);
             if (isNaN(min) && isNaN(max)) return 'normal';
             const amplitud = (!isNaN(min) && !isNaN(max)) ? max - min : 0;
-            const umbral = amplitud * 0.15;
+            const umbral = amplitud * this.umbralPorcentaje;
             if (!isNaN(min) && res < min) return (amplitud > 0 && res >= min - umbral) ? 'alerta' : 'critico';
             if (!isNaN(max) && res > max) return (amplitud > 0 && res <= max + umbral) ? 'alerta' : 'critico';
             return 'normal';
         }
         const val = parseFloat(fila.rango_valor);
         if (isNaN(val)) return 'normal';
-        const umbral = Math.abs(val) * 0.15;
+        const umbral = Math.abs(val) * this.umbralPorcentaje;
         if (tipo === 'menor' && res >= val) return res <= val + umbral ? 'alerta' : 'critico';
         if (tipo === 'menor-igual' && res > val) return res <= val + umbral ? 'alerta' : 'critico';
         if (tipo === 'mayor' && res <= val) return res >= val - umbral ? 'alerta' : 'critico';

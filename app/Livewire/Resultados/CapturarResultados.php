@@ -433,7 +433,7 @@ class CapturarResultados extends Component
                     if (is_array($item)) {
                         // Verificar todos los campos excepto 'nombre'
                         foreach ($item as $key => $value) {
-                            if ($key !== 'nombre' && ! empty($value)) {
+                            if ($key !== 'nombre' && $value !== '' && $value !== null) {
                                 return true;
                             }
                         }
@@ -441,14 +441,17 @@ class CapturarResultados extends Component
                         return false;
                     }
 
-                    return ! empty($item);
+                    return $item !== '' && $item !== null;
                 }));
 
             case 'campos-etiquetados':
                 // Estructura: {titulo, campos: [{nombre, valor}, ...]}
                 if (isset($data['campos']) && is_array($data['campos'])) {
                     $data['campos'] = array_values(array_filter($data['campos'], function ($item) {
-                        return is_array($item) && (! empty($item['valor']) || ! empty($item['resultado']));
+                        return is_array($item) && (
+                            (isset($item['valor']) && $item['valor'] !== '' && $item['valor'] !== null) ||
+                            (isset($item['resultado']) && $item['resultado'] !== '' && $item['resultado'] !== null)
+                        );
                     }));
 
                     return (! empty($data['campos']) || ! empty($data['titulo'])) ? $data : null;
@@ -457,10 +460,11 @@ class CapturarResultados extends Component
                 // Fallback: array plano
                 return array_values(array_filter($data, function ($item) {
                     if (is_array($item)) {
-                        return ! empty($item['valor']) || ! empty($item['resultado']);
+                        return (isset($item['valor']) && $item['valor'] !== '' && $item['valor'] !== null) ||
+                               (isset($item['resultado']) && $item['resultado'] !== '' && $item['resultado'] !== null);
                     }
 
-                    return ! empty($item);
+                    return $item !== '' && $item !== null;
                 }));
 
             case 'tabla-dos-columnas':
@@ -468,10 +472,11 @@ class CapturarResultados extends Component
                 // Filtrar campos con valor vacío y re-indexar para mantener array JSON válido
                 return array_values(array_filter($data, function ($item) {
                     if (is_array($item)) {
-                        return ! empty($item['valor']) || ! empty($item['resultado']);
+                        return (isset($item['valor']) && $item['valor'] !== '' && $item['valor'] !== null) ||
+                               (isset($item['resultado']) && $item['resultado'] !== '' && $item['resultado'] !== null);
                     }
 
-                    return ! empty($item);
+                    return $item !== '' && $item !== null;
                 }));
 
             case 'examen-microscopico':
@@ -489,19 +494,21 @@ class CapturarResultados extends Component
 
             case 'tabla-hematologica':
                 // Filtrar valores vacíos en cada sección y re-indexar
+                // Nota: NO usar empty() porque empty("0") === true y descartaría valores legítimos de 0
                 if (isset($data['parametros'])) {
                     $data['parametros'] = array_values(array_filter($data['parametros'], function ($p) {
-                        return ! empty($p['resultado']);
+                        return isset($p['resultado']) && $p['resultado'] !== '' && $p['resultado'] !== null;
                     }));
                 }
                 if (isset($data['diferenciales'])) {
                     $data['diferenciales'] = array_values(array_filter($data['diferenciales'], function ($d) {
-                        return ! empty($d['valor_rel']) || ! empty($d['valor_abs']);
+                        return (isset($d['valor_rel']) && $d['valor_rel'] !== '' && $d['valor_rel'] !== null) ||
+                               (isset($d['valor_abs']) && $d['valor_abs'] !== '' && $d['valor_abs'] !== null);
                     }));
                 }
                 if (isset($data['indices'])) {
                     $data['indices'] = array_values(array_filter($data['indices'], function ($i) {
-                        return ! empty($i['resultado']);
+                        return isset($i['resultado']) && $i['resultado'] !== '' && $i['resultado'] !== null;
                     }));
                 }
 

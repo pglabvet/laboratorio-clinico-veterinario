@@ -51,7 +51,7 @@
                                     $min = floatval($matches[1]);
                                     $max = floatval($matches[2]);
                                     $amplitud = $max - $min;
-                                    $umbral = $amplitud * 0.15;
+                                    $umbral = $amplitud * config('labvet.umbral_resultado');
                                     if ($resultadoNum < $min) {
                                         $clasificacion = ($amplitud > 0 && $resultadoNum >= $min - $umbral) ? 'alerta' : 'critico';
                                     } elseif ($resultadoNum > $max) {
@@ -59,25 +59,25 @@
                                     }
                                 } elseif (preg_match('/^[<≤]\s*=\s*(\d+(?:\.\d+)?)/', $rangoRef, $matches)) {
                                     $val = floatval($matches[1]);
-                                    $umbral = abs($val) * 0.15;
+                                    $umbral = abs($val) * config('labvet.umbral_resultado');
                                     if ($resultadoNum > $val) {
                                         $clasificacion = ($resultadoNum <= $val + $umbral) ? 'alerta' : 'critico';
                                     }
                                 } elseif (preg_match('/^[<]\s*(\d+(?:\.\d+)?)/', $rangoRef, $matches)) {
                                     $val = floatval($matches[1]);
-                                    $umbral = abs($val) * 0.15;
+                                    $umbral = abs($val) * config('labvet.umbral_resultado');
                                     if ($resultadoNum >= $val) {
                                         $clasificacion = ($resultadoNum <= $val + $umbral) ? 'alerta' : 'critico';
                                     }
                                 } elseif (preg_match('/^[>≥]\s*=\s*(\d+(?:\.\d+)?)/', $rangoRef, $matches)) {
                                     $val = floatval($matches[1]);
-                                    $umbral = abs($val) * 0.15;
+                                    $umbral = abs($val) * config('labvet.umbral_resultado');
                                     if ($resultadoNum < $val) {
                                         $clasificacion = ($resultadoNum >= $val - $umbral) ? 'alerta' : 'critico';
                                     }
                                 } elseif (preg_match('/^[>]\s*(\d+(?:\.\d+)?)/', $rangoRef, $matches)) {
                                     $val = floatval($matches[1]);
-                                    $umbral = abs($val) * 0.15;
+                                    $umbral = abs($val) * config('labvet.umbral_resultado');
                                     if ($resultadoNum <= $val) {
                                         $clasificacion = ($resultadoNum >= $val - $umbral) ? 'alerta' : 'critico';
                                     }
