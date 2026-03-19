@@ -1,8 +1,15 @@
 <!-- Preview de Campos Etiquetados -->
 <div class="border border-gray-300 dark:border-zinc-700 rounded-lg overflow-hidden">
-    @if(isset($props['titulo']))
+    @if(!empty($props['titulos']))
     <div class="bg-white dark:bg-zinc-800 border-b border-gray-300 dark:border-zinc-700">
-        <h4 class="font-bold text-gray-800 dark:text-zinc-100 text-center py-2">{{ $props['titulo'] }}</h4>
+        <h4 class="font-bold text-gray-800 dark:text-zinc-100 text-center py-2">
+            {{ implode(' / ', array_filter($props['titulos'])) }}
+        </h4>
+        @if(count(array_filter($props['titulos'])) > 1)
+        <p class="text-xs text-gray-400 dark:text-zinc-500 text-center pb-1 italic">
+            (el bioquímico elegirá uno)
+        </p>
+        @endif
     </div>
     @endif
 
@@ -21,10 +28,26 @@
         <tbody>
         @if(isset($props['campos']) && count($props['campos']) > 0)
             @foreach($props['campos'] as $campo)
-                @if($campo)
+                @php
+                    $nombre = is_array($campo) ? ($campo['nombre'] ?? '') : $campo;
+                    $tipoInput = is_array($campo) ? ($campo['tipo_input'] ?? 'texto') : 'texto';
+                    $unidad = is_array($campo) ? ($campo['unidad'] ?? '') : '';
+                @endphp
+                @if($nombre)
                 <tr>
-                    <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 font-semibold bg-gray-50 dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">{{ $campo }}</td>
-                    <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-center text-gray-400 dark:text-zinc-500 italic">(a completar)</td>
+                    <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 font-semibold bg-gray-50 dark:bg-zinc-900 text-gray-900 dark:text-zinc-100">{{ $nombre }}</td>
+                    <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-center text-gray-400 dark:text-zinc-500 italic">
+                        @if($tipoInput === 'select')
+                            <span class="inline-flex items-center gap-1">
+                                <i class="fas fa-list-ul text-xs"></i> selección
+                            </span>
+                        @else
+                            (a completar)
+                        @endif
+                        @if($unidad)
+                            <span class="text-gray-500 dark:text-zinc-400 ml-1">{{ $unidad }}</span>
+                        @endif
+                    </td>
                 </tr>
                 @endif
             @endforeach

@@ -1,7 +1,10 @@
 {{-- Componente PDF V2: Campos Etiquetados (pares etiqueta-valor) --}}
 @php
-    $tituloComponente = $resultado['titulo'] ?? $componente['propiedades']['titulo'] ?? null;
+    $tituloComponente = $resultado['titulo'] ?? $componente['propiedades']['titulos'][0] ?? $componente['propiedades']['titulo'] ?? null;
     $camposResultado = $resultado['campos'] ?? [];
+    $camposConfig = $componente['propiedades']['campos'] ?? [];
+    // Indexar config por nombre para obtener unidades
+    $camposConfigByName = collect($camposConfig)->filter(fn($c) => is_array($c))->keyBy('nombre');
 @endphp
 
 @if($tituloComponente)
@@ -24,12 +27,22 @@
     <tbody>
         @foreach($camposResultado as $campo)
             @if(is_array($campo) && ((isset($campo['valor']) && $campo['valor'] !== '' && $campo['valor'] !== null) || (isset($campo['resultado']) && $campo['resultado'] !== '' && $campo['resultado'] !== null)))
+            @php
+                $nombrePDF = $campo['etiqueta'] ?? $campo['nombre'] ?? '';
+                $valorPDF = $campo['valor'] ?? $campo['resultado'] ?? '';
+                $unidadPDF = $campo['unidad'] ?? '';
+                // Si no viene unidad en el resultado, buscar en config
+                if (empty($unidadPDF)) {
+                    $configPDF = $camposConfigByName->get($nombrePDF);
+                    $unidadPDF = $configPDF['unidad'] ?? '';
+                }
+            @endphp
             <tr>
                 <td style="width: 40%; color: #1a1a1a;">
-                    {{ $campo['etiqueta'] ?? $campo['nombre'] ?? '' }}
+                    {{ $nombrePDF }}
                 </td>
                 <td>
-                    {{ $campo['valor'] ?? $campo['resultado'] ?? '' }}
+                    {{ $valorPDF }}@if(!empty($unidadPDF)) {{ $unidadPDF }}@endif
                 </td>
             </tr>
             @endif
