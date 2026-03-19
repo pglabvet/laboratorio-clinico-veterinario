@@ -257,18 +257,18 @@ class GestionarPlantillas extends Component
                 ],
             ],
             'campos-etiquetados' => [
-                'titulo' => 'CULTIVO',
+                'titulos' => ['CULTIVO'],
                 'columnas' => [
                     ['nombre' => 'CAMPO'],
                     ['nombre' => 'RESULTADO'],
                 ],
                 'campos' => [
-                    'MUESTRA',
-                    'COLOR',
-                    'TINCION GRAM',
-                    'RECUENTO DE COLONIAS',
-                    'CRECIMIENTO MICOTICO',
-                    'DIAGNOSTICO MICROBIOLOGICO',
+                    ['nombre' => 'MUESTRA', 'tipo_input' => 'texto', 'opciones' => '', 'unidad' => ''],
+                    ['nombre' => 'COLOR', 'tipo_input' => 'texto', 'opciones' => '', 'unidad' => ''],
+                    ['nombre' => 'TINCION GRAM', 'tipo_input' => 'texto', 'opciones' => '', 'unidad' => ''],
+                    ['nombre' => 'RECUENTO DE COLONIAS', 'tipo_input' => 'select', 'opciones' => 'Menor a 100000,Mayor a 100000', 'unidad' => 'UFC/ml'],
+                    ['nombre' => 'CRECIMIENTO MICOTICO', 'tipo_input' => 'texto', 'opciones' => '', 'unidad' => ''],
+                    ['nombre' => 'DIAGNOSTICO MICROBIOLOGICO', 'tipo_input' => 'texto', 'opciones' => '', 'unidad' => ''],
                 ],
             ],
             'texto-libre' => [

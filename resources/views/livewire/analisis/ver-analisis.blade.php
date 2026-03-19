@@ -194,7 +194,11 @@
                 @endphp
                 <div class="mb-6 last:mb-0">
                     <h4 class="font-semibold text-gray-700 dark:text-zinc-300 mb-3 text-uppercase">
-                        {{ $propiedadesComponente['titulo'] ?? str_replace('-', ' ', str_replace('_', ' ', $tipo)) }}
+                        @if($tipo === 'campos-etiquetados')
+                            {{ $resultado->valor['titulo'] ?? $propiedadesComponente['titulos'][0] ?? $propiedadesComponente['titulo'] ?? 'CAMPOS ETIQUETADOS' }}
+                        @else
+                            {{ $propiedadesComponente['titulo'] ?? str_replace('-', ' ', str_replace('_', ' ', $tipo)) }}
+                        @endif
                     </h4>
 
                         <div class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 mb-3">
@@ -248,6 +252,9 @@
                                 {{-- Campos Etiquetados --}}
                                 @php
                                     $itemsCE = $resultado->valor['campos'] ?? [];
+                                    $camposConfigCE = $propiedadesComponente['campos'] ?? [];
+                                    // Indexar la config por nombre para buscar unidades
+                                    $camposConfigByName = collect($camposConfigCE)->filter(fn($c) => is_array($c))->keyBy('nombre');
                                 @endphp
                                 <table class="w-full text-sm">
                                     @if(!empty($propiedadesComponente['columnas']))
@@ -263,12 +270,25 @@
                                     @endif
                                     <tbody>
                                         @foreach($itemsCE as $item)
+                                        @php
+                                            $nombreCE = $item['nombre'] ?? 'Campo';
+                                            $valorCE = $item['valor'] ?? '';
+                                            $unidadCE = $item['unidad'] ?? '';
+                                            // Si no viene unidad en el resultado, buscar en config
+                                            if (empty($unidadCE)) {
+                                                $configCE = $camposConfigByName->get($nombreCE);
+                                                $unidadCE = $configCE['unidad'] ?? '';
+                                            }
+                                        @endphp
                                         <tr class="border-b border-gray-200 dark:border-zinc-700 last:border-0">
                                             <td class="py-2 px-3 font-semibold bg-gray-50 dark:bg-zinc-800 w-1/3">
-                                                {{ $item['nombre'] ?? 'Campo' }}
+                                                {{ $nombreCE }}
                                             </td>
                                             <td class="py-2 px-3">
-                                                {{ $item['valor'] ?? '' }}
+                                                {{ $valorCE }}
+                                                @if(!empty($unidadCE) && $valorCE !== '')
+                                                    <span class="text-gray-500 dark:text-zinc-400">{{ $unidadCE }}</span>
+                                                @endif
                                             </td>
                                         </tr>
                                         @endforeach
