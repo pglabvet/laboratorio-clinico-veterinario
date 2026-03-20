@@ -72,6 +72,9 @@ class PepsInventarioService
             $inventario->costo_total += $costoTotal;
             $inventario->save();
 
+            // Intentar saldar deudas pendientes con este nuevo ingreso
+            $this->saldarDeudasPendientes($insumoId, $sucursalId);
+
             return $movimiento;
         });
     }
@@ -138,7 +141,7 @@ class PepsInventarioService
         float $cantidad,
         int $usuarioId,
         ?string $observacion = null
-        ): MovimientoInventario
+        ): ?MovimientoInventario
     {
         return DB::transaction(function () use ($insumoId, $sucursalId, $cantidad, $usuarioId, $observacion) {
             // 1. Verificar stock disponible
@@ -147,22 +150,44 @@ class PepsInventarioService
                 ->lockForUpdate()
                 ->first();
 
-            if (!$inventario || $inventario->stock_actual < $cantidad) {
-                throw new \Exception('Stock insuficiente para consumo de análisis. Stock actual: ' . ($inventario->stock_actual ?? 0));
+            $stockActual = $inventario ? $inventario->stock_actual : 0;
+
+            if ($stockActual < $cantidad) {
+                // Hay deuda parcial o total
+                $cantidadDisponible = max(0, $stockActual);
+                $cantidadDeuda = $cantidad - $cantidadDisponible;
+
+                // Registrar la deuda en la nueva tabla
+                \App\Models\ConsumoPendiente::create([
+                    'insumo_id' => $insumoId,
+                    'sucursal_id' => $sucursalId,
+                    'cantidad' => $cantidadDeuda,
+                    'usuario_id' => $usuarioId,
+                    'observacion' => $observacion,
+                    'estado' => \App\Models\ConsumoPendiente::ESTADO_PENDIENTE,
+                ]);
+
+                if ($cantidadDisponible <= 0) {
+                    return null; // Todo fue a deuda, no hay movimiento PEPS
+                }
+
+                $cantidadAConsumir = $cantidadDisponible;
+            } else {
+                $cantidadAConsumir = $cantidad;
             }
 
             // 2. Consumir lotes PEPS
-            $resultado = $this->consumirLotesPeps($insumoId, $sucursalId, $cantidad);
+            $resultado = $this->consumirLotesPeps($insumoId, $sucursalId, $cantidadAConsumir);
 
             // 3. Calcular costo unitario promedio de la salida
-            $costoUnitarioSalida = $cantidad > 0 ? round($resultado['costo_total'] / $cantidad, 4) : 0;
+            $costoUnitarioSalida = $cantidadAConsumir > 0 ? round($resultado['costo_total'] / $cantidadAConsumir, 4) : 0;
 
             // 4. Crear movimiento de consumo por análisis
             $movimiento = MovimientoInventario::create([
                 'insumo_id' => $insumoId,
                 'sucursal_id' => $sucursalId,
                 'tipo_movimiento' => 'CONSUMO_ANALISIS',
-                'cantidad' => -$cantidad,
+                'cantidad' => -$cantidadAConsumir,
                 'costo_unitario' => $costoUnitarioSalida,
                 'costo_total' => $resultado['costo_total'],
                 'motivo' => 'CONSUMO_ANALISIS',
@@ -172,7 +197,7 @@ class PepsInventarioService
             ]);
 
             // 5. Actualizar inventario de sucursal
-            $inventario->stock_actual -= $cantidad;
+            $inventario->stock_actual -= $cantidadAConsumir;
             $inventario->recalcularCostoTotal();
 
             return $movimiento;
@@ -253,6 +278,62 @@ class PepsInventarioService
             'costo_total' => round($costoTotal, 4),
             'detalle_lotes' => $detalleLotes,
         ];
+    }
+
+    /**
+     * Revisa si hay deudas pendientes para este insumo y trata de saldarlas
+     * con el nuevo stock ingresado.
+     */
+    private function saldarDeudasPendientes(int $insumoId, int $sucursalId): void
+    {
+        $deudas = \App\Models\ConsumoPendiente::where('insumo_id', $insumoId)
+            ->where('sucursal_id', $sucursalId)
+            ->where('estado', \App\Models\ConsumoPendiente::ESTADO_PENDIENTE)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        if ($deudas->isEmpty()) return;
+
+        foreach ($deudas as $deuda) {
+            $inventario = \App\Models\InventarioSucursal::where('insumo_id', $insumoId)
+                ->where('sucursal_id', $sucursalId)
+                ->first();
+
+            if (!$inventario || $inventario->stock_actual <= 0) {
+                break; // Se acabó el stock, dejar el resto de deudas pendientes
+            }
+
+            $cantidadAPagar = min($deuda->cantidad, $inventario->stock_actual);
+
+            // Consumir el stock por PEPS
+            $resultadoPeps = $this->consumirLotesPeps($insumoId, $sucursalId, $cantidadAPagar);
+            $costoUnitario = $cantidadAPagar > 0 ? round($resultadoPeps['costo_total'] / $cantidadAPagar, 4) : 0;
+
+            // Registrar el movimiento de salida
+            \App\Models\MovimientoInventario::create([
+                'insumo_id' => $insumoId,
+                'sucursal_id' => $sucursalId,
+                'tipo_movimiento' => 'CONSUMO_ANALISIS',
+                'cantidad' => -$cantidadAPagar,
+                'costo_unitario' => $costoUnitario,
+                'costo_total' => $resultadoPeps['costo_total'],
+                'motivo' => 'COBRO_DEUDA_AUTOMATICO',
+                'observacion' => $deuda->observacion,
+                'usuario_id' => $deuda->usuario_id,
+                'fecha' => now(),
+            ]);
+
+            // Actualizar inventario
+            $inventario->stock_actual -= $cantidadAPagar;
+            $inventario->recalcularCostoTotal();
+
+            // Actualizar estado de la deuda
+            $deuda->cantidad -= $cantidadAPagar;
+            if ($deuda->cantidad <= 0.0001) {
+                $deuda->estado = \App\Models\ConsumoPendiente::ESTADO_RESUELTO;
+            }
+            $deuda->save();
+        }
     }
 
     /**

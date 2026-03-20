@@ -256,13 +256,12 @@ class AnalisisPdfService
         if ($qrUrl) {
             try {
                 $options = new QROptions([
-                    'outputType' => QRCode::OUTPUT_IMAGE_PNG,
+                    'outputInterface' => \chillerlan\QRCode\Output\QRGdImagePNG::class,
                     'scale' => 5,
-                    'imageBase64' => false,
+                    'outputBase64' => true,
                     'imageTransparent' => true,
                 ]);
-                $qrData = (new QRCode($options))->render($qrUrl);
-                $qrBase64 = 'data:image/png;base64,'.base64_encode($qrData);
+                $qrBase64 = (new QRCode($options))->render($qrUrl);
             } catch (\Exception $e) {
                 // Si falla la generación del QR, continuar sin él
             }

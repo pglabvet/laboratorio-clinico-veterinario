@@ -161,6 +161,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/analisis/{analisisId}/guardar-grafica', [PdfController::class, 'guardarGrafica'])
         ->name('analisis.guardar-grafica');
 
+    // Muestras Rechazadas
+    Route::get('/muestras-rechazadas', \App\Livewire\MuestrasRechazadas\ListarMuestrasRechazadas::class)
+        ->name('muestras-rechazadas.index');
+
+    Route::get('/muestras-rechazadas/crear', \App\Livewire\MuestrasRechazadas\RegistrarMuestraRechazada::class)
+        ->name('muestras-rechazadas.crear');
+
     // Auditorías del sistema
     Route::get('/auditorias', \App\Livewire\Auditorias\ListarAuditorias::class)
         ->middleware('can:ver-auditorias')

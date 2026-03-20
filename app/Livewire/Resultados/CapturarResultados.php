@@ -5,7 +5,9 @@ namespace App\Livewire\Resultados;
 use App\Models\Analisis;
 use App\Models\PlantillaFormulario;
 use App\Models\Resultado;
+use App\Services\PepsInventarioService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -34,6 +36,9 @@ class CapturarResultados extends Component
 
     // Propiedades para manejo de imágenes
     public $imagenes = [];
+
+    // Repeticiones por componente/fila para descuento de reactivos
+    public $repeticionesData = [];
 
     public function mount($analisisId)
     {
@@ -80,6 +85,9 @@ class CapturarResultados extends Component
         if (in_array($this->analisis->estado, [Analisis::ESTADO_EN_REVISION, Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO])) {
             $this->modoRevision = true;
         }
+
+        // Inicializar datos de repeticiones desde la plantilla
+        $this->inicializarRepeticiones();
     }
 
     private function inicializarResultados()
@@ -124,6 +132,267 @@ class CapturarResultados extends Component
                     $this->imagenes[$index]['preview2'] = $resultado->valor['imagen2'] ?? null;
                 }
             }
+        }
+    }
+
+    /**
+     * Inicializar datos de repeticiones para componentes con reactivos
+     */
+    private function inicializarRepeticiones()
+    {
+        // Tipos que aplican insumos a nivel de TODO el componente
+        $tiposBloque = ['antibiograma', 'examen-diferencial', 'examen-microscopico',
+                        'coproparasitologia-seriado', 'carga-viral', 'tabla-hematologica'];
+
+        foreach ($this->plantilla->componentes as $index => $componente) {
+            $tipo = $componente['tipo'];
+            $props = $componente['propiedades'] ?? [];
+
+            // Por fila — tabla-resultados y tabla-temporal
+            if (in_array($tipo, ['tabla-resultados', 'tabla-temporal']) && !empty($props['filas'])) {
+                foreach ($props['filas'] as $filaIndex => $fila) {
+                    if (!empty($fila['reactivos'])) {
+                        $this->repeticionesData["{$index}.{$filaIndex}"] = 1;
+                    }
+                }
+            }
+
+            // Por campo — campos-etiquetados
+            if ($tipo === 'campos-etiquetados' && !empty($props['campos'])) {
+                foreach ($props['campos'] as $campoIndex => $campo) {
+                    if (!empty($campo['reactivos'])) {
+                        $this->repeticionesData["{$index}.c{$campoIndex}"] = 1;
+                    }
+                }
+            }
+
+            // Por campo anidado — tabla-dos-columnas
+            if ($tipo === 'tabla-dos-columnas' && !empty($props['secciones'])) {
+                foreach ($props['secciones'] as $secIndex => $seccion) {
+                    foreach ($seccion['campos'] ?? [] as $campoIndex => $campo) {
+                        if (!empty($campo['reactivos'])) {
+                            $this->repeticionesData["{$index}.s{$secIndex}.c{$campoIndex}"] = 1;
+                        }
+                    }
+                }
+            }
+
+            // Nivel componente
+            if (in_array($tipo, $tiposBloque) && !empty($props['reactivos'])) {
+                $this->repeticionesData["{$index}"] = 1;
+            }
+        }
+
+        // Si hay resultados existentes, cargar repeticiones guardadas
+        if ($this->modoEdicion) {
+            $resultadosPorIndice = $this->analisis->resultados->keyBy('indice');
+            foreach ($resultadosPorIndice as $indice => $resultado) {
+                $componente = $this->plantilla->componentes[$indice] ?? null;
+                if (!$componente) continue;
+
+                $tipo = $componente['tipo'];
+                $props = $componente['propiedades'] ?? [];
+
+                if (in_array($tipo, ['tabla-resultados', 'tabla-temporal']) && !empty($props['filas'])) {
+                    foreach ($props['filas'] as $filaIndex => $fila) {
+                        if (!empty($fila['reactivos'])) {
+                            $this->repeticionesData["{$indice}.{$filaIndex}"] = $resultado->repeticiones ?? 1;
+                        }
+                    }
+                }
+
+                if ($tipo === 'campos-etiquetados' && !empty($props['campos'])) {
+                    foreach ($props['campos'] as $campoIndex => $campo) {
+                        if (!empty($campo['reactivos'])) {
+                            $this->repeticionesData["{$indice}.c{$campoIndex}"] = $resultado->repeticiones ?? 1;
+                        }
+                    }
+                }
+
+                if ($tipo === 'tabla-dos-columnas' && !empty($props['secciones'])) {
+                    foreach ($props['secciones'] as $secIndex => $seccion) {
+                        foreach ($seccion['campos'] ?? [] as $campoIndex => $campo) {
+                            if (!empty($campo['reactivos'])) {
+                                $this->repeticionesData["{$indice}.s{$secIndex}.c{$campoIndex}"] = $resultado->repeticiones ?? 1;
+                            }
+                        }
+                    }
+                }
+
+                if (in_array($tipo, $tiposBloque) && !empty($props['reactivos'])) {
+                    $this->repeticionesData["{$indice}"] = $resultado->repeticiones ?? 1;
+                }
+            }
+        }
+    }
+
+    /**
+     * Descontar reactivos al finalizar resultados.
+     * Soporta múltiples reactivos (array reactivos[]) por componente/fila/campo.
+     * Calcula la diferencia exacta entre lo que requiere estar procesado y lo consumido históricamente.
+     */
+    private function descontarReactivosPorParametro()
+    {
+        $pepsService = app(\App\Services\PepsInventarioService::class);
+        $sucursalId = $this->analisis->muestra->sucursal_id;
+        $codigoMuestra = $this->analisis->muestra->codigo_muestra;
+        $tipoNombre = $this->analisis->tipoAnalisis->nombre ?? 'Análisis';
+
+        // Traer todo el historial para calcular saldos exactos
+        $movimientosHistoricos = \App\Models\MovimientoInventario::where('tipo_movimiento', 'CONSUMO_ANALISIS')
+            ->where('sucursal_id', $sucursalId)
+            ->where('observacion', 'ilike', "%Muestra: {$codigoMuestra}%")
+            ->where('observacion', 'ilike', "%Análisis: {$tipoNombre}%")
+            ->get();
+
+        $deudasHistoricas = \App\Models\ConsumoPendiente::where('sucursal_id', $sucursalId)
+            ->where('observacion', 'ilike', "%Muestra: {$codigoMuestra}%")
+            ->where('observacion', 'ilike', "%Análisis: {$tipoNombre}%")
+            ->get();
+
+        $tiposBloque = ['antibiograma', 'examen-diferencial', 'examen-microscopico', 'coproparasitologia-seriado', 'carga-viral', 'tabla-hematologica'];
+        $alertasFaltaStock = [];
+
+        foreach ($this->plantilla->componentes as $index => $componente) {
+            $tipo = $componente['tipo'];
+            $props = $componente['propiedades'] ?? [];
+
+            $resultado = $this->analisis->resultados()->where('indice', $index)->first();
+            $valorActual = $resultado ? ($resultado->valor ?? []) : [];
+
+            // ─── POR FILA: tabla-resultados, tabla-temporal ───
+            if (in_array($tipo, ['tabla-resultados', 'tabla-temporal']) && !empty($props['filas'])) {
+                foreach ($props['filas'] as $filaIndex => $fila) {
+                    $reactivos = $fila['reactivos'] ?? [];
+                    if (empty($reactivos)) continue;
+
+                    $rowActual = $valorActual[$filaIndex] ?? [];
+
+                    // tabla-resultados guarda columnas como col_0, col_1, etc.
+                    // tabla-temporal guarda la clave 'resultado'.
+                    // Evaluamos ambos formatos para determinar si la fila fue completada.
+                    $estaLlena = false;
+                    foreach ($rowActual as $key => $val) {
+                        if ($val === '' || $val === null) continue;
+                        if (str_starts_with($key, 'col_') || $key === 'resultado') {
+                            $estaLlena = true;
+                            break;
+                        }
+                    }
+
+                    $repeticionesRequeridas = $estaLlena ? (int) ($this->repeticionesData["{$index}.{$filaIndex}"] ?? 1) : 0;
+                    $observacionFila = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre}, Parámetro: {$fila['nombre']}";
+
+                    $this->procesarDiferenciaInventario(
+                        $pepsService, $reactivos, $sucursalId, $codigoMuestra, $tipoNombre, $fila['nombre'], $observacionFila, $repeticionesRequeridas, $movimientosHistoricos, $deudasHistoricas, $alertasFaltaStock
+                    );
+                }
+
+            // ─── POR CAMPO: campos-etiquetados ───
+            } elseif ($tipo === 'campos-etiquetados' && !empty($props['campos'])) {
+                foreach ($props['campos'] as $campoIndex => $campo) {
+                    $reactivos = $campo['reactivos'] ?? [];
+                    if (empty($reactivos)) continue;
+
+                    $estaLleno = isset($valorActual[$campoIndex]) && $valorActual[$campoIndex] !== '';
+                    $repeticionesRequeridas = $estaLleno ? (int) ($this->repeticionesData["{$index}.c{$campoIndex}"] ?? 1) : 0;
+                    $observacionCampo = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre}, Campo: {$campo['nombre']}";
+
+                    $this->procesarDiferenciaInventario(
+                        $pepsService, $reactivos, $sucursalId, $codigoMuestra, $tipoNombre, $campo['nombre'], $observacionCampo, $repeticionesRequeridas, $movimientosHistoricos, $deudasHistoricas, $alertasFaltaStock
+                    );
+                }
+
+            // ─── POR CAMPO ANIDADO: tabla-dos-columnas ───
+            } elseif ($tipo === 'tabla-dos-columnas' && !empty($props['secciones'])) {
+                foreach ($props['secciones'] as $secIndex => $seccion) {
+                    foreach ($seccion['campos'] ?? [] as $campoIndex => $campo) {
+                        $reactivos = $campo['reactivos'] ?? [];
+                        if (empty($reactivos)) continue;
+
+                        $estaLleno = isset($valorActual[$secIndex][$campoIndex]) && $valorActual[$secIndex][$campoIndex] !== '';
+                        $repeticionesRequeridas = $estaLleno ? (int) ($this->repeticionesData["{$index}.s{$secIndex}.c{$campoIndex}"] ?? 1) : 0;
+                        $observacionCampo = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre}, Campo: {$campo['nombre']}";
+
+                        $this->procesarDiferenciaInventario(
+                            $pepsService, $reactivos, $sucursalId, $codigoMuestra, $tipoNombre, $campo['nombre'], $observacionCampo, $repeticionesRequeridas, $movimientosHistoricos, $deudasHistoricas, $alertasFaltaStock
+                        );
+                    }
+                }
+
+            // ─── NIVEL COMPONENTE: antibiograma, examen-diferencial, etc. ───
+            } elseif (in_array($tipo, $tiposBloque) && !empty($props['reactivos'])) {
+                $estaLleno = !empty($valorActual);
+                $repeticionesRequeridas = $estaLleno ? (int) ($this->repeticionesData["{$index}"] ?? 1) : 0;
+                $observacionComp = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre}";
+
+                $this->procesarDiferenciaInventario(
+                    $pepsService, $props['reactivos'], $sucursalId, $codigoMuestra, $tipoNombre, $tipoNombre, $observacionComp, $repeticionesRequeridas, $movimientosHistoricos, $deudasHistoricas, $alertasFaltaStock
+                );
+            }
+        }
+        
+        if (!empty($alertasFaltaStock)) {
+            session()->flash('warning', '⚠️ Algunos reactivos (' . implode(', ', array_unique($alertasFaltaStock)) . ') pasaron a deuda pendiente por falta de stock digital. Almacén la liquidará automáticamente al ingresar compras.');
+        }
+    }
+
+    /**
+     * Aplica el consumo/reembolso a un parámetro particular considerando el inventario y las deudas pendientes.
+     */
+    private function procesarDiferenciaInventario(
+        \App\Services\PepsInventarioService $pepsService,
+        array $reactivos,
+        int $sucursalId,
+        string $codigoMuestra,
+        string $tipoNombre,
+        string $nombreParam,
+        string $observacionParticular,
+        float $repeticionesRequeridas,
+        $movimientosHistoricos,
+        $deudasHistoricas,
+        array &$alertasFaltaStock
+    ) {
+        foreach ($reactivos as $reactivo) {
+            if (empty($reactivo['reactivo_id'])) continue;
+            
+            $cantidadRequerida = (float) ($reactivo['cantidad'] ?? 1) * $repeticionesRequeridas;
+            
+            $consumoHistorico = abs($movimientosHistoricos
+                ->where('observacion', $observacionParticular)
+                ->where('insumo_id', $reactivo['reactivo_id'])
+                ->sum('cantidad'));
+                
+            $deudaHistorica = $deudasHistoricas
+                ->where('observacion', $observacionParticular)
+                ->where('insumo_id', $reactivo['reactivo_id'])
+                ->sum('cantidad');
+
+            $consumoTotal = $consumoHistorico + $deudaHistorica;
+            $diferencia = round($cantidadRequerida - $consumoTotal, 4);
+
+            if ($diferencia > 0) {
+                // Faltan consumir (se agregó una fila nueva o se subieron las repeticiones)
+                try {
+                    $movimiento = $pepsService->registrarConsumoAnalisis(
+                        insumoId: (int) $reactivo['reactivo_id'],
+                        sucursalId: $sucursalId,
+                        cantidad: $diferencia,
+                        usuarioId: auth()->id(),
+                        observacion: $observacionParticular
+                    );
+                    
+                    if (!$movimiento) {
+                        $alertasFaltaStock[] = $nombreParam;
+                    }
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::warning("Excepción de stock en {$nombreParam}: " . $e->getMessage());
+                    $alertasFaltaStock[] = $nombreParam;
+                }
+            } 
+            // IMPORTANTE: Si $diferencia < 0 (Ej: Borraron una fila al editar un resultado),
+            // NO DEVOLVEMOS el reactivo al stock. En la vida real, un reactivo químico procesado 
+            // no se puede regresar al frasco original. Queda registrado como consumido (merma).
         }
     }
 
@@ -190,8 +459,8 @@ class CapturarResultados extends Component
                 }
             }
 
-            // Eliminar todos los resultados anteriores de la BD
-            $this->analisis->resultados()->delete();
+            // Marcar los IDs de resultados que actualizamos para borrar el resto
+            $resultadosAfectados = [];
 
             $resultadosGuardados = 0;
 
@@ -225,13 +494,18 @@ class CapturarResultados extends Component
 
                     // Guardar en BD si hay imágenes
                     if (! empty($imagenesGuardadas)) {
-                        Resultado::create([
-                            'analisis_id' => $this->analisis->id,
-                            'tipo' => 'campo-imagenes',
-                            'indice' => $index,
-                            'valor' => $imagenesGuardadas,
-                            'fuera_rango' => false,
-                        ]);
+                        $resultado = Resultado::updateOrCreate(
+                            [
+                                'analisis_id' => $this->analisis->id,
+                                'tipo' => 'campo-imagenes',
+                                'indice' => $index,
+                            ],
+                            [
+                                'valor' => $imagenesGuardadas,
+                                'fuera_rango' => false,
+                            ]
+                        );
+                        $resultadosAfectados[] = $resultado->id;
 
                         $resultadosGuardados++;
                     }
@@ -245,18 +519,26 @@ class CapturarResultados extends Component
                     $datosParaGuardar = $this->filtrarDatosVacios($componenteData['data'], $componenteData['tipo']);
 
                     if (! empty($datosParaGuardar)) {
-                        Resultado::create([
-                            'analisis_id' => $this->analisis->id,
-                            'tipo' => $componenteData['tipo'],
-                            'indice' => $index,
-                            'valor' => $datosParaGuardar,
-                            'fuera_rango' => false,
-                        ]);
+                        $resultado = Resultado::updateOrCreate(
+                            [
+                                'analisis_id' => $this->analisis->id,
+                                'tipo' => $componenteData['tipo'],
+                                'indice' => $index,
+                            ],
+                            [
+                                'valor' => $datosParaGuardar,
+                                'fuera_rango' => false,
+                            ]
+                        );
+                        $resultadosAfectados[] = $resultado->id;
 
                         $resultadosGuardados++;
                     }
                 }
             }
+
+            // Eliminar resultados que ya no existen en el formulario
+            $this->analisis->resultados()->whereNotIn('id', $resultadosAfectados)->delete();
 
             // NO actualizar estado ni fecha_finalizacion - permanece en captura
 
@@ -311,10 +593,10 @@ class CapturarResultados extends Component
                         Storage::disk('public')->delete($resultado->valor['imagen2']);
                     }
                 }
-
-                // Eliminar todos los resultados anteriores de la BD
-                $this->analisis->resultados()->delete();
             }
+
+            // Marcar los IDs de resultados que actualizamos para borrar el resto
+            $resultadosAfectados = [];
 
             $resultadosGuardados = 0;
 
@@ -348,13 +630,18 @@ class CapturarResultados extends Component
 
                     // Guardar en BD si hay imágenes
                     if (! empty($imagenesGuardadas)) {
-                        Resultado::create([
-                            'analisis_id' => $this->analisis->id,
-                            'tipo' => 'campo-imagenes',
-                            'indice' => $index,
-                            'valor' => $imagenesGuardadas,
-                            'fuera_rango' => false,
-                        ]);
+                        $resultado = Resultado::updateOrCreate(
+                            [
+                                'analisis_id' => $this->analisis->id,
+                                'tipo' => 'campo-imagenes',
+                                'indice' => $index,
+                            ],
+                            [
+                                'valor' => $imagenesGuardadas,
+                                'fuera_rango' => false,
+                            ]
+                        );
+                        $resultadosAfectados[] = $resultado->id;
 
                         $resultadosGuardados++;
                     }
@@ -368,18 +655,26 @@ class CapturarResultados extends Component
                     $datosParaGuardar = $this->filtrarDatosVacios($componenteData['data'], $componenteData['tipo']);
 
                     if (! empty($datosParaGuardar)) {
-                        Resultado::create([
-                            'analisis_id' => $this->analisis->id,
-                            'tipo' => $componenteData['tipo'],
-                            'indice' => $index,
-                            'valor' => $datosParaGuardar,
-                            'fuera_rango' => false,
-                        ]);
+                        $resultado = Resultado::updateOrCreate(
+                            [
+                                'analisis_id' => $this->analisis->id,
+                                'tipo' => $componenteData['tipo'],
+                                'indice' => $index,
+                            ],
+                            [
+                                'valor' => $datosParaGuardar,
+                                'fuera_rango' => false,
+                            ]
+                        );
+                        $resultadosAfectados[] = $resultado->id;
 
                         $resultadosGuardados++;
                     }
                 }
             }
+
+            // Eliminar resultados que ya no existen en el formulario
+            $this->analisis->resultados()->whereNotIn('id', $resultadosAfectados)->delete();
 
             // Actualizar estado del análisis a 'En revision'
             // (El modelo Analisis sincroniza automáticamente el estado de la muestra)
@@ -387,6 +682,9 @@ class CapturarResultados extends Component
                 'estado' => Analisis::ESTADO_EN_REVISION,
                 'fecha_finalizacion' => now(),
             ]);
+
+            // Descontar reactivos por parámetro
+            $this->descontarReactivosPorParametro();
 
             DB::commit();
 
