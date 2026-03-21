@@ -157,10 +157,10 @@ class CapturarResultados extends Component
                 }
             }
 
-            // Por campo — campos-etiquetados
-            if ($tipo === 'campos-etiquetados' && !empty($props['campos'])) {
+            // Por campo — campos-etiquetados y serologia
+            if (in_array($tipo, ['campos-etiquetados', 'serologia']) && !empty($props['campos'])) {
                 foreach ($props['campos'] as $campoIndex => $campo) {
-                    if (!empty($campo['reactivos'])) {
+                    if (is_array($campo) && !empty($campo['reactivos'])) {
                         $this->repeticionesData["{$index}.c{$campoIndex}"] = 1;
                     }
                 }
@@ -201,9 +201,9 @@ class CapturarResultados extends Component
                     }
                 }
 
-                if ($tipo === 'campos-etiquetados' && !empty($props['campos'])) {
+                if (in_array($tipo, ['campos-etiquetados', 'serologia']) && !empty($props['campos'])) {
                     foreach ($props['campos'] as $campoIndex => $campo) {
-                        if (!empty($campo['reactivos'])) {
+                        if (is_array($campo) && !empty($campo['reactivos'])) {
                             $this->repeticionesData["{$indice}.c{$campoIndex}"] = $resultado->repeticiones ?? 1;
                         }
                     }
@@ -268,33 +268,63 @@ class CapturarResultados extends Component
 
                     $rowActual = $valorActual[$filaIndex] ?? [];
 
-                    // tabla-resultados guarda columnas como col_0, col_1, etc.
-                    // tabla-temporal guarda la clave 'resultado'.
-                    // Evaluamos ambos formatos para determinar si la fila fue completada.
+                    // tabla-resultados: solo col_0 es el resultado real del bioquímico.
+                    //   col_1 = rango de referencia (siempre pre-llenado, NO cuenta).
+                    //   unidad = unidad de medida (siempre pre-llenado, NO cuenta).
+                    // tabla-temporal: usa la clave 'resultado'.
                     $estaLlena = false;
-                    foreach ($rowActual as $key => $val) {
-                        if ($val === '' || $val === null) continue;
-                        if (str_starts_with($key, 'col_') || $key === 'resultado') {
-                            $estaLlena = true;
-                            break;
-                        }
+                    if ($tipo === 'tabla-resultados') {
+                        $estaLlena = isset($rowActual['col_0']) && $rowActual['col_0'] !== '' && $rowActual['col_0'] !== null;
+                    } else {
+                        $estaLlena = isset($rowActual['resultado']) && $rowActual['resultado'] !== '' && $rowActual['resultado'] !== null;
                     }
 
                     $repeticionesRequeridas = $estaLlena ? (int) ($this->repeticionesData["{$index}.{$filaIndex}"] ?? 1) : 0;
-                    $observacionFila = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre}, Parámetro: {$fila['nombre']}";
+                    $nombreFila = $fila['nombre'] ?? $fila['analisis'] ?? "Fila " . ($filaIndex + 1);
+                    $observacionFila = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre}, Parámetro: {$nombreFila}";
 
                     $this->procesarDiferenciaInventario(
-                        $pepsService, $reactivos, $sucursalId, $codigoMuestra, $tipoNombre, $fila['nombre'], $observacionFila, $repeticionesRequeridas, $movimientosHistoricos, $deudasHistoricas, $alertasFaltaStock
+                        $pepsService, $reactivos, $sucursalId, $codigoMuestra, $tipoNombre, $nombreFila, $observacionFila, $repeticionesRequeridas, $movimientosHistoricos, $deudasHistoricas, $alertasFaltaStock
                     );
                 }
 
             // ─── POR CAMPO: campos-etiquetados ───
+            // Dato guardado: {titulo: "...", campos: [{nombre: "X", valor: "Y"}, ...]}
+            // Los campos sin valor se filtran y re-indexan, así que buscamos por nombre.
             } elseif ($tipo === 'campos-etiquetados' && !empty($props['campos'])) {
+                // Extraer la lista de campos guardados (buscar dentro de 'campos' key)
+                $camposGuardados = $valorActual['campos'] ?? $valorActual;
+                if (!is_array($camposGuardados)) $camposGuardados = [];
+
                 foreach ($props['campos'] as $campoIndex => $campo) {
                     $reactivos = $campo['reactivos'] ?? [];
                     if (empty($reactivos)) continue;
 
-                    $estaLleno = isset($valorActual[$campoIndex]) && $valorActual[$campoIndex] !== '';
+                    $nombreCampo = $campo['nombre'] ?? '';
+                    $match = collect($camposGuardados)->first(fn($item) => is_array($item) && ($item['nombre'] ?? '') === $nombreCampo);
+                    $estaLleno = $match && isset($match['valor']) && $match['valor'] !== '' && $match['valor'] !== null;
+                    $repeticionesRequeridas = $estaLleno ? (int) ($this->repeticionesData["{$index}.c{$campoIndex}"] ?? 1) : 0;
+                    $observacionCampo = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre}, Campo: {$campo['nombre']}";
+
+                    $this->procesarDiferenciaInventario(
+                        $pepsService, $reactivos, $sucursalId, $codigoMuestra, $tipoNombre, $campo['nombre'], $observacionCampo, $repeticionesRequeridas, $movimientosHistoricos, $deudasHistoricas, $alertasFaltaStock
+                    );
+                }
+
+            // ─── POR CAMPO: serologia ───
+            // Dato guardado: [{campo: "Erlichia Canis", valor: "Positivo (+)"}, ...]
+            // Plantilla: campos: [{nombre: "...", reactivos: [...]}, ...]
+            } elseif ($tipo === 'serologia' && !empty($props['campos'])) {
+                $camposGuardados = is_array($valorActual) ? $valorActual : [];
+
+                foreach ($props['campos'] as $campoIndex => $campo) {
+                    if (!is_array($campo)) continue;
+                    $reactivos = $campo['reactivos'] ?? [];
+                    if (empty($reactivos)) continue;
+
+                    $nombreCampo = $campo['nombre'] ?? '';
+                    $match = collect($camposGuardados)->first(fn($item) => is_array($item) && ($item['campo'] ?? '') === $nombreCampo);
+                    $estaLleno = $match && isset($match['valor']) && $match['valor'] !== '' && $match['valor'] !== null;
                     $repeticionesRequeridas = $estaLleno ? (int) ($this->repeticionesData["{$index}.c{$campoIndex}"] ?? 1) : 0;
                     $observacionCampo = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre}, Campo: {$campo['nombre']}";
 
@@ -304,13 +334,19 @@ class CapturarResultados extends Component
                 }
 
             // ─── POR CAMPO ANIDADO: tabla-dos-columnas ───
+            // Dato guardado: [{seccion: "...", campo: "X", valor: "Y"}, ...] array plano
+            // Los campos sin valor se filtran, así que buscamos por nombre de campo.
             } elseif ($tipo === 'tabla-dos-columnas' && !empty($props['secciones'])) {
+                $camposGuardados = is_array($valorActual) ? $valorActual : [];
+
                 foreach ($props['secciones'] as $secIndex => $seccion) {
                     foreach ($seccion['campos'] ?? [] as $campoIndex => $campo) {
                         $reactivos = $campo['reactivos'] ?? [];
                         if (empty($reactivos)) continue;
 
-                        $estaLleno = isset($valorActual[$secIndex][$campoIndex]) && $valorActual[$secIndex][$campoIndex] !== '';
+                        $nombreCampo = $campo['nombre'] ?? '';
+                        $match = collect($camposGuardados)->first(fn($item) => is_array($item) && ($item['campo'] ?? '') === $nombreCampo);
+                        $estaLleno = $match && isset($match['valor']) && $match['valor'] !== '' && $match['valor'] !== null;
                         $repeticionesRequeridas = $estaLleno ? (int) ($this->repeticionesData["{$index}.s{$secIndex}.c{$campoIndex}"] ?? 1) : 0;
                         $observacionCampo = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre}, Campo: {$campo['nombre']}";
 
@@ -322,7 +358,22 @@ class CapturarResultados extends Component
 
             // ─── NIVEL COMPONENTE: antibiograma, examen-diferencial, etc. ───
             } elseif (in_array($tipo, $tiposBloque) && !empty($props['reactivos'])) {
-                $estaLleno = !empty($valorActual);
+                // Cada tipo guarda datos de forma distinta; verificar si hay resultados REALES.
+                $estaLleno = false;
+                if ($tipo === 'tabla-hematologica') {
+                    // Dato: {parametros: [...], diferenciales: [...], indices: [...]}
+                    // Vacío si todos los sub-arrays están vacíos (ya filtrados por filtrarDatosVacios)
+                    $estaLleno = !empty($valorActual['parametros'] ?? [])
+                             || !empty($valorActual['diferenciales'] ?? [])
+                             || !empty($valorActual['indices'] ?? []);
+                } elseif ($tipo === 'coproparasitologia-seriado') {
+                    // Dato: {campos: [...], fechas: [...]} o null
+                    $estaLleno = !empty($valorActual['campos'] ?? []);
+                } else {
+                    // antibiograma, examen-diferencial, examen-microscopico, carga-viral
+                    // Dato: array plano de filas/campos con resultado → vacío = []
+                    $estaLleno = !empty($valorActual);
+                }
                 $repeticionesRequeridas = $estaLleno ? (int) ($this->repeticionesData["{$index}"] ?? 1) : 0;
                 $observacionComp = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre}";
 
@@ -610,21 +661,17 @@ class CapturarResultados extends Component
 
                     // Guardar imagen 1
                     if (! empty($this->imagenes[$index]['imagen1'])) {
-                        // Nueva imagen subida
                         $path1 = $this->imagenes[$index]['imagen1']->store('analisis/imagenes', 'public');
                         $imagenesGuardadas['imagen1'] = $path1;
                     } elseif (! empty($this->imagenes[$index]['preview1'])) {
-                        // Mantener imagen anterior (no fue eliminada ni reemplazada)
                         $imagenesGuardadas['imagen1'] = $this->imagenes[$index]['preview1'];
                     }
 
                     // Guardar imagen 2
                     if (! empty($this->imagenes[$index]['imagen2'])) {
-                        // Nueva imagen subida
                         $path2 = $this->imagenes[$index]['imagen2']->store('analisis/imagenes', 'public');
                         $imagenesGuardadas['imagen2'] = $path2;
                     } elseif (! empty($this->imagenes[$index]['preview2'])) {
-                        // Mantener imagen anterior (no fue eliminada ni reemplazada)
                         $imagenesGuardadas['imagen2'] = $this->imagenes[$index]['preview2'];
                     }
 
@@ -726,21 +773,10 @@ class CapturarResultados extends Component
                 return array_filter($data);
 
             case 'tabla-resultados':
-                // Filtrar filas que tengan al menos un campo con valor (excluyendo 'nombre')
-                return array_values(array_filter($data, function ($item) {
-                    if (is_array($item)) {
-                        // Verificar todos los campos excepto 'nombre'
-                        foreach ($item as $key => $value) {
-                            if ($key !== 'nombre' && $value !== '' && $value !== null) {
-                                return true;
-                            }
-                        }
-
-                        return false;
-                    }
-
-                    return $item !== '' && $item !== null;
-                }));
+                // NO filtrar filas individuales: los índices deben coincidir con las filas
+                // de la plantilla para que al recargar resultados, cada valor caiga en su fila
+                // correcta. El descuento de reactivos ya maneja filas sin resultado (col_0 vacío).
+                return $data;
 
             case 'campos-etiquetados':
                 // Estructura: {titulo, campos: [{nombre, valor}, ...]}

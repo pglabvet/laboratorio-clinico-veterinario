@@ -26,8 +26,6 @@ class GestionarPlantillas extends Component
     // Insumos requeridos
     public $insumos = []; // Array de insumos agregados
 
-    public $categoriaInsumoFiltro = [];
-
     // Campos temporales para agregar nuevo insumo
     public $nuevaCategoria = '';
 
@@ -221,6 +219,7 @@ class GestionarPlantillas extends Component
                     ['nombre' => 'HbCM', 'unidad' => 'pg', 'rango_tipo' => 'min-max', 'rango_min' => '17', 'rango_max' => '23', 'rango_valor' => ''],
                     ['nombre' => 'CCMHb', 'unidad' => 'g/dl', 'rango_tipo' => 'min-max', 'rango_min' => '32', 'rango_max' => '36', 'rango_valor' => ''],
                 ],
+                'reactivos' => [],
             ],
             'tabla-dos-columnas' => [
                 'titulo' => 'EXAMEN MACROSCOPICO',
@@ -250,10 +249,10 @@ class GestionarPlantillas extends Component
                     ['nombre' => 'RESULTADO'],
                 ],
                 'campos' => [
-                    'Dirofilaria Immitis',
-                    'Erlichia Canis',
-                    'Leishmania infantum',
-                    'Anaplacia Phagocytophilum/Anaplacia Platys',
+                    ['nombre' => 'Dirofilaria Immitis', 'reactivos' => []],
+                    ['nombre' => 'Erlichia Canis', 'reactivos' => []],
+                    ['nombre' => 'Leishmania infantum', 'reactivos' => []],
+                    ['nombre' => 'Anaplacia Phagocytophilum/Anaplacia Platys', 'reactivos' => []],
                 ],
             ],
             'campos-etiquetados' => [
