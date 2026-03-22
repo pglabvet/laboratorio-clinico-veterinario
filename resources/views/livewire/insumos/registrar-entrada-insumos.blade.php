@@ -21,47 +21,6 @@
     <x-toast type="error" :message="session('error')" />
 
     {{-- Formulario de registro --}}
-    
-    {{-- ALERTAS DE DEUDA PENDIENTE (OPCIÓN C) --}}
-    @if($sucursal_id && $deudasPendientes->isNotEmpty())
-        <div class="bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-900/50 p-6">
-            <div class="flex items-center gap-3 mb-4">
-                <flux:icon.exclamation-triangle class="size-6 text-amber-600 dark:text-amber-500" />
-                <flux:heading size="lg" class="text-amber-800 dark:text-amber-500">Insumos en Deuda Pendiente</flux:heading>
-            </div>
-            <p class="text-sm text-amber-700 dark:text-amber-400 mb-4">
-                El sistema detectó que los laboratorios consumieron estos insumos pero no había stock digital en esta sucursal. 
-                <strong>Al registrar una entrada de estos insumos, el sistema cobrará la deuda automáticamente.</strong>
-            </p>
-
-            <div class="overflow-hidden rounded-lg border border-amber-200 dark:border-amber-900/50">
-                <table class="min-w-full divide-y divide-amber-200 dark:divide-amber-900/50">
-                    <thead class="bg-amber-100 dark:bg-amber-900/40">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-amber-800 dark:text-amber-400 uppercase tracking-wider">Fecha de Consumo</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-amber-800 dark:text-amber-400 uppercase tracking-wider">Insumo</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-amber-800 dark:text-amber-400 uppercase tracking-wider">Cantidad Adeudada</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-amber-800 dark:text-amber-400 uppercase tracking-wider">Detalle del Análisis / Paciente</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-amber-800 dark:text-amber-400 uppercase tracking-wider">Bioquímico</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-amber-200/50 dark:divide-amber-900/30 bg-white/50 dark:bg-neutral-900/50">
-                        @foreach($deudasPendientes as $deuda)
-                            <tr class="hover:bg-amber-50 dark:hover:bg-amber-900/20">
-                                <td class="whitespace-nowrap px-6 py-3 text-sm text-amber-900 dark:text-amber-100">{{ $deuda->created_at->format('d/m/Y H:i') }}</td>
-                                <td class="whitespace-nowrap px-6 py-3 text-sm font-medium text-amber-900 dark:text-amber-100">{{ $deuda->insumo->nombre }}</td>
-                                <td class="whitespace-nowrap px-6 py-3 text-sm font-bold text-red-600 dark:text-red-400">
-                                    -{{ number_format($deuda->cantidad, 2) }} {{ $deuda->insumo->unidadMedida->abreviatura ?? '' }}
-                                </td>
-                                <td class="px-6 py-3 text-sm text-amber-700 dark:text-amber-300 max-w-xs truncate" title="{{ $deuda->observacion }}">{{ $deuda->observacion }}</td>
-                                <td class="whitespace-nowrap px-6 py-3 text-sm text-amber-700 dark:text-amber-300">{{ $deuda->usuario->name ?? 'Sistema' }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    @endif
 
     <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
         <flux:heading size="lg" class="mb-6">Datos de la Entrada</flux:heading>

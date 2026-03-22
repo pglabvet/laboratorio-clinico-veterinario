@@ -40,6 +40,9 @@ class CapturarResultados extends Component
     // Repeticiones por componente/fila para descuento de reactivos
     public $repeticionesData = [];
 
+    // Error persistente de stock insuficiente (se muestra como banner en la vista)
+    public $errorStock = '';
+
     public function mount($analisisId)
     {
         // Cargar el análisis con todas sus relaciones
@@ -245,13 +248,7 @@ class CapturarResultados extends Component
             ->where('observacion', 'ilike', "%Análisis: {$tipoNombre}%")
             ->get();
 
-        $deudasHistoricas = \App\Models\ConsumoPendiente::where('sucursal_id', $sucursalId)
-            ->where('observacion', 'ilike', "%Muestra: {$codigoMuestra}%")
-            ->where('observacion', 'ilike', "%Análisis: {$tipoNombre}%")
-            ->get();
-
         $tiposBloque = ['antibiograma', 'examen-diferencial', 'examen-microscopico', 'coproparasitologia-seriado', 'carga-viral', 'tabla-hematologica'];
-        $alertasFaltaStock = [];
 
         foreach ($this->plantilla->componentes as $index => $componente) {
             $tipo = $componente['tipo'];
@@ -268,10 +265,6 @@ class CapturarResultados extends Component
 
                     $rowActual = $valorActual[$filaIndex] ?? [];
 
-                    // tabla-resultados: solo col_0 es el resultado real del bioquímico.
-                    //   col_1 = rango de referencia (siempre pre-llenado, NO cuenta).
-                    //   unidad = unidad de medida (siempre pre-llenado, NO cuenta).
-                    // tabla-temporal: usa la clave 'resultado'.
                     $estaLlena = false;
                     if ($tipo === 'tabla-resultados') {
                         $estaLlena = isset($rowActual['col_0']) && $rowActual['col_0'] !== '' && $rowActual['col_0'] !== null;
@@ -284,15 +277,12 @@ class CapturarResultados extends Component
                     $observacionFila = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre}, Parámetro: {$nombreFila}";
 
                     $this->procesarDiferenciaInventario(
-                        $pepsService, $reactivos, $sucursalId, $codigoMuestra, $tipoNombre, $nombreFila, $observacionFila, $repeticionesRequeridas, $movimientosHistoricos, $deudasHistoricas, $alertasFaltaStock
+                        $pepsService, $reactivos, $sucursalId, $observacionFila, $repeticionesRequeridas, $movimientosHistoricos
                     );
                 }
 
             // ─── POR CAMPO: campos-etiquetados ───
-            // Dato guardado: {titulo: "...", campos: [{nombre: "X", valor: "Y"}, ...]}
-            // Los campos sin valor se filtran y re-indexan, así que buscamos por nombre.
             } elseif ($tipo === 'campos-etiquetados' && !empty($props['campos'])) {
-                // Extraer la lista de campos guardados (buscar dentro de 'campos' key)
                 $camposGuardados = $valorActual['campos'] ?? $valorActual;
                 if (!is_array($camposGuardados)) $camposGuardados = [];
 
@@ -307,13 +297,11 @@ class CapturarResultados extends Component
                     $observacionCampo = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre}, Campo: {$campo['nombre']}";
 
                     $this->procesarDiferenciaInventario(
-                        $pepsService, $reactivos, $sucursalId, $codigoMuestra, $tipoNombre, $campo['nombre'], $observacionCampo, $repeticionesRequeridas, $movimientosHistoricos, $deudasHistoricas, $alertasFaltaStock
+                        $pepsService, $reactivos, $sucursalId, $observacionCampo, $repeticionesRequeridas, $movimientosHistoricos
                     );
                 }
 
             // ─── POR CAMPO: serologia ───
-            // Dato guardado: [{campo: "Erlichia Canis", valor: "Positivo (+)"}, ...]
-            // Plantilla: campos: [{nombre: "...", reactivos: [...]}, ...]
             } elseif ($tipo === 'serologia' && !empty($props['campos'])) {
                 $camposGuardados = is_array($valorActual) ? $valorActual : [];
 
@@ -329,13 +317,11 @@ class CapturarResultados extends Component
                     $observacionCampo = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre}, Campo: {$campo['nombre']}";
 
                     $this->procesarDiferenciaInventario(
-                        $pepsService, $reactivos, $sucursalId, $codigoMuestra, $tipoNombre, $campo['nombre'], $observacionCampo, $repeticionesRequeridas, $movimientosHistoricos, $deudasHistoricas, $alertasFaltaStock
+                        $pepsService, $reactivos, $sucursalId, $observacionCampo, $repeticionesRequeridas, $movimientosHistoricos
                     );
                 }
 
             // ─── POR CAMPO ANIDADO: tabla-dos-columnas ───
-            // Dato guardado: [{seccion: "...", campo: "X", valor: "Y"}, ...] array plano
-            // Los campos sin valor se filtran, así que buscamos por nombre de campo.
             } elseif ($tipo === 'tabla-dos-columnas' && !empty($props['secciones'])) {
                 $camposGuardados = is_array($valorActual) ? $valorActual : [];
 
@@ -351,58 +337,44 @@ class CapturarResultados extends Component
                         $observacionCampo = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre}, Campo: {$campo['nombre']}";
 
                         $this->procesarDiferenciaInventario(
-                            $pepsService, $reactivos, $sucursalId, $codigoMuestra, $tipoNombre, $campo['nombre'], $observacionCampo, $repeticionesRequeridas, $movimientosHistoricos, $deudasHistoricas, $alertasFaltaStock
+                            $pepsService, $reactivos, $sucursalId, $observacionCampo, $repeticionesRequeridas, $movimientosHistoricos
                         );
                     }
                 }
 
             // ─── NIVEL COMPONENTE: antibiograma, examen-diferencial, etc. ───
             } elseif (in_array($tipo, $tiposBloque) && !empty($props['reactivos'])) {
-                // Cada tipo guarda datos de forma distinta; verificar si hay resultados REALES.
                 $estaLleno = false;
                 if ($tipo === 'tabla-hematologica') {
-                    // Dato: {parametros: [...], diferenciales: [...], indices: [...]}
-                    // Vacío si todos los sub-arrays están vacíos (ya filtrados por filtrarDatosVacios)
                     $estaLleno = !empty($valorActual['parametros'] ?? [])
                              || !empty($valorActual['diferenciales'] ?? [])
                              || !empty($valorActual['indices'] ?? []);
                 } elseif ($tipo === 'coproparasitologia-seriado') {
-                    // Dato: {campos: [...], fechas: [...]} o null
                     $estaLleno = !empty($valorActual['campos'] ?? []);
                 } else {
-                    // antibiograma, examen-diferencial, examen-microscopico, carga-viral
-                    // Dato: array plano de filas/campos con resultado → vacío = []
                     $estaLleno = !empty($valorActual);
                 }
                 $repeticionesRequeridas = $estaLleno ? (int) ($this->repeticionesData["{$index}"] ?? 1) : 0;
                 $observacionComp = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre}";
 
                 $this->procesarDiferenciaInventario(
-                    $pepsService, $props['reactivos'], $sucursalId, $codigoMuestra, $tipoNombre, $tipoNombre, $observacionComp, $repeticionesRequeridas, $movimientosHistoricos, $deudasHistoricas, $alertasFaltaStock
+                    $pepsService, $props['reactivos'], $sucursalId, $observacionComp, $repeticionesRequeridas, $movimientosHistoricos
                 );
             }
-        }
-        
-        if (!empty($alertasFaltaStock)) {
-            session()->flash('warning', '⚠️ Algunos reactivos (' . implode(', ', array_unique($alertasFaltaStock)) . ') pasaron a deuda pendiente por falta de stock digital. Almacén la liquidará automáticamente al ingresar compras.');
         }
     }
 
     /**
-     * Aplica el consumo/reembolso a un parámetro particular considerando el inventario y las deudas pendientes.
+     * Aplica el consumo de inventario para un parámetro particular.
+     * Lanza excepción si no hay stock suficiente (propagada a finalizarYEnviar).
      */
     private function procesarDiferenciaInventario(
         \App\Services\PepsInventarioService $pepsService,
         array $reactivos,
         int $sucursalId,
-        string $codigoMuestra,
-        string $tipoNombre,
-        string $nombreParam,
         string $observacionParticular,
         float $repeticionesRequeridas,
-        $movimientosHistoricos,
-        $deudasHistoricas,
-        array &$alertasFaltaStock
+        $movimientosHistoricos
     ) {
         foreach ($reactivos as $reactivo) {
             if (empty($reactivo['reactivo_id'])) continue;
@@ -413,33 +385,18 @@ class CapturarResultados extends Component
                 ->where('observacion', $observacionParticular)
                 ->where('insumo_id', $reactivo['reactivo_id'])
                 ->sum('cantidad'));
-                
-            $deudaHistorica = $deudasHistoricas
-                ->where('observacion', $observacionParticular)
-                ->where('insumo_id', $reactivo['reactivo_id'])
-                ->sum('cantidad');
 
-            $consumoTotal = $consumoHistorico + $deudaHistorica;
-            $diferencia = round($cantidadRequerida - $consumoTotal, 4);
+            $diferencia = round($cantidadRequerida - $consumoHistorico, 4);
 
             if ($diferencia > 0) {
-                // Faltan consumir (se agregó una fila nueva o se subieron las repeticiones)
-                try {
-                    $movimiento = $pepsService->registrarConsumoAnalisis(
-                        insumoId: (int) $reactivo['reactivo_id'],
-                        sucursalId: $sucursalId,
-                        cantidad: $diferencia,
-                        usuarioId: auth()->id(),
-                        observacion: $observacionParticular
-                    );
-                    
-                    if (!$movimiento) {
-                        $alertasFaltaStock[] = $nombreParam;
-                    }
-                } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::warning("Excepción de stock en {$nombreParam}: " . $e->getMessage());
-                    $alertasFaltaStock[] = $nombreParam;
-                }
+                // Faltan consumir — si no hay stock, la excepción se propaga
+                $pepsService->registrarConsumoAnalisis(
+                    insumoId: (int) $reactivo['reactivo_id'],
+                    sucursalId: $sucursalId,
+                    cantidad: $diferencia,
+                    usuarioId: auth()->id(),
+                    observacion: $observacionParticular
+                );
             } 
             // IMPORTANTE: Si $diferencia < 0 (Ej: Borraron una fila al editar un resultado),
             // NO DEVOLVEMOS el reactivo al stock. En la vida real, un reactivo químico procesado 
@@ -619,6 +576,7 @@ class CapturarResultados extends Component
         }
 
         try {
+            $this->errorStock = '';
             DB::beginTransaction();
 
             // Si es modo edición, eliminar resultados anteriores
@@ -744,11 +702,11 @@ class CapturarResultados extends Component
 
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Error al guardar resultados:', [
+            \Illuminate\Support\Facades\Log::error('Error al guardar resultados:', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            session()->flash('error', 'Error al guardar los resultados: '.$e->getMessage());
+            $this->errorStock = $e->getMessage();
         }
     }
 

@@ -411,12 +411,7 @@ class FormularioMuestra extends Component
                     ->where('observacion', 'ilike', "%Análisis: {$analisis->tipoAnalisis->nombre}%")
                     ->get();
                     
-                // Cancelar deudas pendientes (falta de stock) asociadas a este análisis eliminado
-                \App\Models\ConsumoPendiente::where('sucursal_id', $muestra->sucursal_id)
-                    ->where('estado', \App\Models\ConsumoPendiente::ESTADO_PENDIENTE)
-                    ->where('observacion', 'ilike', "%Muestra: {$muestra->codigo_muestra}%")
-                    ->where('observacion', 'ilike', "%Análisis: {$analisis->tipoAnalisis->nombre}%")
-                    ->delete();
+                
 
                 foreach ($movimientosConsumo as $movimiento) {
                     $pepsService->revertirConsumoAnalisis(

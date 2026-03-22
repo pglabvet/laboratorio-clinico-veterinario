@@ -246,21 +246,10 @@ class RegistrarEntradaInsumos extends Component
 
         $entradasRecientes = $entradasQuery->paginate(10);
 
-        // Obtener deudas pendientes para la sucursal activa
-        $deudasPendientes = collect();
-        if ($this->sucursal_id) {
-            $deudasPendientes = \App\Models\ConsumoPendiente::with(['insumo.unidadMedida', 'usuario'])
-                ->where('sucursal_id', $this->sucursal_id)
-                ->where('estado', \App\Models\ConsumoPendiente::ESTADO_PENDIENTE)
-                ->orderBy('created_at', 'desc')
-                ->get();
-        }
-
         return view('livewire.insumos.registrar-entrada-insumos', [
             'insumos' => $insumos,
             'entradasRecientes' => $entradasRecientes,
             'motivosDisponibles' => self::MOTIVOS,
-            'deudasPendientes' => $deudasPendientes,
         ]);
     }
 }
