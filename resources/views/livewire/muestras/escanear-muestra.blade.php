@@ -232,10 +232,14 @@
                                         <x-lucide-flask-conical class="size-5 text-blue-600 dark:text-blue-400" />
                                     </div>
                                     <div class="flex-1">
-                                        <p class="mb-1 text-base font-bold text-neutral-900 dark:text-neutral-100">
+                                        <p class="mb-0.5 text-base font-bold text-neutral-900 dark:text-neutral-100">
                                             {{ $analisis->tipoAnalisis->nombre ?? 'N/A' }}
                                         </p>
-                                        
+                                        @if($analisis->plantillaFormulario)
+                                            <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                                                Plantilla: {{ $analisis->plantillaFormulario->nombre }}
+                                            </p>
+                                        @endif
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3">

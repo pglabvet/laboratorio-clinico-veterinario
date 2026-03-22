@@ -66,7 +66,7 @@ class AnalisisPdfService
      *
      * @return \Barryvdh\DomPDF\PDF El objeto PDF renderizado
      */
-    public function renderizarPdf(Analisis $analisis, string $rutaRelativa, ?string $qrUrl = null): \Barryvdh\DomPDF\PDF
+    public function renderizarPdf(Analisis $analisis, string $rutaRelativa, ?string $qrUrl = null, string $formato = 'completo'): \Barryvdh\DomPDF\PDF
     {
         // Cargar relaciones necesarias
         $analisis->load([
@@ -95,7 +95,7 @@ class AnalisisPdfService
         }
 
         // Preparar datos para la vista
-        $datos = $this->prepararDatos($analisis, $plantilla, $qrUrl);
+        $datos = $this->prepararDatos($analisis, $plantilla, $qrUrl, $formato);
 
         // Generar el PDF
         $pdf = DomPDF::loadView('pdf-v2.analisis', $datos);
@@ -120,8 +120,11 @@ class AnalisisPdfService
      */
     public function obtenerOGenerar(Analisis $analisis): array
     {
-        // Buscar PDF existente
-        $pdfModel = $analisis->pdfs()->latest()->first();
+        // Buscar PDF existente (excluir PDFs en formato limpio)
+        $pdfModel = $analisis->pdfs()
+            ->where('ruta_archivo', 'not like', '%_L.PDF')
+            ->latest()
+            ->first();
 
         if ($pdfModel && Storage::disk('public')->exists($pdfModel->ruta_archivo)) {
             // PDF existe en BD y en disco: reutilizar sin generar nada nuevo
@@ -168,7 +171,7 @@ class AnalisisPdfService
     /**
      * Prepara los datos para la vista del PDF
      */
-    private function prepararDatos(Analisis $analisis, PlantillaFormulario $plantilla, ?string $qrUrl = null): array
+    private function prepararDatos(Analisis $analisis, PlantillaFormulario $plantilla, ?string $qrUrl = null, string $formato = 'completo'): array
     {
         // Indexar resultados por indice para acceso directo
         $resultadosPorIndice = $analisis->resultados->keyBy('indice');
@@ -212,23 +215,29 @@ class AnalisisPdfService
             ];
         }
 
+        $esLimpio = $formato === 'limpio';
+
         // ===== FONDO DE HOJA (fondo-pdf.png) =====
-        $fondoPdfPath = public_path('images/fondo-pdf.png');
         $fondoHojaBase64 = null;
-        if (file_exists($fondoPdfPath)) {
-            $fondoHojaBase64 = 'data:image/png;base64,'.base64_encode(file_get_contents($fondoPdfPath));
-        } else {
-            $fondoHojaPath = public_path('images/FONDO-HOJA.png');
-            if (file_exists($fondoHojaPath)) {
-                $fondoHojaBase64 = 'data:image/png;base64,'.base64_encode(file_get_contents($fondoHojaPath));
+        if (! $esLimpio) {
+            $fondoPdfPath = public_path('images/fondo-pdf.png');
+            if (file_exists($fondoPdfPath)) {
+                $fondoHojaBase64 = 'data:image/png;base64,'.base64_encode(file_get_contents($fondoPdfPath));
+            } else {
+                $fondoHojaPath = public_path('images/FONDO-HOJA.png');
+                if (file_exists($fondoHojaPath)) {
+                    $fondoHojaBase64 = 'data:image/png;base64,'.base64_encode(file_get_contents($fondoHojaPath));
+                }
             }
         }
 
         // ===== LOGO =====
-        $logoPath = public_path('images/LOGO.png');
         $logoBase64 = null;
-        if (file_exists($logoPath)) {
-            $logoBase64 = 'data:image/png;base64,'.base64_encode(file_get_contents($logoPath));
+        if (! $esLimpio) {
+            $logoPath = public_path('images/LOGO.png');
+            if (file_exists($logoPath)) {
+                $logoBase64 = 'data:image/png;base64,'.base64_encode(file_get_contents($logoPath));
+            }
         }
 
         // ===== FIRMA =====
@@ -241,7 +250,7 @@ class AnalisisPdfService
         // ===== CÓDIGO DE BARRAS (picqer) =====
         $codigoMuestra = $analisis->muestra->codigo_muestra ?? '';
         $barcodeBase64 = null;
-        if ($codigoMuestra) {
+        if (! $esLimpio && $codigoMuestra) {
             try {
                 $generator = new BarcodeGeneratorPNG;
                 $barcodeData = $generator->getBarcode($codigoMuestra, $generator::TYPE_CODE_128, 2, 50);
@@ -253,7 +262,7 @@ class AnalisisPdfService
 
         // ===== CÓDIGO QR (chillerlan) =====
         $qrBase64 = null;
-        if ($qrUrl) {
+        if (! $esLimpio && $qrUrl) {
             try {
                 $options = new QROptions([
                     'outputInterface' => \chillerlan\QRCode\Output\QRGdImagePNG::class,
@@ -278,6 +287,7 @@ class AnalisisPdfService
             'barcodeBase64' => $barcodeBase64,
             'codigoMuestra' => $codigoMuestra,
             'qrBase64' => $qrBase64,
+            'formato' => $formato,
             'fechaGeneracion' => now()->format('d/m/Y H:i'),
         ];
     }
@@ -285,13 +295,13 @@ class AnalisisPdfService
     /**
      * Genera nombre de archivo único para el PDF
      */
-    private function generarNombreArchivo(Analisis $analisis): string
+    public function generarNombreArchivo(Analisis $analisis, string $sufijo = ''): string
     {
         $paciente = preg_replace('/[^A-Za-z0-9]/', '_', $analisis->muestra->paciente_nombre ?? 'SinNombre');
         $tipoAnalisis = preg_replace('/[^A-Za-z0-9]/', '_', $analisis->tipoAnalisis->nombre ?? 'Analisis');
         $fecha = now()->format('Ymd_His');
 
-        return strtoupper("{$paciente}_{$tipoAnalisis}_{$fecha}.pdf");
+        return strtoupper("{$paciente}_{$tipoAnalisis}_{$fecha}{$sufijo}.pdf");
     }
 
     /**

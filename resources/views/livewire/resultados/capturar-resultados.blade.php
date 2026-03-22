@@ -224,6 +224,20 @@
                                 class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950">
                                 Descargar PDF
                             </flux:button>
+                            <flux:button 
+                                @click="descargarPDF('ver', 'limpio')"
+                                variant="outline" 
+                                icon="eye"
+                                class="border-amber-500 text-amber-600 hover:bg-amber-50 dark:border-amber-400 dark:text-amber-400 dark:hover:bg-amber-950">
+                                Ver PDF Limpio
+                            </flux:button>
+                            <flux:button 
+                                @click="descargarPDF('descargar', 'limpio')"
+                                variant="outline" 
+                                icon="arrow-down-tray"
+                                class="border-amber-500 text-amber-600 hover:bg-amber-50 dark:border-amber-400 dark:text-amber-400 dark:hover:bg-amber-950">
+                                Descargar PDF Limpio
+                            </flux:button>
                             @endcan
                         @else
                             {{-- Botón Actualizar Datos para guardar cambios --}}
@@ -338,7 +352,7 @@
 <script>
     function gestorDescargaPDF() {
         return {
-            async descargarPDF(modo = 'ver') {
+            async descargarPDF(modo = 'ver', formato = 'completo') {
                 try {
                     this.graficas = [];
                     
@@ -378,14 +392,18 @@
                         }
                     }
                     
-                    // Abrir PDF según el modo
-                    if (modo === 'ver') {
-                        const url = `{{ route('analisis.ver-pdf', $analisis->id) }}`;
-                        window.open(url, '_blank');
+                    // Abrir PDF según el modo y formato
+                    let url;
+                    if (formato === 'limpio') {
+                        url = modo === 'ver'
+                            ? `{{ route('analisis.ver-pdf-limpio', $analisis->id) }}`
+                            : `{{ route('analisis.pdf-limpio', $analisis->id) }}`;
                     } else {
-                        const url = `{{ route('analisis.pdf', $analisis->id) }}`;
-                        window.open(url, '_blank');
+                        url = modo === 'ver'
+                            ? `{{ route('analisis.ver-pdf', $analisis->id) }}`
+                            : `{{ route('analisis.pdf', $analisis->id) }}`;
                     }
+                    window.open(url, '_blank');
                     
                 } catch (e) {
                     console.error('Error general:', e);
