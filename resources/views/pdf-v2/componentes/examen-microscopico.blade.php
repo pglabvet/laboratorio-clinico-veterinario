@@ -58,17 +58,14 @@
                             $min = is_numeric($filaTemplate['rango_min'] ?? '') ? floatval($filaTemplate['rango_min']) : null;
                             $max = is_numeric($filaTemplate['rango_max'] ?? '') ? floatval($filaTemplate['rango_max']) : null;
                             if ($min !== null || $max !== null) {
-                                $amplitud = ($min !== null && $max !== null) ? $max - $min : 0;
-                                $umbral = $amplitud * config('labvet.umbral_resultado');
                                 if ($min !== null && $res < $min) {
-                                    $clasificacion = ($amplitud > 0 && $res >= $min - $umbral) ? 'alerta' : 'critico';
+                                    $clasificacion = 'bajo';
                                 } elseif ($max !== null && $res > $max) {
-                                    $clasificacion = ($amplitud > 0 && $res <= $max + $umbral) ? 'alerta' : 'critico';
+                                    $clasificacion = 'alto';
                                 }
                             }
                         } elseif (is_numeric($filaTemplate['rango_valor'] ?? '')) {
                             $val = floatval($filaTemplate['rango_valor']);
-                            $umbral = abs($val) * config('labvet.umbral_resultado');
                             $fuera = match($rtipo) {
                                 'menor' => $res >= $val,
                                 'menor-igual' => $res > $val,
@@ -77,19 +74,18 @@
                                 default => false,
                             };
                             if ($fuera) {
-                                $dist = match($rtipo) {
-                                    'menor', 'menor-igual' => $res - $val,
-                                    'mayor', 'mayor-igual' => $val - $res,
-                                    default => 0,
+                                $clasificacion = match($rtipo) {
+                                    'menor', 'menor-igual' => 'alto',
+                                    'mayor', 'mayor-igual' => 'bajo',
+                                    default => 'normal',
                                 };
-                                $clasificacion = $dist <= $umbral ? 'alerta' : 'critico';
                             }
                         }
                     }
 
                     $claseColor = match($clasificacion) {
-                        'alerta' => 'resultado-alerta',
-                        'critico' => 'resultado-critico',
+                        'bajo' => 'resultado-alerta',
+                        'alto' => 'resultado-critico',
                         default => 'resultado-normal',
                     };
                 }

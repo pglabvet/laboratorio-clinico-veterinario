@@ -51,7 +51,6 @@
     x-data="{
         filas: @js($filas),
         columnas: @js($columnas),
-        umbralPorcentaje: {{ config('labvet.umbral_resultado') }},
         datosExistentes: @js($componentesData[$index]['data'] ?? []),
         datos: @js(collect($filas)->mapWithKeys(fn($analisis, $rowIndex) => [$rowIndex => [
             'nombre' => is_array($analisis) ? ($analisis['nombre'] ?? '') : $analisis,
@@ -104,9 +103,9 @@
                 const rangos = fila.rangos || [];
                 if (rangos.length === 0) return 'normal';
                 for (const r of rangos) {
-                    if (this.valorEnRango(res, r)) return r.es_normal ? 'normal' : 'alerta';
+                    if (this.valorEnRango(res, r)) return r.es_normal ? 'normal' : 'alto';
                 }
-                return 'critico';
+                return 'alto';
             }
             return this.clasificarConRango(res, tipo, fila.rango_min, fila.rango_max, fila.rango_valor);
         },
@@ -128,25 +127,22 @@
             if (tipo === 'min-max') {
                 const min = parseFloat(rangoMin); const max = parseFloat(rangoMax);
                 if (isNaN(min) && isNaN(max)) return 'normal';
-                const amplitud = (!isNaN(min) && !isNaN(max)) ? max - min : 0;
-                const umbral = amplitud * this.umbralPorcentaje;
-                if (!isNaN(min) && res < min) return (amplitud > 0 && res >= min - umbral) ? 'alerta' : 'critico';
-                if (!isNaN(max) && res > max) return (amplitud > 0 && res <= max + umbral) ? 'alerta' : 'critico';
+                if (!isNaN(min) && res < min) return 'bajo';
+                if (!isNaN(max) && res > max) return 'alto';
                 return 'normal';
             }
             const val = parseFloat(rangoValor);
             if (isNaN(val)) return 'normal';
-            const umbral = Math.abs(val) * this.umbralPorcentaje;
-            if (tipo === 'menor' && res >= val) return res <= val + umbral ? 'alerta' : 'critico';
-            if (tipo === 'menor-igual' && res > val) return res <= val + umbral ? 'alerta' : 'critico';
-            if (tipo === 'mayor' && res <= val) return res >= val - umbral ? 'alerta' : 'critico';
-            if (tipo === 'mayor-igual' && res < val) return res >= val - umbral ? 'alerta' : 'critico';
+            if (tipo === 'menor' && res >= val) return 'alto';
+            if (tipo === 'menor-igual' && res > val) return 'alto';
+            if (tipo === 'mayor' && res <= val) return 'bajo';
+            if (tipo === 'mayor-igual' && res < val) return 'bajo';
             return 'normal';
         },
         claseResultado(rowIndex) {
             const c = this.clasificarResultado(rowIndex);
-            if (c === 'alerta') return 'text-blue-600 dark:text-blue-400 font-bold';
-            if (c === 'critico') return 'text-red-600 dark:text-red-400 font-bold';
+            if (c === 'bajo') return 'text-blue-600 dark:text-blue-400 font-bold';
+            if (c === 'alto') return 'text-red-600 dark:text-red-400 font-bold';
             return 'text-gray-900 dark:text-zinc-100';
         }
     }"

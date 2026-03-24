@@ -43,7 +43,6 @@
     x-data="{
         datosExistentes: @js($componentesData[$index]['data'] ?? []),
         filas: @js($datosIniciales),
-        umbralPorcentaje: {{ config('labvet.umbral_resultado') }},
         init() {
             // Convertir a array si es objeto
             let existentes = this.datosExistentes;
@@ -82,25 +81,22 @@
                 const min = parseFloat(fila.rango_min);
                 const max = parseFloat(fila.rango_max);
                 if (isNaN(min) && isNaN(max)) return 'normal';
-                const amplitud = (!isNaN(min) && !isNaN(max)) ? max - min : 0;
-                const umbral = amplitud * this.umbralPorcentaje;
-                if (!isNaN(min) && res < min) return (amplitud > 0 && res >= min - umbral) ? 'alerta' : 'critico';
-                if (!isNaN(max) && res > max) return (amplitud > 0 && res <= max + umbral) ? 'alerta' : 'critico';
+                if (!isNaN(min) && res < min) return 'bajo';
+                if (!isNaN(max) && res > max) return 'alto';
                 return 'normal';
             }
             const val = parseFloat(fila.rango_valor);
             if (isNaN(val)) return 'normal';
-            const umbral = Math.abs(val) * this.umbralPorcentaje;
-            if (tipo === 'menor' && res >= val) return res <= val + umbral ? 'alerta' : 'critico';
-            if (tipo === 'menor-igual' && res > val) return res <= val + umbral ? 'alerta' : 'critico';
-            if (tipo === 'mayor' && res <= val) return res >= val - umbral ? 'alerta' : 'critico';
-            if (tipo === 'mayor-igual' && res < val) return res >= val - umbral ? 'alerta' : 'critico';
+            if (tipo === 'menor' && res >= val) return 'alto';
+            if (tipo === 'menor-igual' && res > val) return 'alto';
+            if (tipo === 'mayor' && res <= val) return 'bajo';
+            if (tipo === 'mayor-igual' && res < val) return 'bajo';
             return 'normal';
         },
         claseResultado(fila) {
             const c = this.clasificarResultado(fila);
-            if (c === 'alerta') return 'text-blue-600 dark:text-blue-400 font-bold';
-            if (c === 'critico') return 'text-red-600 dark:text-red-400 font-bold';
+            if (c === 'bajo') return 'text-blue-600 dark:text-blue-400 font-bold';
+            if (c === 'alto') return 'text-red-600 dark:text-red-400 font-bold';
             return 'text-gray-900 dark:text-zinc-100';
         },
         sincronizarConLivewire() {

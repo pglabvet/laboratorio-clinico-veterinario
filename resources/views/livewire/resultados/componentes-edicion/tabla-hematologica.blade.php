@@ -229,19 +229,16 @@
                 const min = parseFloat(rangoMin);
                 const max = parseFloat(rangoMax);
                 if (isNaN(min) && isNaN(max)) return 'normal';
-                const amplitud = (!isNaN(min) && !isNaN(max)) ? max - min : 0;
-                const umbral = amplitud * this.umbralPorcentaje;
-                if (!isNaN(min) && res < min) return (amplitud > 0 && res >= min - umbral) ? 'alerta' : 'critico';
-                if (!isNaN(max) && res > max) return (amplitud > 0 && res <= max + umbral) ? 'alerta' : 'critico';
+                if (!isNaN(min) && res < min) return 'bajo';
+                if (!isNaN(max) && res > max) return 'alto';
                 return 'normal';
             }
             const val = parseFloat(rangoValor);
             if (isNaN(val)) return 'normal';
-            const umbral = Math.abs(val) * this.umbralPorcentaje;
-            if (tipo === 'menor' && res >= val) return res <= val + umbral ? 'alerta' : 'critico';
-            if (tipo === 'menor-igual' && res > val) return res <= val + umbral ? 'alerta' : 'critico';
-            if (tipo === 'mayor' && res <= val) return res >= val - umbral ? 'alerta' : 'critico';
-            if (tipo === 'mayor-igual' && res < val) return res >= val - umbral ? 'alerta' : 'critico';
+            if (tipo === 'menor' && res >= val) return 'alto';
+            if (tipo === 'menor-igual' && res > val) return 'alto';
+            if (tipo === 'mayor' && res <= val) return 'bajo';
+            if (tipo === 'mayor-igual' && res < val) return 'bajo';
             return 'normal';
         },
         claseParametro(idx) {
@@ -250,32 +247,32 @@
             // Limpiar separadores de miles (puntos) para parsear correctamente (ej: 4.900.000 → 4900000)
             const valorLimpio = parseFloat(String(p.resultado).replace(/\./g, '').replace(/,/g, '.')) || 0;
             const c = this.clasificarConRango(valorLimpio, p.rango_tipo, p.rango_min, p.rango_max, p.rango_valor);
-            if (c === 'alerta') return 'text-blue-600 dark:text-blue-400 font-bold';
-            if (c === 'critico') return 'text-red-600 dark:text-red-400 font-bold';
+            if (c === 'bajo') return 'text-blue-600 dark:text-blue-400 font-bold';
+            if (c === 'alto') return 'text-red-600 dark:text-red-400 font-bold';
             return 'text-gray-900 dark:text-zinc-100';
         },
         claseDiferencialRel(idx) {
             const d = this.diferenciales[idx];
             if (!d || !d.valor_rel) return 'text-gray-900 dark:text-zinc-100';
             const c = this.clasificarConRango(parseFloat(d.valor_rel), d.rango_rel_tipo, d.rango_rel_min, d.rango_rel_max, d.rango_rel_valor);
-            if (c === 'alerta') return 'text-blue-600 dark:text-blue-400 font-bold';
-            if (c === 'critico') return 'text-red-600 dark:text-red-400 font-bold';
+            if (c === 'bajo') return 'text-blue-600 dark:text-blue-400 font-bold';
+            if (c === 'alto') return 'text-red-600 dark:text-red-400 font-bold';
             return 'text-gray-900 dark:text-zinc-100';
         },
         claseDiferencialAbs(idx) {
             const d = this.diferenciales[idx];
             if (!d || !d.valor_abs) return 'text-gray-900 dark:text-zinc-100';
             const c = this.clasificarConRango(parseFloat(d.valor_abs), d.rango_abs_tipo, d.rango_abs_min, d.rango_abs_max, d.rango_abs_valor);
-            if (c === 'alerta') return 'text-blue-600 dark:text-blue-400 font-bold';
-            if (c === 'critico') return 'text-red-600 dark:text-red-400 font-bold';
+            if (c === 'bajo') return 'text-blue-600 dark:text-blue-400 font-bold';
+            if (c === 'alto') return 'text-red-600 dark:text-red-400 font-bold';
             return 'text-gray-900 dark:text-zinc-100';
         },
         claseIndice(idx) {
             const ind = this.indices[idx];
             if (!ind || !ind.resultado) return 'text-gray-900 dark:text-zinc-100';
             const c = this.clasificarConRango(parseFloat(ind.resultado), ind.rango_tipo, ind.rango_min, ind.rango_max, ind.rango_valor);
-            if (c === 'alerta') return 'text-blue-600 dark:text-blue-400 font-bold';
-            if (c === 'critico') return 'text-red-600 dark:text-red-400 font-bold';
+            if (c === 'bajo') return 'text-blue-600 dark:text-blue-400 font-bold';
+            if (c === 'alto') return 'text-red-600 dark:text-red-400 font-bold';
             return 'text-gray-900 dark:text-zinc-100';
         }
     }"
@@ -321,7 +318,7 @@
                                 <span x-text="parametros[{{ $i }}].resultado" :class="claseParametro({{ $i }})" class="block w-full px-1 py-0.5 text-xs text-center"></span>
                             </template>
                             <template x-if="!esParametroCalculado({{ $i }})">
-                                <input type="text" x-model="parametros[{{ $i }}].resultado" @change="onParametroChange()" @blur="onParametroChange()" :class="claseParametro({{ $i }})" placeholder="Ingresar" class="w-full px-1 py-0.5 text-xs border-0 focus:ring-1 focus:ring-blue-500 rounded bg-blue-50 dark:bg-blue-900/30 border-l-2 border-l-blue-400 dark:border-l-blue-500" />
+                                <input type="text" x-model="parametros[{{ $i }}].resultado" @change="onParametroChange()" @blur="onParametroChange()" :class="claseParametro({{ $i }})" placeholder="Ingresar" class="w-full px-1 py-0.5 text-xs text-center border-0 focus:ring-1 focus:ring-blue-500 rounded bg-blue-50 dark:bg-blue-900/30 border-l-2 border-l-blue-400 dark:border-l-blue-500" />
                             </template>
                         </td>
                         <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1 text-center text-xs text-gray-500 dark:text-zinc-400">
@@ -338,7 +335,7 @@
                             {{ $dif['nombre'] }}
                         </td>
                         <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1">
-                            <input type="text" x-model="diferenciales[{{ $i }}].valor_rel" @change="onValorRelChange()" @blur="onValorRelChange()" :class="claseDiferencialRel({{ $i }})" placeholder="Ingresar" class="w-full px-1 py-0.5 text-xs border-0 focus:ring-1 focus:ring-blue-500 rounded bg-blue-50 dark:bg-blue-900/30 border-l-2 border-l-blue-400 dark:border-l-blue-500" />
+                            <input type="text" x-model="diferenciales[{{ $i }}].valor_rel" @change="onValorRelChange()" @blur="onValorRelChange()" :class="claseDiferencialRel({{ $i }})" placeholder="Ingresar" class="w-full px-1 py-0.5 text-xs text-center border-0 focus:ring-1 focus:ring-blue-500 rounded bg-blue-50 dark:bg-blue-900/30 border-l-2 border-l-blue-400 dark:border-l-blue-500" />
                         </td>
                         <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1 text-center text-xs text-gray-500 dark:text-zinc-400">
                             {{ $generarTextoRango($dif, 'rel_') }} <span class="text-gray-900 dark:text-zinc-100">%</span>
