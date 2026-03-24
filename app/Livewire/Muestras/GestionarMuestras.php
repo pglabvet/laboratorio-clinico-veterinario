@@ -80,6 +80,8 @@ class GestionarMuestras extends Component
 
     public $telefonosWhatsappDisponibles = [];
 
+    public $formatoPdfEnvio = 'completo';
+
     public $buscar = '';
 
     public $modoEdicion = false;
@@ -234,6 +236,7 @@ class GestionarMuestras extends Component
         $this->muestraAnalisis = null;
         $this->telefonoWhatsappSeleccionado = '';
         $this->telefonosWhatsappDisponibles = [];
+        $this->formatoPdfEnvio = 'completo';
     }
 
     /**
@@ -243,7 +246,7 @@ class GestionarMuestras extends Component
     {
         try {
             $service = app(EnvioResultadosService::class);
-            $resultado = $service->prepararWhatsApp($analisisId, $this->telefonoWhatsappSeleccionado ?: null);
+            $resultado = $service->prepararWhatsApp($analisisId, $this->telefonoWhatsappSeleccionado ?: null, $this->formatoPdfEnvio);
 
             $this->dispatch('abrir-whatsapp', url: $resultado['url']);
 
@@ -274,7 +277,7 @@ class GestionarMuestras extends Component
 
         try {
             $service = app(EnvioResultadosService::class);
-            $resultado = $service->prepararWhatsAppMasivo($this->muestraAnalisis, $this->telefonoWhatsappSeleccionado ?: null);
+            $resultado = $service->prepararWhatsAppMasivo($this->muestraAnalisis, $this->telefonoWhatsappSeleccionado ?: null, $this->formatoPdfEnvio);
 
             $this->muestraAnalisis->load('analisis.tipoAnalisis', 'veterinaria.telefonos');
             $this->cargarTelefonosWhatsappDisponibles();
@@ -293,7 +296,7 @@ class GestionarMuestras extends Component
     {
         try {
             $service = app(EnvioResultadosService::class);
-            $mensaje = $service->enviarEmail($analisisId);
+            $mensaje = $service->enviarEmail($analisisId, $this->formatoPdfEnvio);
 
             if ($this->muestraAnalisis) {
                 $this->muestraAnalisis->load('analisis.tipoAnalisis');
@@ -321,7 +324,7 @@ class GestionarMuestras extends Component
 
         try {
             $service = app(EnvioResultadosService::class);
-            $mensaje = $service->enviarEmailMasivo($this->muestraAnalisis);
+            $mensaje = $service->enviarEmailMasivo($this->muestraAnalisis, $this->formatoPdfEnvio);
 
             $this->muestraAnalisis->load('analisis.tipoAnalisis');
 

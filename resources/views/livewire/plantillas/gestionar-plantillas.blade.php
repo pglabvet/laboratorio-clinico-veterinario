@@ -77,9 +77,18 @@
                     @endforeach
                 </flux:select>
 
-                {{-- Sección de Insumos Requeridos --}}
+                {{-- Sección de Insumos Requeridos (Toma de Muestra) --}}
                 <div class="border-t border-zinc-200 dark:border-zinc-700 pt-4 mt-4">
-                    <flux:heading size="sm" class="mb-3">Insumos Requeridos</flux:heading>
+                    <div class="mb-4">
+                        <flux:heading size="sm" class="mb-1 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                            Materiales de Toma / Recolección
+                        </flux:heading>
+                        <div class="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md text-sm text-amber-800 dark:text-amber-300">
+                            <strong>⚠️ Importante:</strong> Agrega aquí <b>solo</b> los materiales físicos consumidos al recibir al paciente (jeringas, tubos, algodón, agujas). Estos se descontarán del Kardex automáticamente al <b>registrar la muestra</b>. <br>
+                            <em>Los reactivos químicos de procesamiento no van aquí; deben configurarse dentro del Constructor Visual.</em>
+                        </div>
+                    </div>
 
                     @error('insumos')
                         <div class="mb-3 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-400">
@@ -89,7 +98,7 @@
 
                     {{-- Formulario para agregar nuevo insumo --}}
                     <div class="mb-4 rounded-lg border border-zinc-300 bg-zinc-50 p-4 dark:border-zinc-600 dark:bg-zinc-800">
-                        <p class="mb-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">Agregar Insumo</p>
+                        <p class="mb-3 text-sm font-medium text-zinc-700 dark:text-zinc-300">Agregar Material</p>
                         <div class="flex flex-col gap-3 sm:flex-row sm:items-start">
                             {{-- Categoría --}}
                             <div class="sm:flex-[0.8] min-w-0">
@@ -178,7 +187,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                             </svg>
                             <p class="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-                                No se han agregado insumos
+                                No se han agregado materiales de toma
                             </p>
                             <p class="text-xs text-zinc-500 dark:text-zinc-500">
                                 Esta plantilla no consumirá inventario
@@ -186,7 +195,7 @@
                         </div>
                     @else
                         <div>
-                            <p class="mb-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">Insumos agregados ({{ count($insumos) }})</p>
+                            <p class="mb-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">Materiales agregados ({{ count($insumos) }})</p>
                             <div class="space-y-2">
                                 @foreach($insumos as $index => $insumo)
                                     @php
@@ -352,7 +361,7 @@
             <div class="flex items-center gap-3 text-sm text-zinc-500 dark:text-zinc-400">
                 <span>{{ count($componentes) }} componente(s)</span>
                 <span>·</span>
-                <span>{{ count($insumos) }} insumo(s)</span>
+                <span>{{ count($insumos) }} material(es)</span>
             </div>
             <flux:button 
                 wire:click="guardarFormulario"

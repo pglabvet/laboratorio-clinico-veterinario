@@ -50,16 +50,13 @@
             $minF = ($min !== null && $min !== '') ? floatval(str_replace(',', '', $min)) : null;
             $maxF = ($max !== null && $max !== '') ? floatval(str_replace(',', '', $max)) : null;
             if ($minF === null && $maxF === null) return 'normal';
-            $amplitud = ($minF !== null && $maxF !== null) ? $maxF - $minF : 0;
-            $umbral = $amplitud * config('labvet.umbral_resultado');
-            if ($minF !== null && $resultadoNum < $minF) return ($amplitud > 0 && $resultadoNum >= $minF - $umbral) ? 'alerta' : 'critico';
-            if ($maxF !== null && $resultadoNum > $maxF) return ($amplitud > 0 && $resultadoNum <= $maxF + $umbral) ? 'alerta' : 'critico';
+            if ($minF !== null && $resultadoNum < $minF) return 'bajo';
+            if ($maxF !== null && $resultadoNum > $maxF) return 'alto';
             return 'normal';
         }
 
         if ($valor === null || $valor === '') return 'normal';
         $valorF = floatval(str_replace(',', '', $valor));
-        $umbral = abs($valorF) * config('labvet.umbral_resultado');
         $fuera = match($tipo) {
             'menor' => $resultadoNum >= $valorF,
             'menor-igual' => $resultadoNum > $valorF,
@@ -68,18 +65,17 @@
             default => false,
         };
         if (!$fuera) return 'normal';
-        $dist = match($tipo) {
-            'menor', 'menor-igual' => $resultadoNum - $valorF,
-            'mayor', 'mayor-igual' => $valorF - $resultadoNum,
-            default => 0,
+        return match($tipo) {
+            'menor', 'menor-igual' => 'alto',
+            'mayor', 'mayor-igual' => 'bajo',
+            default => 'normal',
         };
-        return $dist <= $umbral ? 'alerta' : 'critico';
     };
 
     $claseClasificacion = function ($clasificacion) {
         return match($clasificacion) {
-            'alerta' => 'resultado-alerta',
-            'critico' => 'resultado-critico',
+            'bajo' => 'resultado-alerta',
+            'alto' => 'resultado-critico',
             default => 'resultado-normal',
         };
     };

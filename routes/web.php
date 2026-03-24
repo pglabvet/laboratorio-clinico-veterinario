@@ -157,9 +157,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/analisis/{analisisId}/pdf', [PdfController::class, 'descargar'])
         ->name('analisis.pdf');
 
+    // Ver PDF limpio en el navegador (sin branding)
+    Route::get('/analisis/{analisisId}/ver-pdf-limpio', [PdfController::class, 'verLimpio'])
+        ->name('analisis.ver-pdf-limpio');
+
+    // Descargar PDF limpio (sin branding)
+    Route::get('/analisis/{analisisId}/pdf-limpio', [PdfController::class, 'descargarLimpio'])
+        ->name('analisis.pdf-limpio');
+
     // Guardar gráfica de análisis
     Route::post('/analisis/{analisisId}/guardar-grafica', [PdfController::class, 'guardarGrafica'])
         ->name('analisis.guardar-grafica');
+
+    // Muestras Rechazadas
+    Route::get('/muestras-rechazadas', \App\Livewire\MuestrasRechazadas\ListarMuestrasRechazadas::class)
+        ->name('muestras-rechazadas.index');
+
+    Route::get('/muestras-rechazadas/crear', \App\Livewire\MuestrasRechazadas\RegistrarMuestraRechazada::class)
+        ->name('muestras-rechazadas.crear');
 
     // Auditorías del sistema
     Route::get('/auditorias', \App\Livewire\Auditorias\ListarAuditorias::class)

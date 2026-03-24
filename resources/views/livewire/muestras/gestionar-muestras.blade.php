@@ -750,6 +750,52 @@
                     @endif
                 </div>
 
+                {{-- Selector de formato PDF --}}
+                <div class="rounded-lg border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-700 dark:bg-neutral-900">
+                    <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-1">Formato del PDF</p>
+                    <p class="text-xs text-neutral-500 dark:text-neutral-400 mb-3">
+                        Selecciona el formato del PDF que se enviará.
+                    </p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button 
+                            type="button"
+                            wire:click="$set('formatoPdfEnvio', 'completo')"
+                            class="relative flex items-center gap-3 rounded-lg border-2 p-3 text-left transition-all
+                                {{ $formatoPdfEnvio === 'completo' 
+                                    ? 'border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/20' 
+                                    : 'border-neutral-200 bg-white hover:border-neutral-300 dark:border-neutral-600 dark:bg-neutral-800 dark:hover:border-neutral-500' }}"
+                        >
+                            <div class="flex size-8 shrink-0 items-center justify-center rounded-full {{ $formatoPdfEnvio === 'completo' ? 'bg-blue-500 text-white' : 'bg-neutral-200 dark:bg-neutral-700' }}">
+                                @if($formatoPdfEnvio === 'completo')
+                                    <svg class="size-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                @endif
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold {{ $formatoPdfEnvio === 'completo' ? 'text-blue-700 dark:text-blue-300' : 'text-neutral-700 dark:text-neutral-300' }}">PDF Completo</p>
+                                <p class="text-xs {{ $formatoPdfEnvio === 'completo' ? 'text-blue-600/70 dark:text-blue-400/70' : 'text-neutral-500 dark:text-neutral-400' }}">Con logo, código de barras, QR y fondo</p>
+                            </div>
+                        </button>
+                        <button 
+                            type="button"
+                            wire:click="$set('formatoPdfEnvio', 'limpio')"
+                            class="relative flex items-center gap-3 rounded-lg border-2 p-3 text-left transition-all
+                                {{ $formatoPdfEnvio === 'limpio' 
+                                    ? 'border-amber-500 bg-amber-50 dark:border-amber-400 dark:bg-amber-900/20' 
+                                    : 'border-neutral-200 bg-white hover:border-neutral-300 dark:border-neutral-600 dark:bg-neutral-800 dark:hover:border-neutral-500' }}"
+                        >
+                            <div class="flex size-8 shrink-0 items-center justify-center rounded-full {{ $formatoPdfEnvio === 'limpio' ? 'bg-amber-500 text-white' : 'bg-neutral-200 dark:bg-neutral-700' }}">
+                                @if($formatoPdfEnvio === 'limpio')
+                                    <svg class="size-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                                @endif
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold {{ $formatoPdfEnvio === 'limpio' ? 'text-amber-700 dark:text-amber-300' : 'text-neutral-700 dark:text-neutral-300' }}">PDF Limpio</p>
+                                <p class="text-xs {{ $formatoPdfEnvio === 'limpio' ? 'text-amber-600/70 dark:text-amber-400/70' : 'text-neutral-500 dark:text-neutral-400' }}">Sin logo, sin código de barras, sin QR, sin fondo</p>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
                 {{-- Tabla de análisis --}}
                 <div class="overflow-hidden rounded-lg border border-neutral-200 dark:border-neutral-700">
                     <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">

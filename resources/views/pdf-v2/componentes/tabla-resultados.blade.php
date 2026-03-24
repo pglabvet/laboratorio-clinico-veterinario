@@ -50,42 +50,36 @@
                                 if (preg_match('/(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)/', $rangoRef, $matches)) {
                                     $min = floatval($matches[1]);
                                     $max = floatval($matches[2]);
-                                    $amplitud = $max - $min;
-                                    $umbral = $amplitud * config('labvet.umbral_resultado');
                                     if ($resultadoNum < $min) {
-                                        $clasificacion = ($amplitud > 0 && $resultadoNum >= $min - $umbral) ? 'alerta' : 'critico';
+                                        $clasificacion = 'bajo';
                                     } elseif ($resultadoNum > $max) {
-                                        $clasificacion = ($amplitud > 0 && $resultadoNum <= $max + $umbral) ? 'alerta' : 'critico';
+                                        $clasificacion = 'alto';
                                     }
                                 } elseif (preg_match('/^[<≤]\s*=\s*(\d+(?:\.\d+)?)/', $rangoRef, $matches)) {
                                     $val = floatval($matches[1]);
-                                    $umbral = abs($val) * config('labvet.umbral_resultado');
                                     if ($resultadoNum > $val) {
-                                        $clasificacion = ($resultadoNum <= $val + $umbral) ? 'alerta' : 'critico';
+                                        $clasificacion = 'alto';
                                     }
                                 } elseif (preg_match('/^[<]\s*(\d+(?:\.\d+)?)/', $rangoRef, $matches)) {
                                     $val = floatval($matches[1]);
-                                    $umbral = abs($val) * config('labvet.umbral_resultado');
                                     if ($resultadoNum >= $val) {
-                                        $clasificacion = ($resultadoNum <= $val + $umbral) ? 'alerta' : 'critico';
+                                        $clasificacion = 'alto';
                                     }
                                 } elseif (preg_match('/^[>≥]\s*=\s*(\d+(?:\.\d+)?)/', $rangoRef, $matches)) {
                                     $val = floatval($matches[1]);
-                                    $umbral = abs($val) * config('labvet.umbral_resultado');
                                     if ($resultadoNum < $val) {
-                                        $clasificacion = ($resultadoNum >= $val - $umbral) ? 'alerta' : 'critico';
+                                        $clasificacion = 'bajo';
                                     }
                                 } elseif (preg_match('/^[>]\s*(\d+(?:\.\d+)?)/', $rangoRef, $matches)) {
                                     $val = floatval($matches[1]);
-                                    $umbral = abs($val) * config('labvet.umbral_resultado');
                                     if ($resultadoNum <= $val) {
-                                        $clasificacion = ($resultadoNum >= $val - $umbral) ? 'alerta' : 'critico';
+                                        $clasificacion = 'bajo';
                                     }
                                 }
 
                                 $claseColor = match($clasificacion) {
-                                    'alerta' => 'resultado-alerta',
-                                    'critico' => 'resultado-critico',
+                                    'bajo' => 'resultado-alerta',
+                                    'alto' => 'resultado-critico',
                                     default => 'resultado-normal',
                                 };
                             } elseif ($esMultiRango && $valor !== '') {
@@ -121,7 +115,7 @@
                                     }
                                     if ($rangoEncontrado) {
                                         if (!($rangoEncontrado['es_normal'] ?? false)) {
-                                            $claseColor = 'resultado-alerta';
+                                            $claseColor = 'resultado-critico';
                                         }
                                     } else {
                                         $claseColor = 'resultado-critico';

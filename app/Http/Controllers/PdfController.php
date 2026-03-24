@@ -75,6 +75,64 @@ class PdfController extends Controller
     }
 
     /**
+     * Genera y descarga el PDF en formato limpio (sin branding)
+     */
+    public function descargarLimpio(int $analisisId)
+    {
+        $analisis = Analisis::findOrFail($analisisId);
+
+        $estadosValidos = [Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO];
+        if (! in_array($analisis->estado, $estadosValidos)) {
+            abort(403, 'Solo se pueden generar PDFs de análisis aprobados o enviados.');
+        }
+
+        try {
+            $nombreArchivo = $this->pdfService->generarNombreArchivo($analisis, '_L');
+            $rutaRelativa = 'pdfs/'.date('Y/m').'/'.$nombreArchivo;
+
+            $pdf = $this->pdfService->renderizarPdf($analisis, $rutaRelativa, null, 'limpio');
+
+            $fullPath = \Illuminate\Support\Facades\Storage::disk('public')->path($rutaRelativa);
+
+            return response()->file($fullPath, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="'.$nombreArchivo.'"',
+            ]);
+        } catch (\Exception $e) {
+            abort(500, 'Error al generar el PDF: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Ver el PDF en formato limpio (sin branding) en el navegador
+     */
+    public function verLimpio(int $analisisId)
+    {
+        $analisis = Analisis::findOrFail($analisisId);
+
+        $estadosValidos = [Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO];
+        if (! in_array($analisis->estado, $estadosValidos)) {
+            return back()->with('error', 'Solo se pueden ver PDFs de análisis aprobados o enviados.');
+        }
+
+        try {
+            $nombreArchivo = $this->pdfService->generarNombreArchivo($analisis, '_L');
+            $rutaRelativa = 'pdfs/'.date('Y/m').'/'.$nombreArchivo;
+
+            $pdf = $this->pdfService->renderizarPdf($analisis, $rutaRelativa, null, 'limpio');
+
+            $fullPath = \Illuminate\Support\Facades\Storage::disk('public')->path($rutaRelativa);
+
+            return response()->file($fullPath, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="'.$nombreArchivo.'"',
+            ]);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error al generar el PDF: '.$e->getMessage());
+        }
+    }
+
+    /**
      * Guarda la imagen de la gráfica para un análisis
      */
     public function guardarGrafica(Request $request, int $analisisId)

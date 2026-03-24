@@ -405,7 +405,8 @@
     </div>
   @endif
 
-  {{-- === BARRA AZUL INFERIOR (todas las páginas) === --}}
+  {{-- === BARRA AZUL INFERIOR (todas las páginas, solo formato completo) === --}}
+  @if(($formato ?? 'completo') !== 'limpio')
   <div class="footer-bar"></div>
   <div class="footer-bar-content">
     <table>
@@ -427,6 +428,7 @@
       </tr>
     </table>
   </div>
+  @endif
 
   {{-- === CONTENIDO PRINCIPAL === --}}
   <div class="container">

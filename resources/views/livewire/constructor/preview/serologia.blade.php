@@ -25,10 +25,13 @@
         </thead>
         @endif
         @foreach($props['campos'] ?? [] as $campo)
-            @if($campo)
+            @php
+                $campoNombre = is_string($campo) ? $campo : ($campo['nombre'] ?? '');
+            @endphp
+            @if($campoNombre)
             <tr>
                 <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 font-semibold bg-gray-50 dark:bg-zinc-900 w-2/3 text-gray-900 dark:text-zinc-100">
-                    {{ $campo }}
+                    {{ $campoNombre }}
                 </td>
                 <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-center text-gray-400 dark:text-zinc-500 italic">
                     Negativo (-) / Positivo (+)
