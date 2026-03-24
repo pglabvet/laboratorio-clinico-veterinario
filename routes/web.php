@@ -173,9 +173,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Muestras Rechazadas
     Route::get('/muestras-rechazadas', \App\Livewire\MuestrasRechazadas\ListarMuestrasRechazadas::class)
+        ->middleware('can:ver-muestras-rechazadas')
         ->name('muestras-rechazadas.index');
 
     Route::get('/muestras-rechazadas/crear', \App\Livewire\MuestrasRechazadas\RegistrarMuestraRechazada::class)
+        ->middleware('can:crear-muestras-rechazadas')
         ->name('muestras-rechazadas.crear');
 
     // Auditorías del sistema
