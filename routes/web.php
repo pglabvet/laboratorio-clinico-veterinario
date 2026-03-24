@@ -129,10 +129,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Capturar resultados de análisis (Bioquímico)
     Route::get('/analisis/{analisisId}/resultados', \App\Livewire\Resultados\CapturarResultados::class)
+        ->middleware('can:ingresar-resultados')
         ->name('analisis.capturar-resultados');
 
     // Editar resultados de análisis (Admin/Bioquímico)
     Route::get('/analisis/{analisisId}/editar', \App\Livewire\Resultados\CapturarResultados::class)
+        ->middleware('can:ingresar-resultados')
         ->name('analisis.editar');
 
     //  PREVIEW: Vista de captura de resultados (frontend temporal)

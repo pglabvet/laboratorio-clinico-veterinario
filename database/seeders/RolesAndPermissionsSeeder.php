@@ -153,6 +153,10 @@ class RolesAndPermissionsSeeder extends Seeder
             // Auditorías
             'ver-auditorias',
 
+            // Muestras Rechazadas
+            'ver-muestras-rechazadas',
+            'crear-muestras-rechazadas',
+
             // Ayuda / Guía del Sistema
             'ver-ayuda',
 
