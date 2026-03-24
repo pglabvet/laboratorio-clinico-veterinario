@@ -36,6 +36,15 @@
         </flux:sidebar.group>
         @endcanany
 
+        {{-- Muestras Rechazadas --}}
+        @can('ver-muestras-rechazadas')
+        <flux:sidebar.group :heading="__('Muestras Rechazadas')" class="grid">
+            <flux:sidebar.item icon="x-circle" :href="route('muestras-rechazadas.index')" :current="request()->routeIs('muestras-rechazadas.*')" wire:navigate>
+                {{ __('Muestras Rechazadas') }}
+            </flux:sidebar.item>
+        </flux:sidebar.group>
+        @endcan
+
         {{-- Configuración: se configura una vez --}}
         @canany(['ver-sucursales', 'ver-especies', 'ver-veterinarias', 'ver-tipos-analisis', 'ver-plantillas'])
         <flux:sidebar.group :heading="__('Catálogos')" class="grid">

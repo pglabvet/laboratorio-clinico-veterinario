@@ -26,8 +26,6 @@ class GestionarPlantillas extends Component
     // Insumos requeridos
     public $insumos = []; // Array de insumos agregados
 
-    public $categoriaInsumoFiltro = [];
-
     // Campos temporales para agregar nuevo insumo
     public $nuevaCategoria = '';
 
@@ -221,6 +219,7 @@ class GestionarPlantillas extends Component
                     ['nombre' => 'HbCM', 'unidad' => 'pg', 'rango_tipo' => 'min-max', 'rango_min' => '17', 'rango_max' => '23', 'rango_valor' => ''],
                     ['nombre' => 'CCMHb', 'unidad' => 'g/dl', 'rango_tipo' => 'min-max', 'rango_min' => '32', 'rango_max' => '36', 'rango_valor' => ''],
                 ],
+                'reactivos' => [],
             ],
             'tabla-dos-columnas' => [
                 'titulo' => 'EXAMEN MACROSCOPICO',
@@ -250,25 +249,25 @@ class GestionarPlantillas extends Component
                     ['nombre' => 'RESULTADO'],
                 ],
                 'campos' => [
-                    'Dirofilaria Immitis',
-                    'Erlichia Canis',
-                    'Leishmania infantum',
-                    'Anaplacia Phagocytophilum/Anaplacia Platys',
+                    ['nombre' => 'Dirofilaria Immitis', 'reactivos' => []],
+                    ['nombre' => 'Erlichia Canis', 'reactivos' => []],
+                    ['nombre' => 'Leishmania infantum', 'reactivos' => []],
+                    ['nombre' => 'Anaplacia Phagocytophilum/Anaplacia Platys', 'reactivos' => []],
                 ],
             ],
             'campos-etiquetados' => [
-                'titulo' => 'CULTIVO',
+                'titulos' => ['CULTIVO'],
                 'columnas' => [
                     ['nombre' => 'CAMPO'],
                     ['nombre' => 'RESULTADO'],
                 ],
                 'campos' => [
-                    'MUESTRA',
-                    'COLOR',
-                    'TINCION GRAM',
-                    'RECUENTO DE COLONIAS',
-                    'CRECIMIENTO MICOTICO',
-                    'DIAGNOSTICO MICROBIOLOGICO',
+                    ['nombre' => 'MUESTRA', 'tipo_input' => 'texto', 'opciones' => '', 'unidad' => ''],
+                    ['nombre' => 'COLOR', 'tipo_input' => 'texto', 'opciones' => '', 'unidad' => ''],
+                    ['nombre' => 'TINCION GRAM', 'tipo_input' => 'texto', 'opciones' => '', 'unidad' => ''],
+                    ['nombre' => 'RECUENTO DE COLONIAS', 'tipo_input' => 'select', 'opciones' => 'Menor a 100000,Mayor a 100000', 'unidad' => 'UFC/ml'],
+                    ['nombre' => 'CRECIMIENTO MICOTICO', 'tipo_input' => 'texto', 'opciones' => '', 'unidad' => ''],
+                    ['nombre' => 'DIAGNOSTICO MICROBIOLOGICO', 'tipo_input' => 'texto', 'opciones' => '', 'unidad' => ''],
                 ],
             ],
             'texto-libre' => [
@@ -453,14 +452,12 @@ class GestionarPlantillas extends Component
     {
         $this->validate([
             'nombreFormulario' => 'required|min:3|max:255',
-            'insumos' => 'required|array|min:1',
+            'insumos' => 'nullable|array',
             'insumos.*.insumo_id' => 'required|exists:insumos,id',
             'insumos.*.cantidad_requerida' => 'required|numeric|min:0.01',
         ], [
             'nombreFormulario.required' => 'El nombre del formulario es obligatorio',
             'nombreFormulario.min' => 'El nombre debe tener al menos 3 caracteres',
-            'insumos.required' => 'Debe agregar al menos un insumo a la plantilla',
-            'insumos.min' => 'Debe agregar al menos un insumo a la plantilla',
             'insumos.*.insumo_id.required' => 'Debe seleccionar un insumo',
             'insumos.*.insumo_id.exists' => 'El insumo seleccionado no es válido',
             'insumos.*.cantidad_requerida.required' => 'La cantidad es obligatoria',

@@ -24,20 +24,13 @@
             if (empty($fila['rango_min']) && empty($fila['rango_max'])) return 'normal';
             $min = !empty($fila['rango_min']) ? floatval($fila['rango_min']) : null;
             $max = !empty($fila['rango_max']) ? floatval($fila['rango_max']) : null;
-            $amplitud = ($min !== null && $max !== null) ? $max - $min : 0;
-            $umbral = $amplitud * config('labvet.umbral_resultado');
-            if ($min !== null && $resultadoNumerico < $min) {
-                return ($amplitud > 0 && $resultadoNumerico >= $min - $umbral) ? 'alerta' : 'critico';
-            }
-            if ($max !== null && $resultadoNumerico > $max) {
-                return ($amplitud > 0 && $resultadoNumerico <= $max + $umbral) ? 'alerta' : 'critico';
-            }
+            if ($min !== null && $resultadoNumerico < $min) return 'bajo';
+            if ($max !== null && $resultadoNumerico > $max) return 'alto';
             return 'normal';
         }
 
         if (empty($fila['rango_valor'])) return 'normal';
         $val = floatval($fila['rango_valor']);
-        $umbral = abs($val) * config('labvet.umbral_resultado');
         $fuera = match($tipo) {
             'menor' => $resultadoNumerico >= $val,
             'menor-igual' => $resultadoNumerico > $val,
@@ -46,12 +39,11 @@
             default => false,
         };
         if (!$fuera) return 'normal';
-        $dist = match($tipo) {
-            'menor', 'menor-igual' => $resultadoNumerico - $val,
-            'mayor', 'mayor-igual' => $val - $resultadoNumerico,
-            default => 0,
+        return match($tipo) {
+            'menor', 'menor-igual' => 'alto',
+            'mayor', 'mayor-igual' => 'bajo',
+            default => 'normal',
         };
-        return $dist <= $umbral ? 'alerta' : 'critico';
     };
 
     $filasPlantilla = $componente['propiedades']['filas'] ?? [];
@@ -85,8 +77,8 @@
 
                 $rangoTexto = $generarTextoRango($filaTemplate);
                 $claseColor = match($clasificacion) {
-                    'alerta' => 'resultado-alerta',
-                    'critico' => 'resultado-critico',
+                    'bajo' => 'resultado-alerta',
+                    'alto' => 'resultado-critico',
                     default => 'resultado-normal',
                 };
             @endphp

@@ -49,7 +49,8 @@ class EscanearMuestra extends Component
             'veterinaria',
             'sucursal',
             'analisis.tipoAnalisis',
-            'analisis.bioquimico'
+            'analisis.bioquimico',
+            'analisis.plantillaFormulario'
         ])
             ->where('codigo_muestra', $this->codigo_muestra)
             ->when(!auth()->user()->can('vista-general-sistema'), function ($query) {

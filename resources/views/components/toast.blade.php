@@ -45,7 +45,7 @@
         x-show="show" 
         x-init="
             $store.notifications.add('{{ $type }}', @js($message));
-            setTimeout(() => show = false, 5000);
+            setTimeout(() => show = false, 10000);
         "
         x-transition:enter="transition ease-out duration-300"
         x-transition:enter-start="opacity-0 transform translate-x-full"

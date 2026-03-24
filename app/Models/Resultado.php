@@ -17,6 +17,8 @@ class Resultado extends Model
         'indice',
         'valor',
         'fuera_rango',
+        'repeticiones',
+        'repeticiones_procesadas',
     ];
 
     protected $casts = [

@@ -2,6 +2,7 @@
     x-data="gestorDescargaPDF()"
     @keydown.ctrl.s.prevent.window="if (!{{ json_encode($modoRevision) }}) { window.__labvetData = {}; window.dispatchEvent(new Event('antes-de-guardar')); $wire.guardarBorrador(window.__labvetData); }"
     @keydown.ctrl.enter.prevent.window="if (!{{ json_encode($modoRevision) }}) { window.__labvetData = {}; window.dispatchEvent(new Event('antes-de-guardar')); $wire.finalizarYEnviar(window.__labvetData); }">
+
     <div class="container mx-auto px-4 py-6">
         {{-- Header con info del análisis --}}
         <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-md p-6 mb-6">
@@ -173,8 +174,29 @@
                 @endforeach
             </div>
 
+            {{-- Banner de error persistente para stock insuficiente --}}
+            @if($errorStock)
+                <div class="mt-8 p-4 bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-800 rounded-lg">
+                    <div class="flex items-start gap-3">
+                        <svg class="w-6 h-6 text-red-500 dark:text-red-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"></path>
+                        </svg>
+                        <div class="flex-1">
+                            <p class="font-semibold text-red-800 dark:text-red-200">No se pudieron enviar los resultados</p>
+                            <p class="text-sm text-red-600 dark:text-red-300 mt-1">{{ $errorStock }}</p>
+                            <p class="text-xs text-red-500 dark:text-red-400 mt-2">Verifique el inventario de insumos y vuelva a intentarlo.</p>
+                        </div>
+                        <button wire:click="$set('errorStock', '')" class="text-red-400 hover:text-red-600 dark:hover:text-red-300 flex-shrink-0 p-1">
+                            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            @endif
+
             {{-- Botones de acción --}}
-            <div class="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-zinc-700">
+            <div class="flex items-center justify-between mt-6 pt-6 border-t border-gray-200 dark:border-zinc-700">
                 <flux:button 
                     wire:click="cancelar" 
                     variant="outline" 
@@ -201,6 +223,20 @@
                                 icon="arrow-down-tray"
                                 class="border-blue-500 text-blue-600 hover:bg-blue-50 dark:border-blue-400 dark:text-blue-400 dark:hover:bg-blue-950">
                                 Descargar PDF
+                            </flux:button>
+                            <flux:button 
+                                @click="descargarPDF('ver', 'limpio')"
+                                variant="outline" 
+                                icon="eye"
+                                class="border-amber-500 text-amber-600 hover:bg-amber-50 dark:border-amber-400 dark:text-amber-400 dark:hover:bg-amber-950">
+                                Ver PDF Limpio
+                            </flux:button>
+                            <flux:button 
+                                @click="descargarPDF('descargar', 'limpio')"
+                                variant="outline" 
+                                icon="arrow-down-tray"
+                                class="border-amber-500 text-amber-600 hover:bg-amber-50 dark:border-amber-400 dark:text-amber-400 dark:hover:bg-amber-950">
+                                Descargar PDF Limpio
                             </flux:button>
                             @endcan
                         @else
@@ -316,7 +352,7 @@
 <script>
     function gestorDescargaPDF() {
         return {
-            async descargarPDF(modo = 'ver') {
+            async descargarPDF(modo = 'ver', formato = 'completo') {
                 try {
                     this.graficas = [];
                     
@@ -356,14 +392,18 @@
                         }
                     }
                     
-                    // Abrir PDF según el modo
-                    if (modo === 'ver') {
-                        const url = `{{ route('analisis.ver-pdf', $analisis->id) }}`;
-                        window.open(url, '_blank');
+                    // Abrir PDF según el modo y formato
+                    let url;
+                    if (formato === 'limpio') {
+                        url = modo === 'ver'
+                            ? `{{ route('analisis.ver-pdf-limpio', $analisis->id) }}`
+                            : `{{ route('analisis.pdf-limpio', $analisis->id) }}`;
                     } else {
-                        const url = `{{ route('analisis.pdf', $analisis->id) }}`;
-                        window.open(url, '_blank');
+                        url = modo === 'ver'
+                            ? `{{ route('analisis.ver-pdf', $analisis->id) }}`
+                            : `{{ route('analisis.pdf', $analisis->id) }}`;
                     }
+                    window.open(url, '_blank');
                     
                 } catch (e) {
                     console.error('Error general:', e);

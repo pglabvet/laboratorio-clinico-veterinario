@@ -346,25 +346,35 @@ class FormularioMuestra extends Component
                 ]
             );
 
-            // Si es edición, eliminar análisis anteriores
-            if ($this->muestra_id) {
-                $muestra->analisis()->delete();
-            }
-
-            // Crear análisis y descontar insumos
+            // Sincronizar análisis y descontar insumos
             $pepsService = app(PepsInventarioService::class);
+            
+            // Obtener análisis que ya existen en la base de datos para esta muestra
+            $analisisEnDB = $muestra->analisis()->get();
+            $idsAConservar = [];
 
             foreach ($this->analisisSeleccionados as $analisisData) {
-                $analisis = Analisis::create([
-                    'muestra_id' => $muestra->id,
-                    'tipo_analisis_id' => $analisisData['tipo_analisis_id'],
-                    'plantilla_formulario_id' => $analisisData['plantilla_id'],
-                    'bioquimico_id' => auth()->id(),
-                    'estado' => Analisis::ESTADO_PENDIENTE,
-                ]);
+                // Verificar si ya existe un análisis de este tipo y plantilla
+                $existente = $analisisEnDB->first(function ($a) use ($analisisData) {
+                    return $a->tipo_analisis_id == $analisisData['tipo_analisis_id'] &&
+                           $a->plantilla_formulario_id == $analisisData['plantilla_id'];
+                });
 
-                // Descontar insumos asociados a la plantilla (solo para nuevas muestras)
-                if (! $this->muestra_id) {
+                if ($existente) {
+                    // Si ya existe, lo conservamos (no se crea ni se descuentan insumos de nuevo)
+                    $idsAConservar[] = $existente->id;
+                } else {
+                    // Si no existe, es nuevo (o es una nueva muestra)
+                    $nuevoAnalisis = Analisis::create([
+                        'muestra_id' => $muestra->id,
+                        'tipo_analisis_id' => $analisisData['tipo_analisis_id'],
+                        'plantilla_formulario_id' => $analisisData['plantilla_id'],
+                        'bioquimico_id' => auth()->id(),
+                        'estado' => Analisis::ESTADO_PENDIENTE,
+                    ]);
+                    $idsAConservar[] = $nuevoAnalisis->id;
+
+                    // Descontar insumos asociados a la plantilla ("Materiales de Toma")
                     $plantilla = PlantillaFormulario::with('insumos')->find($analisisData['plantilla_id']);
 
                     if ($plantilla && $plantilla->insumos->isNotEmpty()) {
@@ -383,6 +393,38 @@ class FormularioMuestra extends Component
                         }
                     }
                 }
+            }
+
+            // Identificar qué análisis fueron removidos por el usuario durante la edición
+            $analisisAEliminar = $analisisEnDB->whereNotIn('id', $idsAConservar);
+
+            foreach ($analisisAEliminar as $analisis) {
+                // Bloquear eliminación si el análisis ya está siendo procesado o fue completado
+                if ($analisis->estado !== Analisis::ESTADO_PENDIENTE) {
+                    throw new \Exception("No se puede eliminar el análisis de '{$analisis->tipoAnalisis->nombre}' porque ya se encuentra en estado: {$analisis->estado}.");
+                }
+                
+                // Revertir consumos físicos de Materiales de Toma asociados a este análisis eliminado
+                $movimientosConsumo = \App\Models\MovimientoInventario::where('tipo_movimiento', 'CONSUMO_ANALISIS')
+                    ->where('sucursal_id', $muestra->sucursal_id)
+                    ->where('observacion', 'ilike', "%Muestra: {$muestra->codigo_muestra}%")
+                    ->where('observacion', 'ilike', "%Análisis: {$analisis->tipoAnalisis->nombre}%")
+                    ->get();
+                    
+                
+
+                foreach ($movimientosConsumo as $movimiento) {
+                    $pepsService->revertirConsumoAnalisis(
+                        insumoId: $movimiento->insumo_id,
+                        sucursalId: $movimiento->sucursal_id,
+                        cantidad: abs($movimiento->cantidad),
+                        costoUnitario: $movimiento->costo_unitario,
+                        usuarioId: auth()->id(),
+                        observacion: "Devolución automática (Edición Muestra) - Muestra: {$muestra->codigo_muestra}"
+                    );
+                }
+                
+                $analisis->delete();
             }
 
             DB::commit();

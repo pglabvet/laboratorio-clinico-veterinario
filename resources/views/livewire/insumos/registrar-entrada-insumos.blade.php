@@ -21,6 +21,7 @@
     <x-toast type="error" :message="session('error')" />
 
     {{-- Formulario de registro --}}
+
     <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700 p-6">
         <flux:heading size="lg" class="mb-6">Datos de la Entrada</flux:heading>
 

@@ -130,7 +130,7 @@ class PepsInventarioService
 
     /**
      * Registrar consumo de insumo por análisis usando método PEPS.
-     * Similar a registrarSalida pero con tipo CONSUMO_ANALISIS.
+     * Lanza excepción si no hay stock suficiente.
      */
     public function registrarConsumoAnalisis(
         int $insumoId,
@@ -147,8 +147,15 @@ class PepsInventarioService
                 ->lockForUpdate()
                 ->first();
 
-            if (!$inventario || $inventario->stock_actual < $cantidad) {
-                throw new \Exception('Stock insuficiente para consumo de análisis. Stock actual: ' . ($inventario->stock_actual ?? 0));
+            $stockActual = $inventario ? $inventario->stock_actual : 0;
+
+            if ($stockActual < $cantidad) {
+                $insumo = \App\Models\Insumo::find($insumoId);
+                $nombre = $insumo ? $insumo->nombre : "Insumo #{$insumoId}";
+                $unidad = $insumo?->unidadMedida?->abreviatura ?? '';
+                throw new \Exception(
+                    "Stock insuficiente de '{$nombre}': disponible {$stockActual} {$unidad}, requerido {$cantidad} {$unidad}."
+                );
             }
 
             // 2. Consumir lotes PEPS
@@ -178,7 +185,6 @@ class PepsInventarioService
             return $movimiento;
         });
     }
-
 
     /**
      * Revertir un consumo de análisis: crea una entrada de devolución con el mismo costo.

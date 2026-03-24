@@ -1,6 +1,11 @@
 {{-- Componente de edición: Serología --}}
 @php
-    $campos = array_values(array_filter($componente['propiedades']['campos'] ?? [], fn($c) => !empty($c)));
+    $camposRaw = $componente['propiedades']['campos'] ?? [];
+    // Normalizar: convertir strings a objetos y filtrar vacíos
+    $campos = array_values(array_filter(array_map(function($c) {
+        $nombre = is_string($c) ? $c : ($c['nombre'] ?? '');
+        return $nombre ? $nombre : null;
+    }, $camposRaw)));
     $datosIniciales = [];
     foreach ($campos as $i => $campo) {
         $datosIniciales[$i] = ['campo' => $campo, 'valor' => ''];
