@@ -9,6 +9,7 @@
             <flux:heading size="xl" class="mb-1">Muestras Rechazadas</flux:heading>
             <flux:subheading>Registro de muestras que no pudieron ser procesadas en el laboratorio</flux:subheading>
         </div>
+        @can('crear-muestras-rechazadas')
         <flux:button
             href="{{ route('muestras-rechazadas.crear') }}"
             wire:navigate
@@ -17,6 +18,7 @@
         >
             Registrar Muestra Rechazada
         </flux:button>
+        @endcan
     </div>
 
     {{-- Bloque de filtros --}}
