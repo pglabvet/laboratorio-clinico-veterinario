@@ -148,10 +148,15 @@ class HistorialMovimientos extends Component
             $movimientosQuery->whereDate('fecha', '<=', $this->filtroFechaHasta);
         }
 
-        // Búsqueda por texto (en nombre de insumo)
+        // Búsqueda por texto (nombre insumo, motivo, observación)
         if ($this->buscar) {
-            $movimientosQuery->whereHas('insumo', function ($query) {
-                $query->where('nombre', 'ilike', '%' . $this->buscar . '%');
+            $buscar = '%' . $this->buscar . '%';
+            $movimientosQuery->where(function ($q) use ($buscar) {
+                $q->whereHas('insumo', function ($query) use ($buscar) {
+                    $query->whereRaw('unaccent(nombre) ilike unaccent(?)', [$buscar]);
+                })
+                ->orWhereRaw('unaccent(motivo) ilike unaccent(?)', [$buscar])
+                ->orWhereRaw('unaccent(observacion) ilike unaccent(?)', [$buscar]);
             });
         }
 

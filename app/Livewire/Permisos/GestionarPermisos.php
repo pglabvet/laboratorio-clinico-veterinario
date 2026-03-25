@@ -217,7 +217,7 @@ class GestionarPermisos extends Component
         $permisos = Permission::query()
             ->withCount('roles')
             ->when($this->buscar, function ($query) {
-                $query->where('name', 'ilike', '%' . $this->buscar . '%');
+                $query->whereRaw('unaccent(name) ilike unaccent(?)', ['%' . $this->buscar . '%']);
             })
             ->orderBy($this->sortBy, $this->sortDirection)
             ->paginate(10);

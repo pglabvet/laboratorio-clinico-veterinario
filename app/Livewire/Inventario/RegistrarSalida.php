@@ -262,7 +262,7 @@ class RegistrarSalida extends Component
             ->where('estado', true);
 
         if ($this->buscar) {
-            $insumosQuery->where('nombre', 'ilike', '%' . $this->buscar . '%');
+            $insumosQuery->whereRaw('unaccent(nombre) ilike unaccent(?)', ['%' . $this->buscar . '%']);
         }
 
         if ($this->filtro_categoria) {
@@ -294,10 +294,10 @@ class RegistrarSalida extends Component
             $busqueda = $this->busquedaSalidas;
             $movimientosQuery->where(function ($q) use ($busqueda) {
                 $q->whereHas('insumo', function ($qi) use ($busqueda) {
-                    $qi->where('nombre', 'ilike', "%{$busqueda}%");
+                    $qi->whereRaw('unaccent(nombre) ilike unaccent(?)', ["%{$busqueda}%"]);
                 })
-                ->orWhere('motivo', 'ilike', "%{$busqueda}%")
-                ->orWhere('observacion', 'ilike', "%{$busqueda}%");
+                ->orWhereRaw('unaccent(motivo) ilike unaccent(?)', ["%{$busqueda}%"])
+                ->orWhereRaw('unaccent(observacion) ilike unaccent(?)', ["%{$busqueda}%"]);
             });
         }
 

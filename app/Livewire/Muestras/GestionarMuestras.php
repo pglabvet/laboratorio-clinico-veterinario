@@ -684,11 +684,11 @@ class GestionarMuestras extends Component
             ->when($this->buscar, function ($query) {
                 $searchTerm = '%'.$this->buscar.'%';
                 $query->where(function ($q) use ($searchTerm) {
-                    $q->where('muestras.codigo_muestra', 'ilike', $searchTerm)
-                        ->orWhere('muestras.paciente_nombre', 'ilike', $searchTerm)
-                        ->orWhere('muestras.propietario_nombre', 'ilike', $searchTerm)
+                    $q->whereRaw('unaccent(muestras.codigo_muestra) ilike unaccent(?)', [$searchTerm])
+                        ->orWhereRaw('unaccent(muestras.paciente_nombre) ilike unaccent(?)', [$searchTerm])
+                        ->orWhereRaw('unaccent(muestras.propietario_nombre) ilike unaccent(?)', [$searchTerm])
                         ->orWhereHas('veterinaria', function ($subQuery) use ($searchTerm) {
-                            $subQuery->where('nombre', 'ilike', $searchTerm);
+                            $subQuery->whereRaw('unaccent(nombre) ilike unaccent(?)', [$searchTerm]);
                         });
                 });
             })

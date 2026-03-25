@@ -381,9 +381,15 @@ class GestionarInsumos extends Component
     {
         $query = Insumo::with(['categoria', 'unidadMedida', 'inventarios.sucursal']);
 
-        // Búsqueda por nombre
+        // Búsqueda por nombre de insumo o categoría
         if ($this->buscar) {
-            $query->where('nombre', 'ilike', '%' . $this->buscar . '%');
+            $buscar = '%' . $this->buscar . '%';
+            $query->where(function ($q) use ($buscar) {
+                $q->whereRaw('unaccent(nombre) ilike unaccent(?)', [$buscar])
+                  ->orWhereHas('categoria', function ($cat) use ($buscar) {
+                      $cat->whereRaw('unaccent(nombre) ilike unaccent(?)', [$buscar]);
+                  });
+            });
         }
 
         // Filtro por sucursal

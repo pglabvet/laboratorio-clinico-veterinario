@@ -126,7 +126,7 @@ class ListarAuditorias extends Component
 
         // Filtro de búsqueda en descripción
         if ($this->busqueda !== '') {
-            $query->where('descripcion', 'ilike', "%{$this->busqueda}%");
+            $query->whereRaw('unaccent(descripcion) ilike unaccent(?)', ["%{$this->busqueda}%"]);
         }
 
         // Filtro por usuario
