@@ -252,7 +252,7 @@ class GestionarRoles extends Component
         $roles = Role::query()
             ->withCount(['permissions', 'users'])
             ->when($this->buscar, function ($query) {
-                $query->where('name', 'ilike', '%' . $this->buscar . '%');
+                $query->whereRaw('unaccent(name) ilike unaccent(?)', ['%' . $this->buscar . '%']);
             })
             ->orderBy($this->sortBy, $this->sortDirection)
             ->paginate(10);

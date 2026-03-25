@@ -338,9 +338,10 @@ class GestionarUsuarios extends Component
     {
         $usuarios = User::with(['roles', 'sucursal'])
             ->when($this->search, function ($query) {
-                $query->where(function ($q) {
-                    $q->where('name', 'ilike', '%' . $this->search . '%')
-                      ->orWhere('email', 'ilike', '%' . $this->search . '%');
+                $search = '%' . $this->search . '%';
+                $query->where(function ($q) use ($search) {
+                    $q->whereRaw('unaccent(name) ilike unaccent(?)', [$search])
+                      ->orWhereRaw('unaccent(email) ilike unaccent(?)', [$search]);
                 });
             })
             ->when($this->filtroSucursal, function ($query) {

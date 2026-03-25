@@ -232,9 +232,13 @@ class GestionarCategoriasInsumo extends Component
     {
         $query = CategoriaInsumo::query();
 
-        // Búsqueda por nombre
+        // Búsqueda por nombre y descripción
         if ($this->buscar) {
-            $query->where('nombre', 'ilike', '%' . $this->buscar . '%');
+            $buscar = '%' . $this->buscar . '%';
+            $query->where(function ($q) use ($buscar) {
+                $q->whereRaw('unaccent(nombre) ilike unaccent(?)', [$buscar])
+                  ->orWhereRaw('unaccent(descripcion) ilike unaccent(?)', [$buscar]);
+            });
         }
 
         $categorias = $query->orderBy($this->sortBy, $this->sortDirection)->paginate(10);
