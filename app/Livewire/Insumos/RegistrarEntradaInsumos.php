@@ -52,7 +52,7 @@ class RegistrarEntradaInsumos extends Component
             'sucursal_id' => 'required|exists:sucursales,id',
             'insumo_id' => 'required|exists:insumos,id',
             'cantidad' => 'required|numeric|min:0.01',
-            'costo_unitario' => 'required|numeric|min:0.01',
+            'costo_unitario' => 'required|numeric|min:0.000001',
             'codigo_lote' => 'nullable|string|max:50',
             'fecha_vencimiento' => 'nullable|date|after:today',
             'motivo' => 'required|in:COMPRA,DEVOLUCION,AJUSTE_INVENTARIO,OTRO',
@@ -237,10 +237,10 @@ class RegistrarEntradaInsumos extends Component
             $busqueda = $this->busquedaEntradas;
             $entradasQuery->where(function ($q) use ($busqueda) {
                 $q->whereHas('insumo', function ($qi) use ($busqueda) {
-                    $qi->where('nombre', 'ilike', "%{$busqueda}%");
+                    $qi->whereRaw('unaccent(nombre) ilike unaccent(?)', ["%{$busqueda}%"]);
                 })
-                ->orWhere('motivo', 'ilike', "%{$busqueda}%")
-                ->orWhere('observacion', 'ilike', "%{$busqueda}%");
+                ->orWhereRaw('unaccent(motivo) ilike unaccent(?)', ["%{$busqueda}%"])
+                ->orWhereRaw('unaccent(observacion) ilike unaccent(?)', ["%{$busqueda}%"]);
             });
         }
 

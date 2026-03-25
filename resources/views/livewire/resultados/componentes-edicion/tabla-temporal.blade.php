@@ -394,6 +394,12 @@ class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:
         </table>
     </div>
 
+    {{-- Repeticiones por parámetro (solo si hay reactivos asignados) --}}
+    @include('livewire.resultados.componentes-edicion._repeticiones-reactivos', [
+        'componente' => $componente,
+        'index' => $index,
+    ])
+
     {{-- Gráfica de líneas --}}
     @if(($componente['propiedades']['mostrar_grafica'] ?? true))
     <div class="border border-gray-300 dark:border-zinc-700 rounded-lg overflow-hidden">

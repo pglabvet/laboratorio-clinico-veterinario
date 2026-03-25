@@ -227,11 +227,12 @@ class RevisarAnalisis extends Component
 
         // Búsqueda
         if ($this->busqueda) {
-            $query->where(function ($q) {
-                $q->whereHas('muestra', function ($muestraQuery) {
-                    $muestraQuery->where('codigo_muestra', 'ilike', '%' . $this->busqueda . '%')
-                        ->orWhere('paciente_nombre', 'ilike', '%' . $this->busqueda . '%')
-                        ->orWhere('propietario_nombre', 'ilike', '%' . $this->busqueda . '%');
+            $busqueda = '%' . $this->busqueda . '%';
+            $query->where(function ($q) use ($busqueda) {
+                $q->whereHas('muestra', function ($muestraQuery) use ($busqueda) {
+                    $muestraQuery->whereRaw('unaccent(codigo_muestra) ilike unaccent(?)', [$busqueda])
+                        ->orWhereRaw('unaccent(paciente_nombre) ilike unaccent(?)', [$busqueda])
+                        ->orWhereRaw('unaccent(propietario_nombre) ilike unaccent(?)', [$busqueda]);
                 });
             });
         }

@@ -155,7 +155,7 @@ class CapturarResultados extends Component
             if (in_array($tipo, ['tabla-resultados', 'tabla-temporal']) && !empty($props['filas'])) {
                 foreach ($props['filas'] as $filaIndex => $fila) {
                     if (!empty($fila['reactivos'])) {
-                        $this->repeticionesData["{$index}.{$filaIndex}"] = 1;
+                        $this->repeticionesData[$index][$filaIndex] = 1;
                     }
                 }
             }
@@ -164,7 +164,7 @@ class CapturarResultados extends Component
             if (in_array($tipo, ['campos-etiquetados', 'serologia']) && !empty($props['campos'])) {
                 foreach ($props['campos'] as $campoIndex => $campo) {
                     if (is_array($campo) && !empty($campo['reactivos'])) {
-                        $this->repeticionesData["{$index}.c{$campoIndex}"] = 1;
+                        $this->repeticionesData[$index]["c{$campoIndex}"] = 1;
                     }
                 }
             }
@@ -174,7 +174,7 @@ class CapturarResultados extends Component
                 foreach ($props['secciones'] as $secIndex => $seccion) {
                     foreach ($seccion['campos'] ?? [] as $campoIndex => $campo) {
                         if (!empty($campo['reactivos'])) {
-                            $this->repeticionesData["{$index}.s{$secIndex}.c{$campoIndex}"] = 1;
+                            $this->repeticionesData[$index]["s{$secIndex}"]["c{$campoIndex}"] = 1;
                         }
                     }
                 }
@@ -182,7 +182,7 @@ class CapturarResultados extends Component
 
             // Nivel componente
             if (in_array($tipo, $tiposBloque) && !empty($props['reactivos'])) {
-                $this->repeticionesData["{$index}"] = 1;
+                $this->repeticionesData[$index] = 1;
             }
         }
 
@@ -199,7 +199,7 @@ class CapturarResultados extends Component
                 if (in_array($tipo, ['tabla-resultados', 'tabla-temporal']) && !empty($props['filas'])) {
                     foreach ($props['filas'] as $filaIndex => $fila) {
                         if (!empty($fila['reactivos'])) {
-                            $this->repeticionesData["{$indice}.{$filaIndex}"] = $resultado->repeticiones ?? 1;
+                            $this->repeticionesData[$indice][$filaIndex] = $resultado->repeticiones ?? 1;
                         }
                     }
                 }
@@ -207,7 +207,7 @@ class CapturarResultados extends Component
                 if (in_array($tipo, ['campos-etiquetados', 'serologia']) && !empty($props['campos'])) {
                     foreach ($props['campos'] as $campoIndex => $campo) {
                         if (is_array($campo) && !empty($campo['reactivos'])) {
-                            $this->repeticionesData["{$indice}.c{$campoIndex}"] = $resultado->repeticiones ?? 1;
+                            $this->repeticionesData[$indice]["c{$campoIndex}"] = $resultado->repeticiones ?? 1;
                         }
                     }
                 }
@@ -216,14 +216,14 @@ class CapturarResultados extends Component
                     foreach ($props['secciones'] as $secIndex => $seccion) {
                         foreach ($seccion['campos'] ?? [] as $campoIndex => $campo) {
                             if (!empty($campo['reactivos'])) {
-                                $this->repeticionesData["{$indice}.s{$secIndex}.c{$campoIndex}"] = $resultado->repeticiones ?? 1;
+                                $this->repeticionesData[$indice]["s{$secIndex}"]["c{$campoIndex}"] = $resultado->repeticiones ?? 1;
                             }
                         }
                     }
                 }
 
                 if (in_array($tipo, $tiposBloque) && !empty($props['reactivos'])) {
-                    $this->repeticionesData["{$indice}"] = $resultado->repeticiones ?? 1;
+                    $this->repeticionesData[$indice] = $resultado->repeticiones ?? 1;
                 }
             }
         }
@@ -272,7 +272,7 @@ class CapturarResultados extends Component
                         $estaLlena = isset($rowActual['resultado']) && $rowActual['resultado'] !== '' && $rowActual['resultado'] !== null;
                     }
 
-                    $repeticionesRequeridas = $estaLlena ? (int) ($this->repeticionesData["{$index}.{$filaIndex}"] ?? 1) : 0;
+                    $repeticionesRequeridas = $estaLlena ? (int) ($this->repeticionesData[$index][$filaIndex] ?? 1) : 0;
                     $nombreFila = $fila['nombre'] ?? $fila['analisis'] ?? "Fila " . ($filaIndex + 1);
                     $observacionFila = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre}, Parámetro: {$nombreFila}";
 
@@ -293,7 +293,7 @@ class CapturarResultados extends Component
                     $nombreCampo = $campo['nombre'] ?? '';
                     $match = collect($camposGuardados)->first(fn($item) => is_array($item) && ($item['nombre'] ?? '') === $nombreCampo);
                     $estaLleno = $match && isset($match['valor']) && $match['valor'] !== '' && $match['valor'] !== null;
-                    $repeticionesRequeridas = $estaLleno ? (int) ($this->repeticionesData["{$index}.c{$campoIndex}"] ?? 1) : 0;
+                    $repeticionesRequeridas = $estaLleno ? (int) ($this->repeticionesData[$index]["c{$campoIndex}"] ?? 1) : 0;
                     $observacionCampo = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre}, Campo: {$campo['nombre']}";
 
                     $this->procesarDiferenciaInventario(
@@ -313,7 +313,7 @@ class CapturarResultados extends Component
                     $nombreCampo = $campo['nombre'] ?? '';
                     $match = collect($camposGuardados)->first(fn($item) => is_array($item) && ($item['campo'] ?? '') === $nombreCampo);
                     $estaLleno = $match && isset($match['valor']) && $match['valor'] !== '' && $match['valor'] !== null;
-                    $repeticionesRequeridas = $estaLleno ? (int) ($this->repeticionesData["{$index}.c{$campoIndex}"] ?? 1) : 0;
+                    $repeticionesRequeridas = $estaLleno ? (int) ($this->repeticionesData[$index]["c{$campoIndex}"] ?? 1) : 0;
                     $observacionCampo = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre}, Campo: {$campo['nombre']}";
 
                     $this->procesarDiferenciaInventario(
@@ -333,7 +333,7 @@ class CapturarResultados extends Component
                         $nombreCampo = $campo['nombre'] ?? '';
                         $match = collect($camposGuardados)->first(fn($item) => is_array($item) && ($item['campo'] ?? '') === $nombreCampo);
                         $estaLleno = $match && isset($match['valor']) && $match['valor'] !== '' && $match['valor'] !== null;
-                        $repeticionesRequeridas = $estaLleno ? (int) ($this->repeticionesData["{$index}.s{$secIndex}.c{$campoIndex}"] ?? 1) : 0;
+                        $repeticionesRequeridas = $estaLleno ? (int) ($this->repeticionesData[$index]["s{$secIndex}"]["c{$campoIndex}"] ?? 1) : 0;
                         $observacionCampo = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre}, Campo: {$campo['nombre']}";
 
                         $this->procesarDiferenciaInventario(
@@ -354,7 +354,7 @@ class CapturarResultados extends Component
                 } else {
                     $estaLleno = !empty($valorActual);
                 }
-                $repeticionesRequeridas = $estaLleno ? (int) ($this->repeticionesData["{$index}"] ?? 1) : 0;
+                $repeticionesRequeridas = $estaLleno ? (int) ($this->repeticionesData[$index] ?? 1) : 0;
                 $observacionComp = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre}";
 
                 $this->procesarDiferenciaInventario(

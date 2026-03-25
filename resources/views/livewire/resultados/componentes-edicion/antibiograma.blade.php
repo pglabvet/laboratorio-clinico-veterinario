@@ -172,4 +172,10 @@
         <i class="fas fa-info-circle mr-1"></i>
         Agregue los antibióticos probados y marque la sensibilidad correspondiente
     </div>
+
+    {{-- Repeticiones (solo si hay reactivos asignados a nivel componente) --}}
+    @include('livewire.resultados.componentes-edicion._repeticiones-reactivos', [
+        'componente' => $componente,
+        'index' => $index,
+    ])
 </div>

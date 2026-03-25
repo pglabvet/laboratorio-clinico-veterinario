@@ -160,4 +160,10 @@
             </tbody>
         </table>
     </div>
+
+    {{-- Repeticiones por campo (solo si hay reactivos asignados) --}}
+    @include('livewire.resultados.componentes-edicion._repeticiones-reactivos', [
+        'componente' => $componente,
+        'index' => $index,
+    ])
 </div>

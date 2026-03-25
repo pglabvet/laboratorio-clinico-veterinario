@@ -675,6 +675,7 @@ class GestionarVeterinarias extends Component
 
     }
 
+
     /**
      * Cambiar ordenamiento
      */
@@ -719,13 +720,19 @@ class GestionarVeterinarias extends Component
 
             ->when($this->buscar, function ($query) {
 
-                $query->where('nombre', 'ilike', '%'.$this->buscar.'%')
+                $buscar = '%'.$this->buscar.'%';
 
-                    ->orWhere('responsable', 'ilike', '%'.$this->buscar.'%')
+                $query->where(function ($q) use ($buscar) {
 
-                    ->orWhere('email', 'ilike', '%'.$this->buscar.'%')
+                    $q->whereRaw('unaccent(nombre) ilike unaccent(?)', [$buscar])
 
-                    ->orWhere('direccion', 'ilike', '%'.$this->buscar.'%');
+                        ->orWhereRaw('unaccent(responsable) ilike unaccent(?)', [$buscar])
+
+                        ->orWhereRaw('unaccent(email) ilike unaccent(?)', [$buscar])
+
+                        ->orWhereRaw('unaccent(direccion) ilike unaccent(?)', [$buscar]);
+
+                });
 
             })
 

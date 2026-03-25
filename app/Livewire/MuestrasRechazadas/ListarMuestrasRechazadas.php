@@ -80,10 +80,11 @@ class ListarMuestrasRechazadas extends Component
             ->orderBy('fecha_rechazo', 'desc');
 
         if ($this->buscar) {
-            $query->where(function ($q) {
-                $q->where('codigo_muestra', 'ilike', "%{$this->buscar}%")
-                    ->orWhere('paciente_nombre', 'ilike', "%{$this->buscar}%")
-                    ->orWhere('propietario_nombre', 'ilike', "%{$this->buscar}%");
+            $buscar = "%{$this->buscar}%";
+            $query->where(function ($q) use ($buscar) {
+                $q->whereRaw('unaccent(codigo_muestra) ilike unaccent(?)', [$buscar])
+                    ->orWhereRaw('unaccent(paciente_nombre) ilike unaccent(?)', [$buscar])
+                    ->orWhereRaw('unaccent(propietario_nombre) ilike unaccent(?)', [$buscar]);
             });
         }
 

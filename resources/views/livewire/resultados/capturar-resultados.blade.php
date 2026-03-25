@@ -144,10 +144,7 @@
                         @else
                         <div x-data="{ abierto: true }">
                             {{-- Barra colapsable --}}
-                            <button type="button" @click="abierto = !abierto" class="w-full flex items-center justify-between px-4 py-2.5 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors" :class="abierto ? 'rounded-b-none border-b-0' : ''">
-                                <span class="font-semibold text-gray-700 dark:text-zinc-300 text-sm uppercase tracking-wide">
-                                    {{ $componente['propiedades']['titulo'] ?? str_replace('-', ' ', $componente['tipo']) }}
-                                </span>
+                            <button type="button" @click="abierto = !abierto" class="w-full flex items-center justify-end px-4 py-2.5 bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors" :class="abierto ? 'rounded-b-none border-b-0' : ''">
                                 <svg :class="{ 'rotate-180': abierto }" class="w-4 h-4 text-gray-500 dark:text-zinc-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                                 </svg>
