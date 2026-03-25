@@ -103,4 +103,10 @@
         <i class="fas fa-info-circle mr-1"></i>
         Seleccione el resultado para cada prueba serológica.
     </div>
+
+    {{-- Repeticiones por campo (solo si hay reactivos asignados) --}}
+    @include('livewire.resultados.componentes-edicion._repeticiones-reactivos', [
+        'componente' => $componente,
+        'index' => $index,
+    ])
 </div>

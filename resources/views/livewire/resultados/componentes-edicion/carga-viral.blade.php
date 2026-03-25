@@ -452,6 +452,12 @@
         </div>
         @endif
     </div>
+
+    {{-- Repeticiones (solo si hay reactivos asignados a nivel componente) --}}
+    @include('livewire.resultados.componentes-edicion._repeticiones-reactivos', [
+        'componente' => $componente,
+        'index' => $index,
+    ])
 </div>
 
 {{-- Cargar Chart.js si no está cargado --}}
