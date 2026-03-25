@@ -179,4 +179,10 @@ class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:
             </tbody>
         </table>
     </div>
+
+    {{-- Repeticiones (solo si hay reactivos asignados a nivel componente) --}}
+    @include('livewire.resultados.componentes-edicion._repeticiones-reactivos', [
+        'componente' => $componente,
+        'index' => $index,
+    ])
 </div>

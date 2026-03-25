@@ -386,4 +386,10 @@
         <i class="fas fa-info-circle mr-1"></i>
         Los campos resaltados en azul son los que debe completar.
     </div>
+
+    {{-- Repeticiones (solo si hay reactivos asignados a nivel componente) --}}
+    @include('livewire.resultados.componentes-edicion._repeticiones-reactivos', [
+        'componente' => $componente,
+        'index' => $index,
+    ])
 </div>

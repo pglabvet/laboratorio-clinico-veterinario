@@ -119,4 +119,10 @@ class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:
             @endforeach
         </table>
     </div>
+
+    {{-- Repeticiones por campo (solo si hay reactivos asignados) --}}
+    @include('livewire.resultados.componentes-edicion._repeticiones-reactivos', [
+        'componente' => $componente,
+        'index' => $index,
+    ])
 </div>
