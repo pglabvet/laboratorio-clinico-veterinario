@@ -47,18 +47,28 @@
                 $tieneReactivos = true;
             }
         }
-    } elseif ($tipo === 'tabla-dos-columnas' && !empty($props['secciones'])) {
+    } elseif ($tipo === 'tabla-dos-columnas') {
         // Por campo anidado
-        foreach ($props['secciones'] as $secIdx => $seccion) {
-            foreach ($seccion['campos'] ?? [] as $campoIdx => $campo) {
-                if (!empty($campo['reactivos'])) {
-                    $itemsConReactivo[] = [
-                        'key' => "{$index}.s{$secIdx}.c{$campoIdx}",
-                        'nombre' => $campo['nombre'] ?? "Campo",
-                    ];
-                    $tieneReactivos = true;
+        if (!empty($props['secciones'])) {
+            foreach ($props['secciones'] as $secIdx => $seccion) {
+                foreach ($seccion['campos'] ?? [] as $campoIdx => $campo) {
+                    if (!empty($campo['reactivos'])) {
+                        $itemsConReactivo[] = [
+                            'key' => "{$index}.s{$secIdx}.c{$campoIdx}",
+                            'nombre' => $campo['nombre'] ?? "Campo",
+                        ];
+                        $tieneReactivos = true;
+                    }
                 }
             }
+        }
+        // Nivel global
+        if (!empty($props['reactivos'])) {
+            $itemsConReactivo[] = [
+                'key' => "{$index}.global",
+                'nombre' => ($props['titulo'] ?? 'Tabla') . " (Global)",
+            ];
+            $tieneReactivos = true;
         }
     } elseif (in_array($tipo, $tiposBloque) && !empty($props['reactivos'])) {
         // Nivel bloque

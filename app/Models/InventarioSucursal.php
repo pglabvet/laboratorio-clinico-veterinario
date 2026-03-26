@@ -23,9 +23,9 @@ class InventarioSucursal extends Model
     ];
 
     protected $casts = [
-        'stock_actual' => 'decimal:2',
-        'stock_minimo' => 'decimal:2',
-        'costo_total' => 'decimal:4',
+        'stock_actual' => 'decimal:6',
+        'stock_minimo' => 'decimal:6',
+        'costo_total' => 'decimal:6',
     ];
 
     /**

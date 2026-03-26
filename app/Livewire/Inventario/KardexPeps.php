@@ -146,7 +146,7 @@ class KardexPeps extends Component
                     'saldo_inicial_costo' => 0,
                     'registros' => $registrosCombinados,
                     'saldo_final_cantidad' => round($saldoFinalCantidad, 2),
-                    'saldo_final_costo' => round($saldoFinalCosto, 4),
+                    'saldo_final_costo' => round($saldoFinalCosto, 6),
                 ];
             }
         } catch (\Exception $e) {

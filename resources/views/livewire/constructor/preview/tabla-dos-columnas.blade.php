@@ -7,10 +7,10 @@
     @endif
 
     <table class="w-full text-sm">
-        @foreach($props['secciones'] ?? [] as $seccion)
+        @foreach($props['secciones'] ?? [] as $secIndex => $seccion)
             <!-- Subtítulo de sección si existe -->
             @if($seccion['subtitulo'] ?? null)
-            <tr>
+            <tr wire:key="preview-sec-{{ $index }}-{{ $secIndex }}-sub">
                 <td colspan="2" class="bg-gray-100 dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 px-3 py-2 font-bold text-center text-gray-900 dark:text-zinc-100">
                     {{ $seccion['subtitulo'] }}
                 </td>
@@ -18,11 +18,10 @@
             @endif
 
             <!-- Campos de la sección -->
-            @foreach($seccion['campos'] ?? [] as $campo)
-                @if(!empty($campo['nombre']))
-                <tr>
+            @foreach($seccion['campos'] ?? [] as $fieldIndex => $campo)
+                <tr wire:key="preview-sec-{{ $index }}-{{ $secIndex }}-field-{{ $fieldIndex }}">
                     <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 font-semibold bg-gray-50 dark:bg-zinc-900 w-1/3 text-gray-900 dark:text-zinc-100">
-                        {{ $campo['nombre'] }}
+                        {{ $campo['nombre'] ?: '(sin nombre)' }}
                     </td>
                     <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-gray-400 dark:text-zinc-500 italic">
                         @if(($campo['tipo_input'] ?? 'input') === 'select')
@@ -32,7 +31,6 @@
                         @endif
                     </td>
                 </tr>
-                @endif
             @endforeach
         @endforeach
     </table>
