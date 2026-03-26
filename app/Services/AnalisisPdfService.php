@@ -20,7 +20,7 @@ class AnalisisPdfService
      *
      * @return array{pdf: \Barryvdh\DomPDF\PDF, modelo: Pdf, ruta: string, nombre: string, token: TokenDescarga}
      */
-    public function generar(Analisis $analisis, ?string $qrUrl = null): array
+    public function generar(Analisis $analisis, ?string $qrUrl = null, string $formato = 'completo'): array
     {
         // Validar que el análisis esté aprobado o enviado
         $estadosValidos = [Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO];
@@ -28,8 +28,10 @@ class AnalisisPdfService
             throw new \Exception('Solo se pueden generar PDFs de análisis aprobados o enviados.');
         }
 
+        $esLimpio = $formato === 'limpio';
+
         // Generar nombre único y ruta
-        $nombreArchivo = $this->generarNombreArchivo($analisis);
+        $nombreArchivo = $this->generarNombreArchivo($analisis, $esLimpio ? '_L' : '');
         $rutaRelativa = 'pdfs/'.date('Y/m').'/'.$nombreArchivo;
 
         // Crear registro del PDF en la BD
@@ -40,16 +42,18 @@ class AnalisisPdfService
             'fecha_generacion' => now(),
         ]);
 
-        // Crear token de descarga
+        // Crear token de descarga (necesario para compartir por WhatsApp/Email)
         $tokenDescarga = TokenDescarga::crearParaPdf($pdfModel->id);
 
-        // Si no se proporcionó URL para el QR, usar la del token recién creado
-        if (! $qrUrl) {
-            $qrUrl = $tokenDescarga->getUrlDescarga();
+        // Solo usar QR en el PDF para formato completo
+        if (! $esLimpio) {
+            if (! $qrUrl) {
+                $qrUrl = $tokenDescarga->getUrlDescarga();
+            }
         }
 
-        // Renderizar y guardar el PDF
-        $pdf = $this->renderizarPdf($analisis, $rutaRelativa, $qrUrl);
+        // Renderizar y guardar el PDF (limpio no incluye QR)
+        $pdf = $this->renderizarPdf($analisis, $rutaRelativa, $esLimpio ? null : $qrUrl, $formato);
 
         return [
             'pdf' => $pdf,
@@ -118,11 +122,13 @@ class AnalisisPdfService
      *
      * @return array{modelo: Pdf, ruta: string, nombre: string, fullPath: string}
      */
-    public function obtenerOGenerar(Analisis $analisis): array
+    public function obtenerOGenerar(Analisis $analisis, string $formato = 'completo'): array
     {
-        // Buscar PDF existente (excluir PDFs en formato limpio)
+        $esLimpio = $formato === 'limpio';
+
+        // Buscar PDF existente según formato
         $pdfModel = $analisis->pdfs()
-            ->where('ruta_archivo', 'not like', '%_L.PDF')
+            ->where('ruta_archivo', $esLimpio ? 'like' : 'not like', '%_L.PDF')
             ->latest()
             ->first();
 
@@ -139,15 +145,14 @@ class AnalisisPdfService
         if ($pdfModel && ! Storage::disk('public')->exists($pdfModel->ruta_archivo)) {
             // Registro existe pero archivo no: regenerar solo el archivo
             $token = $pdfModel->tokenVigente();
-            $qrUrl = $token ? $token->getUrlDescarga() : null;
-
-            // Si no hay token vigente, crear uno
-            if (! $qrUrl) {
+            if (! $token) {
                 $token = TokenDescarga::crearParaPdf($pdfModel->id);
-                $qrUrl = $token->getUrlDescarga();
             }
 
-            $this->renderizarPdf($analisis, $pdfModel->ruta_archivo, $qrUrl);
+            // Solo pasar QR URL para formato completo
+            $qrUrl = $esLimpio ? null : $token->getUrlDescarga();
+
+            $this->renderizarPdf($analisis, $pdfModel->ruta_archivo, $qrUrl, $formato);
 
             return [
                 'ruta' => $pdfModel->ruta_archivo,
@@ -157,8 +162,8 @@ class AnalisisPdfService
             ];
         }
 
-        // No existe PDF: generar uno nuevo completo
-        $resultado = $this->generar($analisis);
+        // No existe PDF: generar uno nuevo
+        $resultado = $this->generar($analisis, null, $formato);
 
         return [
             'ruta' => $resultado['ruta'],
