@@ -41,48 +41,19 @@ class EnvioResultadosService
 
         $telefono = $this->resolverTelefonoWhatsapp($analisis->muestra->veterinaria, $telefonoSeleccionado);
 
-        if ($formato === 'limpio') {
-            // Para formato limpio: reutilizar o generar PDF sin branding
-            $pdfModel = $analisis->pdfs()
-                ->where('ruta_archivo', 'like', '%_L.PDF')
-                ->latest()
-                ->first();
+        // Obtener o generar PDF según formato (reutiliza si ya existe)
+        $resultado = $this->pdfService->obtenerOGenerar($analisis, $formato);
+        $pdf = $resultado['modelo'];
 
-            if ($pdfModel && \Illuminate\Support\Facades\Storage::disk('public')->exists($pdfModel->ruta_archivo)) {
-                // Reutilizar PDF limpio existente
-                $tokenDescarga = $pdfModel->tokenVigente();
-                if (! $tokenDescarga) {
-                    $tokenDescarga = TokenDescarga::crearParaPdf($pdfModel->id, self::DIAS_EXPIRACION_ENLACE);
-                }
-            } else {
-                // Generar nuevo PDF limpio
-                $nombreArchivo = $this->pdfService->generarNombreArchivo($analisis, '_L');
-                $rutaRelativa = 'pdfs/'.date('Y/m').'/'.$nombreArchivo;
-
-                $pdfModel = \App\Models\Pdf::create([
-                    'analisis_id' => $analisis->id,
-                    'ruta_archivo' => $rutaRelativa,
-                    'generado_por' => auth()->id(),
-                    'fecha_generacion' => now(),
-                ]);
-
-                $tokenDescarga = TokenDescarga::crearParaPdf($pdfModel->id, self::DIAS_EXPIRACION_ENLACE);
-                $this->pdfService->renderizarPdf($analisis, $rutaRelativa, null, 'limpio');
-            }
-
-            $urlDescarga = $tokenDescarga->getUrlDescarga();
-        } else {
-            // Formato completo: reutilizar o generar PDF con branding
-            $resultado = $this->pdfService->obtenerOGenerar($analisis);
-            $pdf = $resultado['modelo'];
-
-            $tokenDescarga = $pdf->tokenVigente();
-            if (! $tokenDescarga) {
-                $tokenDescarga = TokenDescarga::crearParaPdf($pdf->id, self::DIAS_EXPIRACION_ENLACE);
+        $tokenDescarga = $pdf->tokenVigente();
+        if (! $tokenDescarga) {
+            $tokenDescarga = TokenDescarga::crearParaPdf($pdf->id, self::DIAS_EXPIRACION_ENLACE);
+            // Para formato completo, regenerar el PDF con la URL del QR actualizada
+            if ($formato !== 'limpio') {
                 $this->pdfService->renderizarPdf($analisis, $pdf->ruta_archivo, $tokenDescarga->getUrlDescarga());
             }
-            $urlDescarga = $tokenDescarga->getUrlDescarga();
         }
+        $urlDescarga = $tokenDescarga->getUrlDescarga();
 
         // Construir mensaje y URL
         $mensaje = $this->construirMensajeWhatsApp($analisis, $urlDescarga);
@@ -124,44 +95,19 @@ class EnvioResultadosService
         $linksDescarga = [];
 
         foreach ($analisisCollection as $analisis) {
-            if ($formato === 'limpio') {
-                $pdfModel = $analisis->pdfs()
-                    ->where('ruta_archivo', 'like', '%_limpio.pdf')
-                    ->latest()
-                    ->first();
+            // Obtener o generar PDF según formato (reutiliza si ya existe)
+            $resultado = $this->pdfService->obtenerOGenerar($analisis, $formato);
+            $pdf = $resultado['modelo'];
 
-                if ($pdfModel && \Illuminate\Support\Facades\Storage::disk('public')->exists($pdfModel->ruta_archivo)) {
-                    $tokenDescarga = $pdfModel->tokenVigente();
-                    if (! $tokenDescarga) {
-                        $tokenDescarga = TokenDescarga::crearParaPdf($pdfModel->id, self::DIAS_EXPIRACION_ENLACE);
-                    }
-                } else {
-                    $nombreArchivo = $this->pdfService->generarNombreArchivo($analisis, '_L');
-                    $rutaRelativa = 'pdfs/'.date('Y/m').'/'.$nombreArchivo;
-
-                    $pdfModel = \App\Models\Pdf::create([
-                        'analisis_id' => $analisis->id,
-                        'ruta_archivo' => $rutaRelativa,
-                        'generado_por' => auth()->id(),
-                        'fecha_generacion' => now(),
-                    ]);
-
-                    $tokenDescarga = TokenDescarga::crearParaPdf($pdfModel->id, self::DIAS_EXPIRACION_ENLACE);
-                    $this->pdfService->renderizarPdf($analisis, $rutaRelativa, null, 'limpio');
-                }
-
-                $urlToken = $tokenDescarga->getUrlDescarga();
-            } else {
-                $resultado = $this->pdfService->obtenerOGenerar($analisis);
-                $pdf = $resultado['modelo'];
-
-                $tokenDescarga = $pdf->tokenVigente();
-                if (! $tokenDescarga) {
-                    $tokenDescarga = TokenDescarga::crearParaPdf($pdf->id, self::DIAS_EXPIRACION_ENLACE);
+            $tokenDescarga = $pdf->tokenVigente();
+            if (! $tokenDescarga) {
+                $tokenDescarga = TokenDescarga::crearParaPdf($pdf->id, self::DIAS_EXPIRACION_ENLACE);
+                // Para formato completo, regenerar el PDF con la URL del QR actualizada
+                if ($formato !== 'limpio') {
                     $this->pdfService->renderizarPdf($analisis, $pdf->ruta_archivo, $tokenDescarga->getUrlDescarga());
                 }
-                $urlToken = $tokenDescarga->getUrlDescarga();
             }
+            $urlToken = $tokenDescarga->getUrlDescarga();
 
             $linksDescarga[] = [
                 'nombre' => $analisis->tipoAnalisis->nombre ?? 'Análisis',
@@ -205,13 +151,8 @@ class EnvioResultadosService
             throw new \Exception('La veterinaria no tiene un correo electrónico registrado.');
         }
 
-        if ($formato === 'limpio') {
-            $nombreArchivo = $this->pdfService->generarNombreArchivo($analisis, '_L');
-            $rutaRelativa = 'pdfs/'.date('Y/m').'/'.$nombreArchivo;
-            $this->pdfService->renderizarPdf($analisis, $rutaRelativa, null, 'limpio');
-        } else {
-            $this->pdfService->obtenerOGenerar($analisis);
-        }
+        // Obtener o generar PDF según formato (reutiliza si ya existe)
+        $this->pdfService->obtenerOGenerar($analisis, $formato);
 
         // Refrescar la relación de PDFs
         $analisis->load('pdfs');
@@ -256,13 +197,8 @@ class EnvioResultadosService
         $analisisIds = [];
 
         foreach ($analisisCollection as $analisis) {
-            if ($formato === 'limpio') {
-                $nombreArchivo = $this->pdfService->generarNombreArchivo($analisis, '_L');
-                $rutaRelativa = 'pdfs/'.date('Y/m').'/'.$nombreArchivo;
-                $this->pdfService->renderizarPdf($analisis, $rutaRelativa, null, 'limpio');
-            } else {
-                $this->pdfService->obtenerOGenerar($analisis);
-            }
+            // Obtener o generar PDF según formato (reutiliza si ya existe)
+            $this->pdfService->obtenerOGenerar($analisis, $formato);
 
             $analisisIds[] = $analisis->id;
             $analisis->update(['estado' => Analisis::ESTADO_ENVIADO]);

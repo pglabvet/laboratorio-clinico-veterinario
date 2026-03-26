@@ -87,16 +87,11 @@ class PdfController extends Controller
         }
 
         try {
-            $nombreArchivo = $this->pdfService->generarNombreArchivo($analisis, '_L');
-            $rutaRelativa = 'pdfs/'.date('Y/m').'/'.$nombreArchivo;
+            $resultado = $this->pdfService->obtenerOGenerar($analisis, 'limpio');
 
-            $pdf = $this->pdfService->renderizarPdf($analisis, $rutaRelativa, null, 'limpio');
-
-            $fullPath = \Illuminate\Support\Facades\Storage::disk('public')->path($rutaRelativa);
-
-            return response()->file($fullPath, [
+            return response()->file($resultado['fullPath'], [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'attachment; filename="'.$nombreArchivo.'"',
+                'Content-Disposition' => 'attachment; filename="'.$resultado['nombre'].'"',
             ]);
         } catch (\Exception $e) {
             abort(500, 'Error al generar el PDF: '.$e->getMessage());
@@ -116,16 +111,11 @@ class PdfController extends Controller
         }
 
         try {
-            $nombreArchivo = $this->pdfService->generarNombreArchivo($analisis, '_L');
-            $rutaRelativa = 'pdfs/'.date('Y/m').'/'.$nombreArchivo;
+            $resultado = $this->pdfService->obtenerOGenerar($analisis, 'limpio');
 
-            $pdf = $this->pdfService->renderizarPdf($analisis, $rutaRelativa, null, 'limpio');
-
-            $fullPath = \Illuminate\Support\Facades\Storage::disk('public')->path($rutaRelativa);
-
-            return response()->file($fullPath, [
+            return response()->file($resultado['fullPath'], [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="'.$nombreArchivo.'"',
+                'Content-Disposition' => 'inline; filename="'.$resultado['nombre'].'"',
             ]);
         } catch (\Exception $e) {
             return back()->with('error', 'Error al generar el PDF: '.$e->getMessage());
