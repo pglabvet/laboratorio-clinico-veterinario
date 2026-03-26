@@ -170,13 +170,18 @@ class CapturarResultados extends Component
             }
 
             // Por campo anidado — tabla-dos-columnas
-            if ($tipo === 'tabla-dos-columnas' && !empty($props['secciones'])) {
-                foreach ($props['secciones'] as $secIndex => $seccion) {
-                    foreach ($seccion['campos'] ?? [] as $campoIndex => $campo) {
-                        if (!empty($campo['reactivos'])) {
-                            $this->repeticionesData[$index]["s{$secIndex}"]["c{$campoIndex}"] = 1;
+            if ($tipo === 'tabla-dos-columnas') {
+                if (!empty($props['secciones'])) {
+                    foreach ($props['secciones'] as $secIndex => $seccion) {
+                        foreach ($seccion['campos'] ?? [] as $campoIndex => $campo) {
+                            if (!empty($campo['reactivos'])) {
+                                $this->repeticionesData[$index]["s{$secIndex}"]["c{$campoIndex}"] = 1;
+                            }
                         }
                     }
+                }
+                if (!empty($props['reactivos'])) {
+                    $this->repeticionesData[$index]['global'] = 1;
                 }
             }
 
@@ -212,13 +217,18 @@ class CapturarResultados extends Component
                     }
                 }
 
-                if ($tipo === 'tabla-dos-columnas' && !empty($props['secciones'])) {
-                    foreach ($props['secciones'] as $secIndex => $seccion) {
-                        foreach ($seccion['campos'] ?? [] as $campoIndex => $campo) {
-                            if (!empty($campo['reactivos'])) {
-                                $this->repeticionesData[$indice]["s{$secIndex}"]["c{$campoIndex}"] = $resultado->repeticiones ?? 1;
+                if ($tipo === 'tabla-dos-columnas') {
+                    if (!empty($props['secciones'])) {
+                        foreach ($props['secciones'] as $secIndex => $seccion) {
+                            foreach ($seccion['campos'] ?? [] as $campoIndex => $campo) {
+                                if (!empty($campo['reactivos'])) {
+                                    $this->repeticionesData[$indice]["s{$secIndex}"]["c{$campoIndex}"] = $resultado->repeticiones ?? 1;
+                                }
                             }
                         }
+                    }
+                    if (!empty($props['reactivos'])) {
+                        $this->repeticionesData[$indice]['global'] = $resultado->repeticiones ?? 1;
                     }
                 }
 
@@ -321,25 +331,43 @@ class CapturarResultados extends Component
                     );
                 }
 
-            // ─── POR CAMPO ANIDADO: tabla-dos-columnas ───
-            } elseif ($tipo === 'tabla-dos-columnas' && !empty($props['secciones'])) {
+            // ─── POR CAMPO ANIDADO Y GLOBAL : tabla-dos-columnas ───
+            } elseif ($tipo === 'tabla-dos-columnas') {
                 $camposGuardados = is_array($valorActual) ? $valorActual : [];
 
-                foreach ($props['secciones'] as $secIndex => $seccion) {
-                    foreach ($seccion['campos'] ?? [] as $campoIndex => $campo) {
-                        $reactivos = $campo['reactivos'] ?? [];
-                        if (empty($reactivos)) continue;
+                if (!empty($props['secciones'])) {
+                    foreach ($props['secciones'] as $secIndex => $seccion) {
+                        foreach ($seccion['campos'] ?? [] as $campoIndex => $campo) {
+                            $reactivos = $campo['reactivos'] ?? [];
+                            if (empty($reactivos)) continue;
 
-                        $nombreCampo = $campo['nombre'] ?? '';
-                        $match = collect($camposGuardados)->first(fn($item) => is_array($item) && ($item['campo'] ?? '') === $nombreCampo);
-                        $estaLleno = $match && isset($match['valor']) && $match['valor'] !== '' && $match['valor'] !== null;
-                        $repeticionesRequeridas = $estaLleno ? (int) ($this->repeticionesData[$index]["s{$secIndex}"]["c{$campoIndex}"] ?? 1) : 0;
-                        $observacionCampo = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre}, Campo: {$campo['nombre']}";
+                            $nombreCampo = $campo['nombre'] ?? '';
+                            $match = collect($camposGuardados)->first(fn($item) => is_array($item) && ($item['campo'] ?? '') === $nombreCampo);
+                            $estaLleno = $match && isset($match['valor']) && $match['valor'] !== '' && $match['valor'] !== null;
+                            $repeticionesRequeridas = $estaLleno ? (int) ($this->repeticionesData[$index]["s{$secIndex}"]["c{$campoIndex}"] ?? 1) : 0;
+                            $observacionCampo = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre}, Campo: {$campo['nombre']}";
 
-                        $this->procesarDiferenciaInventario(
-                            $pepsService, $reactivos, $sucursalId, $observacionCampo, $repeticionesRequeridas, $movimientosHistoricos
-                        );
+                            $this->procesarDiferenciaInventario(
+                                $pepsService, $reactivos, $sucursalId, $observacionCampo, $repeticionesRequeridas, $movimientosHistoricos
+                            );
+                        }
                     }
+                }
+
+                if (!empty($props['reactivos'])) {
+                    $estaLleno = false;
+                    foreach ($camposGuardados as $item) {
+                        if (is_array($item) && isset($item['valor']) && $item['valor'] !== '' && $item['valor'] !== null) {
+                            $estaLleno = true;
+                            break;
+                        }
+                    }
+                    $repeticionesRequeridas = $estaLleno ? (int) ($this->repeticionesData[$index]['global'] ?? 1) : 0;
+                    $observacionComp = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre} (Global)";
+
+                    $this->procesarDiferenciaInventario(
+                        $pepsService, $props['reactivos'], $sucursalId, $observacionComp, $repeticionesRequeridas, $movimientosHistoricos
+                    );
                 }
 
             // ─── NIVEL COMPONENTE: antibiograma, examen-diferencial, etc. ───

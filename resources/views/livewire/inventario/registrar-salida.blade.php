@@ -110,7 +110,7 @@
                             </div>
                             <div class="text-right">
                                 <p class="text-xs text-blue-600 dark:text-blue-400">Costo unit. promedio</p>
-                                <p class="text-sm font-semibold text-blue-800 dark:text-blue-200">Bs {{ number_format($costoEstimado['costo_unitario_promedio'], 2) }}/ud</p>
+                                <p class="text-sm font-semibold text-blue-800 dark:text-blue-200">Bs {{ \App\Helpers\FormatoHelper::dinamico($costoEstimado['costo_unitario_promedio']) }}/ud</p>
                             </div>
                         </div>
                         @if(count($detalleLotes) > 1)
@@ -118,7 +118,7 @@
                                 <p class="text-xs font-medium text-blue-700 dark:text-blue-400 mb-2">Desglose por lotes (PEPS):</p>
                                 @foreach($detalleLotes as $lote)
                                     <div class="flex justify-between text-xs text-blue-600 dark:text-blue-300">
-                                        <span>Lote {{ $lote['fecha_entrada'] }} — {{ number_format($lote['cantidad_consumida'], 2) }} uds × Bs {{ number_format($lote['costo_unitario'], 2) }}</span>
+                                        <span>Lote {{ $lote['fecha_entrada'] }} — {{ \App\Helpers\FormatoHelper::dinamico($lote['cantidad_consumida']) }} uds × Bs {{ \App\Helpers\FormatoHelper::dinamico($lote['costo_unitario']) }}</span>
                                         <span class="font-medium">Bs {{ number_format($lote['costo_subtotal'], 2) }}</span>
                                     </div>
                                 @endforeach
@@ -406,7 +406,7 @@
                                 <p class="text-xs font-medium text-neutral-500 dark:text-neutral-400">Lotes a consumir:</p>
                                 @foreach($detalleLotes as $lote)
                                     <div class="flex justify-between text-xs text-neutral-600 dark:text-neutral-300">
-                                        <span>Lote {{ $lote['fecha_entrada'] }}: {{ number_format($lote['cantidad_consumida'], 2) }} × Bs {{ number_format($lote['costo_unitario'], 2) }}</span>
+                                        <span>Lote {{ $lote['fecha_entrada'] }}: {{ \App\Helpers\FormatoHelper::dinamico($lote['cantidad_consumida']) }} × Bs {{ \App\Helpers\FormatoHelper::dinamico($lote['costo_unitario']) }}</span>
                                         <span>Bs {{ number_format($lote['costo_subtotal'], 2) }}</span>
                                     </div>
                                 @endforeach

@@ -26,9 +26,9 @@ class LoteInventario extends Model
     ];
 
     protected $casts = [
-        'cantidad_inicial' => 'decimal:2',
-        'cantidad_restante' => 'decimal:2',
-        'costo_unitario' => 'decimal:4',
+        'cantidad_inicial' => 'decimal:6',
+        'cantidad_restante' => 'decimal:6',
+        'costo_unitario' => 'decimal:6',
         'fecha_entrada' => 'datetime',
         'fecha_vencimiento' => 'date',
     ];
@@ -78,6 +78,6 @@ class LoteInventario extends Model
      */
     public function getCostoTotalLoteAttribute(): float
     {
-        return round($this->cantidad_restante * $this->costo_unitario, 4);
+        return round($this->cantidad_restante * $this->costo_unitario, 6);
     }
 }
