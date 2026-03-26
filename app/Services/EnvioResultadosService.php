@@ -219,7 +219,7 @@ class EnvioResultadosService
         $muestra = $analisis->muestra->load(['veterinaria', 'sucursal', 'especie']);
 
         Mail::to($email)->sendNow(
-            new ResultadosAnalisisMail($muestra, [$analisis->id], true)
+            new ResultadosAnalisisMail($muestra, [$analisis->id], true, $formato)
         );
 
         $analisis->update(['estado' => Analisis::ESTADO_ENVIADO]);
@@ -269,7 +269,7 @@ class EnvioResultadosService
         }
 
         Mail::to($email)->sendNow(
-            new ResultadosAnalisisMail($muestra, $analisisIds, true)
+            new ResultadosAnalisisMail($muestra, $analisisIds, true, $formato)
         );
 
         return 'Todos los resultados fueron enviados por correo electrónico a '.$email;

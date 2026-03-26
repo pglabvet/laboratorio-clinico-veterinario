@@ -18,6 +18,7 @@ class ResultadosAnalisisMail extends Mailable
     public Muestra $muestra;
     public array $analisisIds;
     public bool $adjuntarPdfs;
+    public string $formato;
 
     /**
      * Create a new message instance.
@@ -25,12 +26,14 @@ class ResultadosAnalisisMail extends Mailable
      * @param Muestra $muestra
      * @param array $analisisIds IDs de análisis a incluir
      * @param bool $adjuntarPdfs Si true, adjunta los PDFs al email
+     * @param string $formato 'completo' o 'limpio'
      */
-    public function __construct(Muestra $muestra, array $analisisIds, bool $adjuntarPdfs = true)
+    public function __construct(Muestra $muestra, array $analisisIds, bool $adjuntarPdfs = true, string $formato = 'completo')
     {
         $this->muestra = $muestra;
         $this->analisisIds = $analisisIds;
         $this->adjuntarPdfs = $adjuntarPdfs;
+        $this->formato = $formato;
     }
 
     /**
@@ -85,7 +88,15 @@ class ResultadosAnalisisMail extends Mailable
             ->get();
 
         foreach ($analisisList as $analisis) {
-            $pdf = $analisis->pdfs()->latest()->first();
+            $pdfQuery = $analisis->pdfs();
+
+            if ($this->formato === 'limpio') {
+                $pdfQuery->where('ruta_archivo', 'like', '%_L.PDF');
+            } else {
+                $pdfQuery->where('ruta_archivo', 'not like', '%_L.PDF');
+            }
+
+            $pdf = $pdfQuery->latest()->first();
 
             if ($pdf && Storage::disk('public')->exists($pdf->ruta_archivo)) {
                 $nombreAnalisis = $analisis->tipoAnalisis->nombre ?? 'Analisis';
