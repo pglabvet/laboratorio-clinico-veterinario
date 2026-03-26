@@ -180,6 +180,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('can:crear-muestras-rechazadas')
         ->name('muestras-rechazadas.crear');
 
+    Route::get('/muestras-rechazadas/{id}/editar', \App\Livewire\MuestrasRechazadas\RegistrarMuestraRechazada::class)
+        ->middleware('can:editar-muestras-rechazadas')
+        ->name('muestras-rechazadas.editar');
+
     // Auditorías del sistema
     Route::get('/auditorias', \App\Livewire\Auditorias\ListarAuditorias::class)
         ->middleware('can:ver-auditorias')

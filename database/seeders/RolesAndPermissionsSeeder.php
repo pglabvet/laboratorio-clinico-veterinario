@@ -156,6 +156,9 @@ class RolesAndPermissionsSeeder extends Seeder
             // Muestras Rechazadas
             'ver-muestras-rechazadas',
             'crear-muestras-rechazadas',
+            'editar-muestras-rechazadas',
+            'eliminar-muestras-rechazadas',
+            'mostrar-detalle-muestra-rechazada',
 
             // Ayuda / Guía del Sistema
             'ver-ayuda',
@@ -225,6 +228,12 @@ class RolesAndPermissionsSeeder extends Seeder
             // Muestras extra
             'enviar-resultados-muestra',
             'ver-codigo-barras-muestra',
+            // Muestras rechazadas
+            'ver-muestras-rechazadas',
+            'crear-muestras-rechazadas',
+            'editar-muestras-rechazadas',
+            'eliminar-muestras-rechazadas',
+            'mostrar-detalle-muestra-rechazada',
         ]);
 
         $this->command->info('Roles y permisos creados exitosamente.');

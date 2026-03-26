@@ -14,8 +14,8 @@
         >
             Volver
         </flux:button>
-        <flux:heading size="xl" class="mb-1">Registrar Muestra Rechazada</flux:heading>
-        <flux:subheading>Complete el formulario con los datos del paciente y el motivo de rechazo</flux:subheading>
+        <flux:heading size="xl" class="mb-1">{{ $modoEdicion ? 'Editar Muestra Rechazada' : 'Registrar Muestra Rechazada' }}</flux:heading>
+        <flux:subheading>{{ $modoEdicion ? 'Actualice los datos de la muestra rechazada' : 'Complete el formulario con los datos del paciente y el motivo de rechazo' }}</flux:subheading>
     </div>
 
     {{-- Formulario --}}
@@ -228,7 +228,7 @@
                     Cancelar
                 </flux:button>
                 <flux:button type="submit" variant="primary">
-                    Registrar Muestra Rechazada
+                    {{ $modoEdicion ? 'Actualizar' : 'Registrar Muestra Rechazada' }}
                 </flux:button>
             </div>
 
