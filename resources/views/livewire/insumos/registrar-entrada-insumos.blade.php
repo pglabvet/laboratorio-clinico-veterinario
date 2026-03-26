@@ -286,15 +286,15 @@
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
                                 <span class="font-medium text-green-600 dark:text-green-400">
-                                    +{{ number_format($entrada->cantidad, 2) }} 
+                                    +{{ \App\Helpers\FormatoHelper::dinamico($entrada->cantidad) }} 
                                     {{ $entrada->insumo->unidadMedida->abreviatura ?? '' }}
                                 </span>
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-900 dark:text-neutral-100">
-                                Bs {{ number_format($entrada->costo_unitario, 2) }}
+                                Bs {{ \App\Helpers\FormatoHelper::dinamico($entrada->costo_unitario) }}
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                                Bs {{ number_format($entrada->costo_total, 2) }}
+                                Bs {{ \App\Helpers\FormatoHelper::dinamico($entrada->costo_total) }}
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
                                 <flux:badge 

@@ -26,7 +26,7 @@ class PepsInventarioService
         ): MovimientoInventario
     {
         return DB::transaction(function () use ($insumoId, $sucursalId, $cantidad, $costoUnitario, $motivo, $observacion, $usuarioId, $codigoLote, $fechaVencimiento) {
-            $costoTotal = round($cantidad * $costoUnitario, 4);
+            $costoTotal = round($cantidad * $costoUnitario, 6);
 
             // 1. Crear movimiento de entrada
             $movimiento = MovimientoInventario::create([
@@ -104,7 +104,7 @@ class PepsInventarioService
             $resultado = $this->consumirLotesPeps($insumoId, $sucursalId, $cantidad);
 
             // 3. Calcular costo unitario promedio de la salida
-            $costoUnitarioSalida = $cantidad > 0 ? round($resultado['costo_total'] / $cantidad, 4) : 0;
+            $costoUnitarioSalida = $cantidad > 0 ? round($resultado['costo_total'] / $cantidad, 6) : 0;
 
             // 4. Crear movimiento de salida
             $movimiento = MovimientoInventario::create([
@@ -162,7 +162,7 @@ class PepsInventarioService
             $resultado = $this->consumirLotesPeps($insumoId, $sucursalId, $cantidad);
 
             // 3. Calcular costo unitario promedio de la salida
-            $costoUnitarioSalida = $cantidad > 0 ? round($resultado['costo_total'] / $cantidad, 4) : 0;
+            $costoUnitarioSalida = $cantidad > 0 ? round($resultado['costo_total'] / $cantidad, 6) : 0;
 
             // 4. Crear movimiento de consumo por análisis
             $movimiento = MovimientoInventario::create([
@@ -233,7 +233,7 @@ class PepsInventarioService
             }
 
             $cantidadDelLote = min($lote->cantidad_restante, $cantidadPendiente);
-            $costoDelLote = round($cantidadDelLote * $lote->costo_unitario, 4);
+            $costoDelLote = round($cantidadDelLote * $lote->costo_unitario, 6);
 
             // Descontar del lote
             $lote->cantidad_restante -= $cantidadDelLote;
@@ -256,7 +256,7 @@ class PepsInventarioService
         }
 
         return [
-            'costo_total' => round($costoTotal, 4),
+            'costo_total' => round($costoTotal, 6),
             'detalle_lotes' => $detalleLotes,
         ];
     }
@@ -295,7 +295,7 @@ class PepsInventarioService
             }
 
             $cantidadDelLote = min($lote->cantidad_restante, $cantidadPendiente);
-            $costoDelLote = round($cantidadDelLote * $lote->costo_unitario, 4);
+            $costoDelLote = round($cantidadDelLote * $lote->costo_unitario, 6);
 
             $costoTotal += $costoDelLote;
             $cantidadPendiente -= $cantidadDelLote;
@@ -312,11 +312,11 @@ class PepsInventarioService
 
         $stockSuficiente = $cantidadPendiente <= 0;
         $costoUnitarioPromedio = ($cantidad > 0 && $stockSuficiente)
-            ? round($costoTotal / $cantidad, 4)
+            ? round($costoTotal / $cantidad, 6)
             : 0;
 
         return [
-            'costo_total' => round($costoTotal, 4),
+            'costo_total' => round($costoTotal, 6),
             'costo_unitario_promedio' => $costoUnitarioPromedio,
             'detalle_lotes' => $detalleLotes,
             'stock_suficiente' => $stockSuficiente,
@@ -402,19 +402,19 @@ class PepsInventarioService
                 'entrada_cantidad' => $entradaCantidad !== null ? round($entradaCantidad, 2) : null,
                 'salida_cantidad' => $salidaCantidad !== null ? round($salidaCantidad, 2) : null,
                 'saldo_cantidad' => round($saldoCantidad, 2),
-                'inicio_costo' => round($inicioCosto, 4),
-                'entrada_costo' => $entradaCosto !== null ? round($entradaCosto, 4) : null,
-                'salida_costo' => $salidaCosto !== null ? round($salidaCosto, 4) : null,
-                'saldo_costo' => round($saldoCosto, 4),
+                'inicio_costo' => round($inicioCosto, 6),
+                'entrada_costo' => $entradaCosto !== null ? round($entradaCosto, 6) : null,
+                'salida_costo' => $salidaCosto !== null ? round($salidaCosto, 6) : null,
+                'saldo_costo' => round($saldoCosto, 6),
             ];
         }
 
         return [
             'saldo_inicial_cantidad' => round($saldoCantidadInicial, 2),
-            'saldo_inicial_costo' => round($saldoCostoInicial, 4),
+            'saldo_inicial_costo' => round($saldoCostoInicial, 6),
             'registros' => $registros,
             'saldo_final_cantidad' => round($saldoCantidad, 2),
-            'saldo_final_costo' => round($saldoCosto, 4),
+            'saldo_final_costo' => round($saldoCosto, 6),
         ];
     }
 

@@ -130,10 +130,10 @@
                         <div>
                             <p class="text-xs text-neutral-500 dark:text-neutral-400">Saldo Final</p>
                             <p class="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-                                {{ number_format($kardexData['saldo_final_cantidad'], 2) }} uds
+                                {{ \App\Helpers\FormatoHelper::dinamico($kardexData['saldo_final_cantidad']) }} uds
                             </p>
                             <p class="text-sm font-semibold text-blue-600 dark:text-blue-400">
-                                Bs {{ number_format($kardexData['saldo_final_costo'], 2) }}
+                                Bs {{ \App\Helpers\FormatoHelper::dinamico($kardexData['saldo_final_costo']) }}
                             </p>
                         </div>
                         {{-- Botones de exportación --}}
@@ -224,12 +224,12 @@
 
                                 {{-- CANTIDADES --}}
                                 <td class="whitespace-nowrap px-3 py-3 text-center text-sm text-neutral-500 dark:text-neutral-400">
-                                    {{ number_format($registro['inicio_cantidad'], 2) }}
+                                    {{ \App\Helpers\FormatoHelper::dinamico($registro['inicio_cantidad']) }}
                                 </td>
                                 <td class="whitespace-nowrap px-3 py-3 text-center text-sm">
                                     @if($registro['entrada_cantidad'] !== null)
                                         <span class="font-medium text-green-600 dark:text-green-400">
-                                            {{ number_format($registro['entrada_cantidad'], 2) }}
+                                            {{ \App\Helpers\FormatoHelper::dinamico($registro['entrada_cantidad']) }}
                                         </span>
                                     @else
                                         <span class="text-neutral-300 dark:text-neutral-600">—</span>
@@ -238,24 +238,24 @@
                                 <td class="whitespace-nowrap px-3 py-3 text-center text-sm">
                                     @if($registro['salida_cantidad'] !== null)
                                         <span class="font-medium text-red-600 dark:text-red-400">
-                                            {{ number_format($registro['salida_cantidad'], 2) }}
+                                            {{ \App\Helpers\FormatoHelper::dinamico($registro['salida_cantidad']) }}
                                         </span>
                                     @else
                                         <span class="text-neutral-300 dark:text-neutral-600">—</span>
                                     @endif
                                 </td>
                                 <td class="whitespace-nowrap px-3 py-3 text-center text-sm font-bold text-neutral-900 dark:text-neutral-100">
-                                    {{ number_format($registro['saldo_cantidad'], 2) }}
+                                    {{ \App\Helpers\FormatoHelper::dinamico($registro['saldo_cantidad']) }}
                                 </td>
 
                                 {{-- COSTOS --}}
                                 <td class="whitespace-nowrap px-3 py-3 text-center text-sm text-neutral-500 dark:text-neutral-400 bg-blue-50/30 dark:bg-blue-900/5">
-                                    {{ number_format($registro['inicio_costo'], 2) }}
+                                    {{ \App\Helpers\FormatoHelper::dinamico($registro['inicio_costo']) }}
                                 </td>
                                 <td class="whitespace-nowrap px-3 py-3 text-center text-sm bg-blue-50/30 dark:bg-blue-900/5">
                                     @if($registro['entrada_costo'] !== null)
                                         <span class="font-medium text-green-600 dark:text-green-400">
-                                            {{ number_format($registro['entrada_costo'], 2) }}
+                                            {{ \App\Helpers\FormatoHelper::dinamico($registro['entrada_costo']) }}
                                         </span>
                                     @else
                                         <span class="text-neutral-300 dark:text-neutral-600">—</span>
@@ -264,14 +264,14 @@
                                 <td class="whitespace-nowrap px-3 py-3 text-center text-sm bg-blue-50/30 dark:bg-blue-900/5">
                                     @if($registro['salida_costo'] !== null)
                                         <span class="font-medium text-red-600 dark:text-red-400">
-                                            {{ number_format($registro['salida_costo'], 2) }}
+                                            {{ \App\Helpers\FormatoHelper::dinamico($registro['salida_costo']) }}
                                         </span>
                                     @else
                                         <span class="text-neutral-300 dark:text-neutral-600">—</span>
                                     @endif
                                 </td>
                                 <td class="whitespace-nowrap px-3 py-3 text-center text-sm font-bold text-blue-700 dark:text-blue-300 bg-blue-50/30 dark:bg-blue-900/5">
-                                    {{ number_format($registro['saldo_costo'], 2) }}
+                                    {{ \App\Helpers\FormatoHelper::dinamico($registro['saldo_costo']) }}
                                 </td>
                             </tr>
                         @empty
@@ -295,11 +295,11 @@
                             </td>
                             <td colspan="3"></td>
                             <td class="px-3 py-3 text-center text-sm font-bold text-neutral-900 dark:text-neutral-100">
-                                {{ number_format($kardexData['saldo_final_cantidad'], 2) }}
+                                {{ \App\Helpers\FormatoHelper::dinamico($kardexData['saldo_final_cantidad']) }}
                             </td>
                             <td colspan="3"></td>
                             <td class="px-3 py-3 text-center text-sm font-bold text-blue-700 dark:text-blue-300 bg-blue-100/50 dark:bg-blue-900/20">
-                                Bs {{ number_format($kardexData['saldo_final_costo'], 2) }}
+                                Bs {{ \App\Helpers\FormatoHelper::dinamico($kardexData['saldo_final_costo']) }}
                             </td>
                         </tr>
                     </tfoot>

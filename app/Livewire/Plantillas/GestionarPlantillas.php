@@ -240,6 +240,7 @@ class GestionarPlantillas extends Component
                         ],
                     ],
                 ],
+                'reactivos' => [],
             ],
             'serologia' => [
                 'titulo' => 'SEROLOGIA',

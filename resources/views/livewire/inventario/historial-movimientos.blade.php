@@ -294,20 +294,20 @@
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm">
                                 <span class="font-medium {{ $movimiento->cantidad < 0 ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400' }}">
-                                    {{ $movimiento->cantidad > 0 ? '+' : '' }}{{ number_format($movimiento->cantidad, 2) }} 
+                                    {{ $movimiento->cantidad > 0 ? '+' : '' }}{{ \App\Helpers\FormatoHelper::dinamico($movimiento->cantidad) }} 
                                     {{ $movimiento->insumo->unidadMedida->abreviatura ?? '' }}
                                 </span>
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-900 dark:text-neutral-100">
                                 @if($movimiento->costo_unitario > 0)
-                                    Bs {{ number_format($movimiento->costo_unitario, 2) }}
+                                    Bs {{ \App\Helpers\FormatoHelper::dinamico($movimiento->costo_unitario) }}
                                 @else
                                     <span class="text-neutral-400">—</span>
                                 @endif
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-neutral-900 dark:text-neutral-100">
                                 @if($movimiento->costo_total > 0)
-                                    Bs {{ number_format($movimiento->costo_total, 2) }}
+                                    Bs {{ \App\Helpers\FormatoHelper::dinamico($movimiento->costo_total) }}
                                 @else
                                     <span class="text-neutral-400">—</span>
                                 @endif
