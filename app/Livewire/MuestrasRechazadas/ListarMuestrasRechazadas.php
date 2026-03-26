@@ -20,6 +20,12 @@ class ListarMuestrasRechazadas extends Component
     public $filtroDesde = '';
     public $filtroHasta = '';
 
+    // Modals y datos de acciones
+    public $modalVer = false;
+    public $muestraAVer = null;
+    public $modalEliminar = false;
+    public $muestraEliminarId = null;
+
     public $motivosPredefinidos = [
         'Muestra hemolizada',
         'Muestra coagulada',
@@ -48,6 +54,41 @@ class ListarMuestrasRechazadas extends Component
     public function crear()
     {
         return redirect()->route('muestras-rechazadas.crear');
+    }
+
+    // ─── Acciones: Ver ───
+    public function ver($id)
+    {
+        $this->muestraAVer = MuestraRechazada::with(['especie', 'veterinaria', 'sucursal', 'registradoPor'])->findOrFail($id);
+        $this->modalVer = true;
+    }
+
+    public function cerrarModalVer()
+    {
+        $this->modalVer = false;
+        $this->muestraAVer = null;
+    }
+
+    // ─── Acciones: Eliminar ───
+    public function confirmarEliminar($id)
+    {
+        $this->muestraEliminarId = $id;
+        $this->modalEliminar = true;
+    }
+
+    public function cancelarEliminar()
+    {
+        $this->modalEliminar = false;
+        $this->muestraEliminarId = null;
+    }
+
+    public function eliminar()
+    {
+        $muestra = MuestraRechazada::findOrFail($this->muestraEliminarId);
+        $muestra->delete();
+        $this->modalEliminar = false;
+        $this->muestraEliminarId = null;
+        session()->flash('success', 'Muestra rechazada eliminada exitosamente.');
     }
 
     #[Computed]

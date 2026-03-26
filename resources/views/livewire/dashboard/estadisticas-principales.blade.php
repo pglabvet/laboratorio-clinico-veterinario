@@ -74,7 +74,7 @@
 
     @can('ver-alertas-inventario')
     {{-- Alertas de Inventario --}}
-    <a href="{{ route('insumos.index') }}" wire:navigate class="group block rounded-xl border border-zinc-200 bg-white p-6 transition-all hover:border-blue-300 hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-blue-700">
+    <a href="{{ route('insumos.index') }}" wire:navigate class="group block rounded-xl border border-zinc-200 bg-white p-6 transition-all hover:shadow-lg dark:border-zinc-700 dark:bg-zinc-900 {{ $insumosStockBajo > 0 ? 'hover:border-amber-300 dark:hover:border-amber-700' : 'hover:border-green-300 dark:hover:border-green-700' }}">
         <div class="flex items-start justify-between">
             <div class="flex-1">
                 <flux:heading size="sm" class="text-zinc-600 dark:text-zinc-400 font-medium">

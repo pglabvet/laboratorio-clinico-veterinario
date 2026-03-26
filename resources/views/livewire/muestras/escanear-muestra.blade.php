@@ -277,48 +277,6 @@
                         @endforeach
                     </div>
                 </div>
-            </div>
-
-            {{-- Footer con acciones --}}
-            <div class="border-t border-neutral-200 bg-neutral-50 px-6 py-4 dark:border-neutral-700 dark:bg-neutral-900">
-                <div class="flex flex-wrap gap-3"
-                     x-data="{
-                        printWindow: null,
-                        printEtiqueta() {
-                            if (this.printWindow && !this.printWindow.closed) {
-                                this.printWindow.close();
-                            }
-                            const timestamp = new Date().getTime();
-                            const printUrl = `{{ route('muestras.etiqueta', $muestra) }}?t=${timestamp}`;
-                            const windowName = `etiqueta_{{ $muestra->id }}_${timestamp}`;
-                            this.printWindow = window.open(printUrl, windowName, 'width=800,height=600');
-                            if (this.printWindow) {
-                                this.printWindow.onload = function() {
-                                    setTimeout(() => {
-                                        this.print();
-                                    }, 500);
-                                };
-                            }
-                        }
-                     }">
-                    <flux:button 
-                        type="button"
-                        x-on:click="printEtiqueta()"
-                        variant="outline"
-                        icon="printer"
-                    >
-                        Reimprimir Etiqueta
-                    </flux:button>
-
-                    <flux:button 
-                        href="{{ route('muestras.index') }}"
-                        variant="ghost"
-                        icon="list-bullet"
-                    >
-                        Ver todas las muestras
-                    </flux:button>
-                </div>
-            </div>
         </div>
     @endif
 </div>
