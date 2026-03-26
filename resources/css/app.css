@@ -176,3 +176,13 @@ select:focus[data-flux-control] {
     background-color: #27272a;
     background-image: url('/images/fondo_sistema_oscuro.png');
 }
+
+/* ===== Scrollbar delgado para paneles del constructor ===== */
+.scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #a1a1aa transparent;
+}
+
+.dark .scrollbar-thin {
+    scrollbar-color: #52525b transparent;
+}

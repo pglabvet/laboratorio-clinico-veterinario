@@ -252,7 +252,7 @@
             
             <!-- Panel Izquierdo: Componentes Disponibles -->
             <div class="col-span-2">
-                <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-md p-6 sticky top-6">
+                <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-md p-6 sticky top-6 max-h-[calc(100vh-7rem)] overflow-y-auto scrollbar-thin">
                     <h3 class="text-lg font-bold text-gray-800 dark:text-zinc-100 mb-4 flex items-center">
                         <i class="fas fa-puzzle-piece mr-2 text-blue-600"></i>
                         Componentes
@@ -314,7 +314,7 @@
 
             <!-- Panel Derecho: Propiedades -->
             <div class="col-span-3">
-                <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-md p-6 sticky top-6">
+                <div class="bg-white dark:bg-zinc-900 rounded-lg shadow-md p-6 sticky top-6 max-h-[calc(100vh-7rem)] overflow-y-auto scrollbar-thin">
                     <h3 class="text-lg font-bold text-gray-800 dark:text-zinc-100 mb-4 flex items-center">
                         <i class="fas fa-sliders-h mr-2 text-blue-600"></i>
                         Propiedades

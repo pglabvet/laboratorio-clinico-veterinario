@@ -31,6 +31,10 @@ class RegistrarMuestraRechazada extends Component
     public $motivo_personalizado = '';
     public $observaciones = '';
 
+    // Edición
+    public $muestraId = null;
+    public $modoEdicion = false;
+
     public $motivosPredefinidos = [
         'Muestra hemolizada',
         'Muestra coagulada',
@@ -40,11 +44,40 @@ class RegistrarMuestraRechazada extends Component
         'Tubo incorrecto',
     ];
 
-    public function mount()
+    public function mount($id = null)
     {
         $user = auth()->user();
         if ($user->sucursal_id) {
             $this->sucursal_id = $user->sucursal_id;
+        }
+
+        if ($id) {
+            $muestra = MuestraRechazada::findOrFail($id);
+            $this->muestraId = $muestra->id;
+            $this->modoEdicion = true;
+            $this->paciente_nombre = $muestra->paciente_nombre;
+            $this->especie_id = $muestra->especie_id;
+            $this->raza = $muestra->raza ?? '';
+            $this->propietario_nombre = $muestra->propietario_nombre;
+            $this->tipo_muestra = $muestra->tipo_muestra;
+            $this->veterinaria_id = $muestra->veterinaria_id;
+            $this->sucursal_id = $muestra->sucursal_id;
+            $this->observaciones = $muestra->observaciones ?? '';
+            $this->sexo = $muestra->sexo;
+
+            // Parsear edad (formato "3 años")
+            if ($muestra->edad && preg_match('/^(\d+)\s+(.+)$/', $muestra->edad, $matches)) {
+                $this->edadCantidad = $matches[1];
+                $this->edadUnidad = $matches[2];
+            }
+
+            // Verificar si el motivo es predefinido o personalizado
+            if (in_array($muestra->motivo_rechazo, $this->motivosPredefinidos)) {
+                $this->motivo_rechazo = $muestra->motivo_rechazo;
+            } else {
+                $this->motivo_rechazo = 'Otro';
+                $this->motivo_personalizado = $muestra->motivo_rechazo;
+            }
         }
     }
 
@@ -88,11 +121,8 @@ class RegistrarMuestraRechazada extends Component
         try {
             DB::beginTransaction();
 
-            $codigo = $this->generarCodigo();
-            $edad   = $this->edadCantidad . ' ' . $this->edadUnidad;
-
-            MuestraRechazada::create([
-                'codigo_muestra'     => $codigo,
+            $edad = $this->edadCantidad . ' ' . $this->edadUnidad;
+            $datos = [
                 'paciente_nombre'    => $this->paciente_nombre,
                 'especie_id'         => $this->especie_id,
                 'raza'               => $this->raza,
@@ -104,18 +134,29 @@ class RegistrarMuestraRechazada extends Component
                 'tipo_muestra'       => $this->tipo_muestra,
                 'motivo_rechazo'     => $motivoFinal,
                 'observaciones'      => $this->observaciones ?: null,
-                'registrado_por'     => auth()->id(),
-                'fecha_rechazo'      => now(),
-            ]);
+            ];
+
+            if ($this->modoEdicion) {
+                $muestra = MuestraRechazada::findOrFail($this->muestraId);
+                $muestra->update($datos);
+                $mensaje = 'Muestra rechazada actualizada exitosamente.';
+            } else {
+                $codigo = $this->generarCodigo();
+                $datos['codigo_muestra'] = $codigo;
+                $datos['registrado_por'] = auth()->id();
+                $datos['fecha_rechazo'] = now();
+                MuestraRechazada::create($datos);
+                $mensaje = "Muestra rechazada registrada exitosamente. Código: {$codigo}";
+            }
 
             DB::commit();
 
-            session()->flash('success', "Muestra rechazada registrada exitosamente. Código: {$codigo}");
+            session()->flash('success', $mensaje);
             return redirect()->route('muestras-rechazadas.index');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            session()->flash('error', 'Error al registrar: ' . $e->getMessage());
+            session()->flash('error', 'Error al ' . ($this->modoEdicion ? 'actualizar' : 'registrar') . ': ' . $e->getMessage());
         }
     }
 
