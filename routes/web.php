@@ -43,6 +43,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('muestras.crear');
 
     Route::view('/muestras/editar/{id}', 'muestras.editar')
+        ->middleware('can:editar-muestras')
         ->name('muestras.editar');
 
     Route::view('/muestras/escanear', 'muestras.escanear')
