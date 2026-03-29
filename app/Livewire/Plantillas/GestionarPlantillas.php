@@ -75,14 +75,8 @@ class GestionarPlantillas extends Component
                 ];
             })->toArray();
 
-            // Asegurar que todos los componentes tengan ID
-            $componentes = $plantillaOriginal->componentes ?? [];
-            foreach ($componentes as &$componente) {
-                if (! isset($componente['id'])) {
-                    $componente['id'] = uniqid('comp_', true);
-                }
-            }
-            $this->componentes = array_values($componentes);
+            // Normalizar y asegurar IDs
+            $this->componentes = $this->normalizarComponentes($plantillaOriginal->componentes);
         } else {
             $this->nombreFormulario = 'Nuevo Analisis';
             $this->descripcionFormulario = '';
@@ -105,14 +99,31 @@ class GestionarPlantillas extends Component
             ];
         })->toArray();
 
-        // Asegurar que todos los componentes tengan ID
-        $componentes = $plantilla->componentes ?? [];
+        // Normalizar y asegurar IDs
+        $this->componentes = $this->normalizarComponentes($plantilla->componentes);
+    }
+
+    private function normalizarComponentes($componentesOriginales)
+    {
+        $componentes = $componentesOriginales ?? [];
         foreach ($componentes as &$componente) {
             if (! isset($componente['id'])) {
                 $componente['id'] = uniqid('comp_', true);
             }
+            
+            // Migrar componentes antiguos de serologia al nuevo formato
+            if (isset($componente['tipo']) && $componente['tipo'] === 'serologia' && isset($componente['propiedades']['campos'])) {
+                foreach ($componente['propiedades']['campos'] as &$campo) {
+                    if (is_string($campo)) {
+                        $campo = [
+                            'nombre' => $campo,
+                            'reactivos' => []
+                        ];
+                    }
+                }
+            }
         }
-        $this->componentes = array_values($componentes);
+        return array_values($componentes);
     }
 
     public function agregarComponente($tipo)

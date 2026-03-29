@@ -44,12 +44,7 @@
         
         <div class="space-y-3 max-h-96 overflow-y-auto">
             @foreach($props['campos'] ?? [] as $fieldIndex => $campo)
-            @php
-                // Compatibilidad: si el campo es un string simple, convertirlo a objeto
-                $campoNombre = is_string($campo) ? $campo : ($campo['nombre'] ?? '');
-                $campoReactivos = is_string($campo) ? [] : ($campo['reactivos'] ?? []);
-            @endphp
-            <div class="p-3 bg-gray-50 dark:bg-zinc-900 rounded border border-gray-200 dark:border-zinc-700">
+            <div wire:key="prueba-{{ $indiceComponente }}-{{ $fieldIndex }}" class="p-3 bg-gray-50 dark:bg-zinc-900 rounded border border-gray-200 dark:border-zinc-700">
                 <div class="flex items-center gap-2 mb-2">
                     <span class="text-xs font-semibold text-gray-500 dark:text-zinc-400">Prueba {{ $fieldIndex + 1 }}</span>
                     <div class="flex-1"></div>
@@ -77,12 +72,12 @@
                     </p>
                     <p class="text-[10px] text-emerald-600/80 mb-2 leading-tight">Solo químicos. Material de toma va en plantilla base.</p>
                     <div class="space-y-1">
-                        @foreach($campoReactivos as $ri => $reactivo)
-                        <div class="border border-emerald-200 dark:border-emerald-700 rounded p-1.5 bg-white dark:bg-zinc-800 space-y-1">
+                        @foreach($campo['reactivos'] ?? [] as $ri => $reactivo)
+                        <div wire:key="reactivo-{{ $indiceComponente }}-{{ $fieldIndex }}-{{ $ri }}" class="border border-emerald-200 dark:border-emerald-700 rounded p-1.5 bg-white dark:bg-zinc-800 space-y-1">
                             <div class="flex items-center justify-between">
                                 <span class="text-xs text-emerald-600 dark:text-emerald-400">Reactivo {{ $ri + 1 }}</span>
                                 <button
-                                    wire:click="$set('componentes.{{ $indiceComponente }}.propiedades.campos.{{ $fieldIndex }}.reactivos', {{ json_encode(array_values(array_filter($campoReactivos, fn($r, $i) => $i !== $ri, ARRAY_FILTER_USE_BOTH))) }})"
+                                    wire:click="$set('componentes.{{ $indiceComponente }}.propiedades.campos.{{ $fieldIndex }}.reactivos', {{ json_encode(array_values(array_filter($campo['reactivos'] ?? [], fn($r, $i) => $i !== $ri, ARRAY_FILTER_USE_BOTH))) }})"
                                     class="px-1 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-500 rounded text-xs">
                                     <i class="fas fa-times"></i>
                                 </button>
@@ -113,7 +108,7 @@
                         @endforeach
                     </div>
                     <button
-                        wire:click="$set('componentes.{{ $indiceComponente }}.propiedades.campos.{{ $fieldIndex }}.reactivos', {{ json_encode(array_merge($campoReactivos, [['categoria_id' => '', 'reactivo_id' => '', 'cantidad' => 1]])) }})"
+                        wire:click="$set('componentes.{{ $indiceComponente }}.propiedades.campos.{{ $fieldIndex }}.reactivos', {{ json_encode(array_merge($campo['reactivos'] ?? [], [['categoria_id' => '', 'reactivo_id' => '', 'cantidad' => 1]])) }})"
                         class="mt-1 w-full px-2 py-1 border border-dashed border-emerald-400 dark:border-emerald-600 text-emerald-700 dark:text-emerald-400 rounded text-xs hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors flex items-center justify-center gap-1">
                         <i class="fas fa-plus"></i> Agregar Reactivo
                     </button>

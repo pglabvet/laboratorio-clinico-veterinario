@@ -24,24 +24,19 @@
             </tr>
         </thead>
         @endif
-        @foreach($props['campos'] ?? [] as $campo)
-            @php
-                $campoNombre = is_string($campo) ? $campo : ($campo['nombre'] ?? '');
-            @endphp
-            @if($campoNombre)
-            <tr>
-                <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 font-semibold bg-gray-50 dark:bg-zinc-900 w-2/3 text-gray-900 dark:text-zinc-100">
-                    {{ $campoNombre }}
+        @foreach($props['campos'] ?? [] as $index => $campo)
+            <tr wire:key="preview-serologia-{{ $componente['id'] ?? 'temp' }}-{{ $index }}">
+                <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 font-semibold bg-gray-50 dark:bg-zinc-900 w-2/3 text-gray-900 dark:text-zinc-100 {{ empty($campo['nombre']) ? 'text-gray-400 italic' : '' }}">
+                    {{ !empty($campo['nombre']) ? $campo['nombre'] : '(prueba sin nombre)' }}
                 </td>
                 <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 text-center text-gray-400 dark:text-zinc-500 italic">
                     Negativo (-) / Positivo (+)
                 </td>
             </tr>
-            @endif
         @endforeach
     </table>
 
-    @if(empty(array_filter($props['campos'] ?? [])))
+    @if(empty($props['campos']))
     <div class="p-4 text-center text-gray-400 dark:text-zinc-500 text-sm italic">
         Agrega pruebas serológicas para ver la vista previa
     </div>
