@@ -300,10 +300,40 @@
                                 @php
                                     $filasTemplateVer = $propiedadesComponente['filas'] ?? [];
                                     $filasTemplateByNameVer = collect($filasTemplateVer)->filter(fn($f) => is_array($f))->keyBy('nombre');
+                                    
+                                    // Extraer descripción de serología si existe
+                                    $descripcionSerologia = '';
+                                    if ($tipo === 'serologia' && is_array($resultado->valor)) {
+                                        foreach ($resultado->valor as $itemMeta) {
+                                            if (is_array($itemMeta) && ($itemMeta['_meta'] ?? '') === 'descripcion') {
+                                                $descripcionSerologia = $itemMeta['valor'] ?? '';
+                                                break;
+                                            }
+                                        }
+                                        // Fallback: descripción de la plantilla
+                                        if (empty($descripcionSerologia)) {
+                                            $tipoDescVer = $propiedadesComponente['tipo_descripcion'] ?? 'input';
+                                            if ($tipoDescVer === 'input') {
+                                                $descripcionSerologia = $propiedadesComponente['descripcion'] ?? '';
+                                            } elseif ($tipoDescVer === 'select') {
+                                                $opcsVer = array_filter(array_map('trim', explode(',', $propiedadesComponente['opciones_descripcion'] ?? '')));
+                                                if (count($opcsVer) === 1) {
+                                                    $descripcionSerologia = $opcsVer[0];
+                                                }
+                                            }
+                                        }
+                                    }
                                 @endphp
+                                @if(!empty($descripcionSerologia))
+                                    <p class="text-xs text-gray-500 dark:text-zinc-400 text-center italic mb-2">{{ $descripcionSerologia }}</p>
+                                @endif
                                 <table class="w-full text-sm">
                                     <tbody>
                                         @foreach($resultado->valor as $item)
+                                        {{-- Saltar entradas de metadatos --}}
+                                        @if(is_array($item) && isset($item['_meta']))
+                                            @continue
+                                        @endif
                                         @php
                                             $nombreItem = $item['nombre'] ?? $item['campo'] ?? 'Campo';
                                             $valorResultado = $item['col_0'] ?? '';

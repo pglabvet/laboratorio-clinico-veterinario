@@ -10,6 +10,11 @@
     foreach ($campos as $i => $campo) {
         $datosIniciales[$i] = ['campo' => $campo, 'valor' => ''];
     }
+    
+    // Descripción: tipo fijo o seleccionable
+    $tipoDesc = $componente['propiedades']['tipo_descripcion'] ?? 'input';
+    $descFija = $componente['propiedades']['descripcion'] ?? '';
+    $opcionesDesc = array_filter(array_map('trim', explode(',', $componente['propiedades']['opciones_descripcion'] ?? '')));
 @endphp
 
 <div 
@@ -17,6 +22,10 @@
     x-data="{
         datosExistentes: @js($componentesData[$index]['data'] ?? []),
         datos: @js($datosIniciales),
+        tipoDesc: @js($tipoDesc),
+        descripcionSeleccionada: '',
+        opcionesDesc: @js($opcionesDesc),
+        descFija: @js($descFija),
         init() {
             let existentes = this.datosExistentes;
             if (existentes && !Array.isArray(existentes)) {
@@ -24,6 +33,12 @@
             }
 
             if (Array.isArray(existentes) && existentes.length > 0) {
+                // Extraer descripción del metadato si existe
+                const metaDesc = existentes.find(item => item && item._meta === 'descripcion');
+                if (metaDesc) {
+                    this.descripcionSeleccionada = metaDesc.valor || '';
+                }
+                
                 Object.keys(this.datos).forEach(key => {
                     const nombre = this.datos[key].campo;
                     const match = existentes.find(item => item && item.campo === nombre);
@@ -31,6 +46,15 @@
                         this.datos[key].valor = match.valor || '';
                     }
                 });
+            }
+
+            // Si es texto fijo, usar la descripción de la plantilla
+            if (this.tipoDesc === 'input' && this.descFija) {
+                this.descripcionSeleccionada = this.descFija;
+            }
+            // Si es seleccionable y solo hay una opción, usarla automáticamente
+            if (this.tipoDesc === 'select' && this.opcionesDesc.length === 1 && !this.descripcionSeleccionada) {
+                this.descripcionSeleccionada = this.opcionesDesc[0];
             }
 
             // Sincronizar antes de guardar
@@ -46,9 +70,15 @@
         },
         sincronizarConLivewire() {
             const data = Object.values(this.datos);
+            // Agregar la descripción seleccionada como metadato al inicio
+            const dataConDesc = [];
+            if (this.descripcionSeleccionada) {
+                dataConDesc.push({ _meta: 'descripcion', valor: this.descripcionSeleccionada });
+            }
+            dataConDesc.push(...data);
             window.__labvetData = window.__labvetData || {};
-            window.__labvetData['{{ $index }}'] = data;
-            $wire.set('componentesData.{{ $index }}.data', data);
+            window.__labvetData['{{ $index }}'] = dataConDesc;
+            $wire.set('componentesData.{{ $index }}.data', dataConDesc);
         }
     }"
     class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:bg-zinc-900">
@@ -59,9 +89,23 @@
     </h4>
     @endif
 
-    @if(isset($componente['propiedades']['descripcion']) && $componente['propiedades']['descripcion'])
+    @if($tipoDesc === 'select' && count($opcionesDesc) > 0)
+    {{-- Dropdown para elegir la descripción --}}
+    <div class="mb-3">
+        <label class="block text-xs font-medium text-gray-600 dark:text-zinc-400 mb-1 text-center">Seleccione la técnica / descripción</label>
+        <select
+            x-model="descripcionSeleccionada"
+            @change="sincronizarConLivewire()"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100 focus:ring-2 focus:ring-blue-500">
+            <option value="">Seleccionar descripción...</option>
+            @foreach($opcionesDesc as $descOpcion)
+                <option value="{{ $descOpcion }}">{{ $descOpcion }}</option>
+            @endforeach
+        </select>
+    </div>
+    @elseif($tipoDesc === 'input' && !empty($descFija))
     <p class="text-xs text-gray-500 dark:text-zinc-400 text-center italic mb-3">
-        {{ $componente['propiedades']['descripcion'] }}
+        {{ $descFija }}
     </p>
     @endif
 
