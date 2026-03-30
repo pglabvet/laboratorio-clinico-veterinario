@@ -3,9 +3,38 @@
     <div class="component-title">{{ $componente['propiedades']['titulo'] }}</div>
 @endif
 
-@if(isset($componente['propiedades']['descripcion']) && $componente['propiedades']['descripcion'])
-    <p style="font-style: italic; color: #718096; margin-bottom: 8px; font-size: 8px; text-align: center;">
-        {{ $componente['propiedades']['descripcion'] }}
+@php
+    // Buscar la descripción seleccionada por el bioquímico en los datos guardados
+    $descripcionPdf = '';
+    
+    // 1) Buscar en el resultado guardado (entrada _meta = 'descripcion')
+    if (!empty($resultado) && is_array($resultado)) {
+        foreach ($resultado as $fila) {
+            if (is_array($fila) && ($fila['_meta'] ?? '') === 'descripcion') {
+                $descripcionPdf = $fila['valor'] ?? '';
+                break;
+            }
+        }
+    }
+    
+    // 2) Fallback: descripción fija de la plantilla
+    if (empty($descripcionPdf)) {
+        $tipoDescPdf = $componente['propiedades']['tipo_descripcion'] ?? 'input';
+        if ($tipoDescPdf === 'input') {
+            $descripcionPdf = $componente['propiedades']['descripcion'] ?? '';
+        } elseif ($tipoDescPdf === 'select') {
+            // Si es seleccionable y solo hay una opción, usarla
+            $opcionesPdf = array_filter(array_map('trim', explode(',', $componente['propiedades']['opciones_descripcion'] ?? '')));
+            if (count($opcionesPdf) === 1) {
+                $descripcionPdf = $opcionesPdf[0];
+            }
+        }
+    }
+@endphp
+
+@if(!empty($descripcionPdf))
+    <p style="font-style: italic; color: #718096; margin-bottom: 8px; font-size: 11px; text-align: center;">
+        {{ $descripcionPdf }}
     </p>
 @endif
 
@@ -19,6 +48,10 @@
     </thead>
     <tbody>
         @foreach($resultado as $fila)
+            {{-- Saltar entradas de metadatos --}}
+            @if(is_array($fila) && isset($fila['_meta']))
+                @continue
+            @endif
             @if(is_array($fila) && isset($fila['valor']) && $fila['valor'] !== '' && $fila['valor'] !== null)
                 @php
                     $esPositivo = str_contains($fila['valor'], 'Positivo');

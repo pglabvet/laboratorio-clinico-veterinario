@@ -790,8 +790,13 @@ class CapturarResultados extends Component
             case 'tabla-dos-columnas':
             case 'serologia':
                 // Filtrar campos con valor vacío y re-indexar para mantener array JSON válido
+                // Preservar entradas _meta (metadatos como descripcion seleccionada)
                 return array_values(array_filter($data, function ($item) {
                     if (is_array($item)) {
+                        // Preservar metadatos
+                        if (isset($item['_meta'])) {
+                            return !empty($item['valor']);
+                        }
                         return (isset($item['valor']) && $item['valor'] !== '' && $item['valor'] !== null) ||
                                (isset($item['resultado']) && $item['resultado'] !== '' && $item['resultado'] !== null);
                     }

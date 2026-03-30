@@ -112,14 +112,35 @@ class GestionarPlantillas extends Component
             }
             
             // Migrar componentes antiguos de serologia al nuevo formato
-            if (isset($componente['tipo']) && $componente['tipo'] === 'serologia' && isset($componente['propiedades']['campos'])) {
-                foreach ($componente['propiedades']['campos'] as &$campo) {
-                    if (is_string($campo)) {
-                        $campo = [
-                            'nombre' => $campo,
-                            'reactivos' => []
-                        ];
+            if (isset($componente['tipo']) && $componente['tipo'] === 'serologia') {
+                // Migrar campos string → array
+                if (isset($componente['propiedades']['campos'])) {
+                    foreach ($componente['propiedades']['campos'] as &$campo) {
+                        if (is_string($campo)) {
+                            $campo = [
+                                'nombre' => $campo,
+                                'reactivos' => []
+                            ];
+                        }
                     }
+                }
+                
+                // Asegurar que existan los campos de descripción tipo seleccionable
+                if (!isset($componente['propiedades']['tipo_descripcion'])) {
+                    $componente['propiedades']['tipo_descripcion'] = 'input';
+                }
+                if (!isset($componente['propiedades']['opciones_descripcion'])) {
+                    $componente['propiedades']['opciones_descripcion'] = '';
+                }
+                // Limpiar campo descripciones si existía (migración transitoria)
+                if (isset($componente['propiedades']['descripciones'])) {
+                    $descs = array_filter($componente['propiedades']['descripciones']);
+                    if (!empty($descs) && empty($componente['propiedades']['descripcion'])) {
+                        // Convertir a formato seleccionable
+                        $componente['propiedades']['tipo_descripcion'] = 'select';
+                        $componente['propiedades']['opciones_descripcion'] = implode(',', $descs);
+                    }
+                    unset($componente['propiedades']['descripciones']);
                 }
             }
         }
@@ -256,6 +277,8 @@ class GestionarPlantillas extends Component
             'serologia' => [
                 'titulo' => 'SEROLOGIA',
                 'descripcion' => '',
+                'tipo_descripcion' => 'input',
+                'opciones_descripcion' => '',
                 'columnas' => [
                     ['nombre' => 'PRUEBA'],
                     ['nombre' => 'RESULTADO'],
