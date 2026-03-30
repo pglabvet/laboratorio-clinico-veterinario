@@ -33,7 +33,7 @@
 @endphp
 
 @if(!empty($descripcionPdf))
-    <p style="font-style: italic; color: #718096; margin-bottom: 8px; font-size: 8px; text-align: center;">
+    <p style="font-style: italic; color: #718096; margin-bottom: 8px; font-size: 11px; text-align: center;">
         {{ $descripcionPdf }}
     </p>
 @endif
