@@ -6,9 +6,22 @@
     </div>
     @endif
 
-    @if(isset($props['descripcion']) && $props['descripcion'])
-    <div class="bg-white dark:bg-zinc-800 border-b border-gray-300 dark:border-zinc-700">
-        <p class="text-xs text-gray-500 dark:text-zinc-400 text-center py-1 italic">{{ $props['descripcion'] }}</p>
+    @php
+        $tipoDesc = $props['tipo_descripcion'] ?? 'input';
+        $descTexto = $props['descripcion'] ?? '';
+        $opcionesDesc = array_filter(array_map('trim', explode(',', $props['opciones_descripcion'] ?? '')));
+    @endphp
+
+    @if($tipoDesc === 'input' && !empty($descTexto))
+    <div class="bg-white dark:bg-zinc-800 border-b border-gray-300 dark:border-zinc-700 py-1 px-2">
+        <p class="text-xs text-gray-500 dark:text-zinc-400 text-center italic">{{ $descTexto }}</p>
+    </div>
+    @elseif($tipoDesc === 'select' && count($opcionesDesc) > 0)
+    <div class="bg-white dark:bg-zinc-800 border-b border-gray-300 dark:border-zinc-700 py-1 px-2">
+        <p class="text-xs text-gray-500 dark:text-zinc-400 text-center italic">
+            <i class="fas fa-caret-down mr-1"></i>
+            El bioquímico elegirá: {{ implode(' / ', $opcionesDesc) }}
+        </p>
     </div>
     @endif
 

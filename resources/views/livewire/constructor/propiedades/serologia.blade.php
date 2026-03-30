@@ -10,14 +10,30 @@
             class="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
     </div>
 
-    <!-- Descripción -->
+    <!-- Descripción (opcional) -->
     <div>
         <label class="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">Descripción (opcional)</label>
+        <div class="flex gap-2 items-center">
+            <input 
+                type="text" 
+                wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.descripcion"
+                placeholder="Ej: PRUEBA RÁPIDA CON TÉCNICA DE INMUNOCROMATOGRAFÍA"
+                class="flex-1 px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100"
+                @if(($props['tipo_descripcion'] ?? 'input') === 'select') disabled @endif>
+            <select
+                wire:model.live="componentes.{{ $indiceComponente }}.propiedades.tipo_descripcion"
+                class="px-2 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg text-xs bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
+                <option value="input">Texto fijo</option>
+                <option value="select">Seleccionable</option>
+            </select>
+        </div>
+        @if(($props['tipo_descripcion'] ?? 'input') === 'select')
         <input 
-            type="text" 
-            wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.descripcion"
-            placeholder="Ej: PRUEBA RÁPIDA CON TÉCNICA DE INMUNOCROMATOGRAFÍA"
-            class="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg text-sm bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
+            type="text"
+            wire:model.live.debounce.500ms="componentes.{{ $indiceComponente }}.propiedades.opciones_descripcion"
+            placeholder="Opciones separadas por coma (ej: PRUEBA RÁPIDA,ELISA,INMUNOFLUORESCENCIA)"
+            class="w-full px-3 py-2 border border-gray-200 dark:border-zinc-600 rounded-lg text-sm bg-gray-50 dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 mt-2">
+        @endif
     </div>
 
     <!-- Columnas (encabezados) -->
