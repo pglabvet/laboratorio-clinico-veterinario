@@ -357,6 +357,19 @@
                                     />
                                     @endcan
 
+                                    {{-- Botón editar (solo si todos los análisis están pendientes) --}}
+                                    @can('editar-muestras')
+                                    @if($muestra->estado === 'Pendiente')
+                                    <flux:button
+                                        href="{{ route('muestras.editar', $muestra->id) }}"
+                                        variant="ghost"
+                                        size="sm"
+                                        icon="pencil-square"
+                                        title="Editar muestra"
+                                    />
+                                    @endif
+                                    @endcan
+
                                     {{-- Botón eliminar --}}
                                     @can('eliminar-muestras')
                                     <flux:button
