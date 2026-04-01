@@ -305,7 +305,7 @@
 
                 window.__labvetData = window.__labvetData || {};
                 window.__labvetData['{{ $index }}'] = data;
-                $wire.set('componentesData.{{ $index }}.data', data);
+                this.$wire.set('componentesData.{{ $index }}.data', data);
             }
         }
     }
