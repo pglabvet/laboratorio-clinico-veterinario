@@ -52,6 +52,7 @@ class GestionarPlantillas extends Component
         'examen-microscopico' => 'Examen Microscópico',
         'examen-diferencial' => 'Examen Diferencial',
         'coproparasitologia-seriado' => 'Coproparasitología Seriado',
+        'citologia' => 'Citología',
     ];
 
     public function mount($plantilla = null)
@@ -141,6 +142,14 @@ class GestionarPlantillas extends Component
                         $componente['propiedades']['opciones_descripcion'] = implode(',', $descs);
                     }
                     unset($componente['propiedades']['descripciones']);
+                }
+            }
+            
+            // Migrar componentes antiguos de citologia al nuevo formato de titulos
+            if (isset($componente['tipo']) && $componente['tipo'] === 'citologia') {
+                if (!isset($componente['propiedades']['titulos'])) {
+                    $tituloBase = $componente['propiedades']['titulo'] ?? 'CITOLOGÍA';
+                    $componente['propiedades']['titulos'] = [$tituloBase];
                 }
             }
         }
@@ -309,6 +318,7 @@ class GestionarPlantillas extends Component
                 'titulo' => 'OBSERVACIONES',
                 'contenido' => '',
                 'formato' => 'parrafos', // parrafos, lista
+                'reactivos' => [],
             ],
             'lista-items' => [
                 'titulo' => 'ITEMS',
@@ -434,6 +444,40 @@ class GestionarPlantillas extends Component
                         ],
                     ],
                 ],
+            ],
+            'citologia' => [
+                'titulos' => ['CITOLOGÍA'],
+                'tumores' => [
+                    'Histiositoma fibroso benigno',
+                    'Mastocitoma',
+                    'Lipoma',
+                    'Fibrosarcoma',
+                    'Melanoma',
+                ],
+                'secciones' => [
+                    [
+                        'titulo' => 'Observación macroscópica',
+                        'texto_base' => '',
+                        'tipo' => 'editable',
+                        'usa_tumor' => false,
+                        'textos_por_tumor' => [],
+                    ],
+                    [
+                        'titulo' => 'Observación microscópica',
+                        'texto_base' => '',
+                        'tipo' => 'dependiente',
+                        'usa_tumor' => true,
+                        'textos_por_tumor' => [],
+                    ],
+                    [
+                        'titulo' => 'Diagnostico citológico',
+                        'texto_base' => 'Según la presencia celular se confirma el diagnostico de',
+                        'tipo' => 'con_tumor',
+                        'usa_tumor' => true,
+                        'textos_por_tumor' => [],
+                    ],
+                ],
+                'reactivos' => [],
             ],
             default => [],
         };

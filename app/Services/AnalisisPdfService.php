@@ -330,6 +330,9 @@ class AnalisisPdfService
             'campo-texto', 'texto-libre' => ! empty($valor['valor'])
                 || ! empty($valor['contenido']),
 
+            'citologia' => ! empty($valor['tumor'])
+                || ! empty($valor['secciones']),
+
             'campo-imagenes' => collect($valor)->contains(fn ($img) => ! empty($img)),
 
             default => count($valor) > 0,

@@ -1,6 +1,8 @@
 {{-- Componente PDF V2: Texto Libre (diseño limpio) --}}
 @if(isset($componente['propiedades']['titulo']))
-    <div class="component-title">{{ $componente['propiedades']['titulo'] }}</div>
+    <div class="component-title" style="text-align: {{ ($componente['propiedades']['alineacion_titulo'] ?? 'left') === 'center' ? 'center' : 'left' }};">
+        {{ $componente['propiedades']['titulo'] }}
+    </div>
 @endif
 
 @php

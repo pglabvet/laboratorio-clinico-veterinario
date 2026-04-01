@@ -315,6 +315,20 @@
       line-height: 1.6;
     }
 
+    .text-content p {
+      margin: 0 0 4px 0;
+    }
+    .text-content p:last-child {
+      margin-bottom: 0;
+    }
+    .text-content ul, .text-content ol {
+      margin: 0 0 4px 0;
+      padding-left: 20px;
+    }
+    .text-content li {
+      margin-bottom: 2px;
+    }
+
     .text-content strong, .text-content b { font-weight: bold; }
     .text-content em, .text-content i { font-style: italic; }
     .text-content u { text-decoration: underline; }
@@ -490,7 +504,7 @@
         $chartImage = $item['chartImage'] ?? null;
 
         // Componentes pequeños que NO deben cortarse entre páginas
-        $componentesPequenos = ['subtitulo', 'campo-texto', 'texto-libre', 'campo-imagenes'];
+        $componentesPequenos = ['subtitulo', 'campo-texto', 'texto-libre', 'campo-imagenes', 'citologia'];
         $cssClass = in_array($tipo, $componentesPequenos) ? 'component-no-break' : 'component';
       @endphp
 
