@@ -145,7 +145,7 @@ class CapturarResultados extends Component
     {
         // Tipos que aplican insumos a nivel de TODO el componente
         $tiposBloque = ['antibiograma', 'examen-diferencial', 'examen-microscopico',
-                        'coproparasitologia-seriado', 'carga-viral', 'tabla-hematologica'];
+                        'coproparasitologia-seriado', 'carga-viral', 'tabla-hematologica', 'citologia'];
 
         foreach ($this->plantilla->componentes as $index => $componente) {
             $tipo = $componente['tipo'];
@@ -258,7 +258,7 @@ class CapturarResultados extends Component
             ->where('observacion', 'ilike', "%Análisis: {$tipoNombre}%")
             ->get();
 
-        $tiposBloque = ['antibiograma', 'examen-diferencial', 'examen-microscopico', 'coproparasitologia-seriado', 'carga-viral', 'tabla-hematologica'];
+        $tiposBloque = ['antibiograma', 'examen-diferencial', 'examen-microscopico', 'coproparasitologia-seriado', 'carga-viral', 'tabla-hematologica', 'citologia'];
 
         foreach ($this->plantilla->componentes as $index => $componente) {
             $tipo = $componente['tipo'];
@@ -846,6 +846,19 @@ class CapturarResultados extends Component
                     return (! empty($data['valor']) || ! empty($data['contenido'])) ? $data : null;
                 }
 
+                return ! empty($data) ? $data : null;
+
+            case 'citologia':
+                // Guardar si hay tumor seleccionado o secciones con contenido
+                if (is_array($data)) {
+                    if (! empty($data['tumor'])) return $data;
+                    if (! empty($data['secciones'])) {
+                        foreach ($data['secciones'] as $sec) {
+                            if (! empty($sec['contenido'])) return $data;
+                        }
+                    }
+                    return null;
+                }
                 return ! empty($data) ? $data : null;
 
             case 'carga-viral':

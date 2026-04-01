@@ -57,6 +57,9 @@
                 this.contenido = this.datoExistente.contenido;
             } else if (typeof this.datoExistente === 'string') {
                 this.contenido = this.datoExistente;
+            } else {
+                // Cargar texto base de la plantilla si no hay dato existente
+                this.contenido = @js($componente['propiedades']['contenido'] ?? '');
             }
             
             // Inicializar Quill solo para modo párrafos
@@ -81,9 +84,12 @@
             const container = this.$refs.quillEditor;
             if (!container || this.quill) return;
             
+            // Determinar placeholder
+            const customPlaceholder = @js($componente['propiedades']['contenido'] ?? '');
+            
             this.quill = new Quill(container, {
                 theme: 'snow',
-                placeholder: '{{ $componente['propiedades']['contenido'] ?? 'Escriba el texto aquí...' }}',
+                placeholder: customPlaceholder || 'Escriba el texto aquí...',
                 modules: {
                     toolbar: [
                         ['bold', 'italic', 'underline', 'strike'],
@@ -99,8 +105,14 @@
                 if (this.contenido.includes('<')) {
                     this.quill.root.innerHTML = this.contenido;
                 } else {
-                    // Si es texto plano, convertir saltos de línea
-                    this.quill.root.innerHTML = this.contenido.replace(/\n/g, '<br>');
+                    // Si es texto plano, convertir cada línea en un párrafo nativo de Quill
+                    // Esto evita que Quill agregue saltos dobles indeseados.
+                    const lineas = this.contenido.split(/\r?\n/);
+                    let htmlContenido = '';
+                    lineas.forEach(linea => {
+                        htmlContenido += `<p>${linea || '<br>'}</p>`;
+                    });
+                    this.quill.root.innerHTML = htmlContenido;
                 }
             }
             
@@ -129,7 +141,7 @@
     class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:bg-zinc-900"
 >
     @if(isset($componente['propiedades']['titulo']))
-    <h4 class="font-bold text-gray-800 dark:text-zinc-100 text-lg mb-3">
+    <h4 class="font-bold text-gray-800 dark:text-zinc-100 text-lg mb-3 {{ ($componente['propiedades']['alineacion_titulo'] ?? 'left') === 'center' ? 'text-center' : 'text-left' }}">
         {{ $componente['propiedades']['titulo'] }}
     </h4>
     @endif

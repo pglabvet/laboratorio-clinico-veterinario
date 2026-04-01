@@ -9,16 +9,59 @@
             <flux:heading size="xl" class="mb-1">Muestras Rechazadas</flux:heading>
             <flux:subheading>Registro de muestras que no pudieron ser procesadas en el laboratorio</flux:subheading>
         </div>
-        @can('crear-muestras-rechazadas')
-        <flux:button
-            href="{{ route('muestras-rechazadas.crear') }}"
-            wire:navigate
-            icon="plus"
-            variant="primary"
-        >
-            Registrar Muestra Rechazada
-        </flux:button>
-        @endcan
+        <div class="flex items-center gap-2">
+            @can('exportar-muestras-rechazadas')
+            <flux:dropdown>
+                <flux:button variant="outline" icon="arrow-down-tray" icon-trailing="chevron-down">
+                    Exportar
+                </flux:button>
+
+                <flux:menu>
+                    <flux:menu.item
+                        icon="document-text"
+                        x-on:click.prevent="
+                            const params = new URLSearchParams({
+                                fecha_desde: $wire.filtroDesde || '',
+                                fecha_hasta: $wire.filtroHasta || '',
+                                motivo: $wire.filtroMotivo || '',
+                                veterinaria_id: $wire.filtroVeterinaria || '',
+                                sucursal_id: $wire.filtroSucursal || '',
+                            });
+                            window.open('{{ route('muestras-rechazadas.exportar.pdf') }}?' + params.toString(), '_blank');
+                        "
+                    >
+                        Exportar PDF
+                    </flux:menu.item>
+                    <flux:menu.item
+                        icon="table-cells"
+                        x-on:click.prevent="
+                            const params = new URLSearchParams({
+                                fecha_desde: $wire.filtroDesde || '',
+                                fecha_hasta: $wire.filtroHasta || '',
+                                motivo: $wire.filtroMotivo || '',
+                                veterinaria_id: $wire.filtroVeterinaria || '',
+                                sucursal_id: $wire.filtroSucursal || '',
+                            });
+                            window.location.href = '{{ route('muestras-rechazadas.exportar.excel') }}?' + params.toString();
+                        "
+                    >
+                        Exportar Excel
+                    </flux:menu.item>
+                </flux:menu>
+            </flux:dropdown>
+            @endcan
+
+            @can('crear-muestras-rechazadas')
+            <flux:button
+                href="{{ route('muestras-rechazadas.crear') }}"
+                wire:navigate
+                icon="plus"
+                variant="primary"
+            >
+                Registrar Muestra Rechazada
+            </flux:button>
+            @endcan
+        </div>
     </div>
 
     {{-- Bloque de filtros --}}

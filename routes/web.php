@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\KardexExportController;
+use App\Http\Controllers\MuestrasExportController;
 use App\Http\Controllers\PdfController;
 use Illuminate\Support\Facades\Route;
 
@@ -59,7 +60,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     }
     )->name('muestras.etiqueta');
 
-    // Ruta
+    // Exportar muestras (reportes)
+    Route::get('/muestras/exportar/excel', [MuestrasExportController::class, 'exportarExcel'])
+        ->middleware('can:exportar-muestras')
+        ->name('muestras.exportar.excel');
+
+    Route::get('/muestras/exportar/pdf', [MuestrasExportController::class, 'exportarPdf'])
+        ->middleware('can:exportar-muestras')
+        ->name('muestras.exportar.pdf');
 
     Route::view('/especies', 'especies.index')
         ->middleware('can:ver-especies')
@@ -183,6 +191,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/muestras-rechazadas/{id}/editar', \App\Livewire\MuestrasRechazadas\RegistrarMuestraRechazada::class)
         ->middleware('can:editar-muestras-rechazadas')
         ->name('muestras-rechazadas.editar');
+
+    Route::get('/muestras-rechazadas/exportar/excel', [\App\Http\Controllers\MuestrasRechazadasExportController::class, 'exportarExcel'])
+        ->middleware('can:exportar-muestras-rechazadas')
+        ->name('muestras-rechazadas.exportar.excel');
+
+    Route::get('/muestras-rechazadas/exportar/pdf', [\App\Http\Controllers\MuestrasRechazadasExportController::class, 'exportarPdf'])
+        ->middleware('can:exportar-muestras-rechazadas')
+        ->name('muestras-rechazadas.exportar.pdf');
 
     // Auditorías del sistema
     Route::get('/auditorias', \App\Livewire\Auditorias\ListarAuditorias::class)
