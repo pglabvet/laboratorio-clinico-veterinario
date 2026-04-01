@@ -192,6 +192,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('can:editar-muestras-rechazadas')
         ->name('muestras-rechazadas.editar');
 
+    Route::get('/muestras-rechazadas/exportar/excel', [\App\Http\Controllers\MuestrasRechazadasExportController::class, 'exportarExcel'])
+        ->middleware('can:exportar-muestras-rechazadas')
+        ->name('muestras-rechazadas.exportar.excel');
+
+    Route::get('/muestras-rechazadas/exportar/pdf', [\App\Http\Controllers\MuestrasRechazadasExportController::class, 'exportarPdf'])
+        ->middleware('can:exportar-muestras-rechazadas')
+        ->name('muestras-rechazadas.exportar.pdf');
+
     // Auditorías del sistema
     Route::get('/auditorias', \App\Livewire\Auditorias\ListarAuditorias::class)
         ->middleware('can:ver-auditorias')

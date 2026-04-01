@@ -160,6 +160,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'editar-muestras-rechazadas',
             'eliminar-muestras-rechazadas',
             'mostrar-detalle-muestra-rechazada',
+            'exportar-muestras-rechazadas',
 
             // Ayuda / Guía del Sistema
             'ver-ayuda',
