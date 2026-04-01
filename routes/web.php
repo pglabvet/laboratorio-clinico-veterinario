@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\KardexExportController;
+use App\Http\Controllers\MuestrasExportController;
 use App\Http\Controllers\PdfController;
 use Illuminate\Support\Facades\Route;
 
@@ -59,7 +60,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     }
     )->name('muestras.etiqueta');
 
-    // Ruta
+    // Exportar muestras (reportes)
+    Route::get('/muestras/exportar/excel', [MuestrasExportController::class, 'exportarExcel'])
+        ->middleware('can:exportar-muestras')
+        ->name('muestras.exportar.excel');
+
+    Route::get('/muestras/exportar/pdf', [MuestrasExportController::class, 'exportarPdf'])
+        ->middleware('can:exportar-muestras')
+        ->name('muestras.exportar.pdf');
 
     Route::view('/especies', 'especies.index')
         ->middleware('can:ver-especies')

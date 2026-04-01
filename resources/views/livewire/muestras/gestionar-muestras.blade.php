@@ -10,16 +10,62 @@
             <flux:heading size="xl" class="mb-1">Gestión de Muestras</flux:heading>
             <flux:subheading>Registra y administra las muestras del laboratorio</flux:subheading>
         </div>
-        {{-- Botón crear --}}
-        @can('crear-muestras')
-        <flux:button 
-            wire:click="crear"
-            icon="plus"
-            variant="primary"
-        >
-            Registrar Muestra
-        </flux:button>
-        @endcan
+        <div class="flex items-center gap-2">
+            {{-- Botón exportar --}}
+            @can('exportar-muestras')
+            <flux:dropdown>
+                <flux:button variant="outline" icon="arrow-down-tray" icon-trailing="chevron-down">
+                    Exportar
+                </flux:button>
+
+                <flux:menu>
+                    <flux:menu.item
+                        icon="document-text"
+                        x-on:click.prevent="
+                            const params = new URLSearchParams({
+                                fecha_desde: $wire.filtroFechaDesde || '',
+                                fecha_hasta: $wire.filtroFechaHasta || '',
+                                estado: $wire.filtroEstado || '',
+                                especie_id: $wire.filtroEspecie || '',
+                                veterinaria_id: $wire.filtroVeterinaria || '',
+                                sucursal_id: $wire.filtroSucursal || '',
+                            });
+                            window.open('{{ route('muestras.exportar.pdf') }}?' + params.toString(), '_blank');
+                        "
+                    >
+                        Exportar PDF
+                    </flux:menu.item>
+                    <flux:menu.item
+                        icon="table-cells"
+                        x-on:click.prevent="
+                            const params = new URLSearchParams({
+                                fecha_desde: $wire.filtroFechaDesde || '',
+                                fecha_hasta: $wire.filtroFechaHasta || '',
+                                estado: $wire.filtroEstado || '',
+                                especie_id: $wire.filtroEspecie || '',
+                                veterinaria_id: $wire.filtroVeterinaria || '',
+                                sucursal_id: $wire.filtroSucursal || '',
+                            });
+                            window.location.href = '{{ route('muestras.exportar.excel') }}?' + params.toString();
+                        "
+                    >
+                        Exportar Excel
+                    </flux:menu.item>
+                </flux:menu>
+            </flux:dropdown>
+            @endcan
+
+            {{-- Botón crear --}}
+            @can('crear-muestras')
+            <flux:button 
+                wire:click="crear"
+                icon="plus"
+                variant="primary"
+            >
+                Registrar Muestra
+            </flux:button>
+            @endcan
+        </div>
     </div>
 
     {{-- Bloque de filtros --}}

@@ -76,6 +76,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'enviar-resultados-muestra',
             'ver-codigo-barras-muestra',
             'filtro-de-sucursal-muestra',
+            'exportar-muestras',
 
             // Vista general del sistema
             'vista-general-sistema', // Ver datos de TODAS las sucursales (sin este permiso, solo ve su sucursal)
