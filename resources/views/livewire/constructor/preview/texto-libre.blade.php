@@ -1,7 +1,9 @@
 <!-- Preview de Texto Libre -->
 <div class="space-y-2">
     @if(isset($props['titulo']))
-    <h4 class="font-bold text-gray-800 dark:text-zinc-100">{{ $props['titulo'] }}</h4>
+    <h4 class="font-bold text-gray-800 dark:text-zinc-100 {{ ($props['alineacion_titulo'] ?? 'left') === 'center' ? 'text-center' : 'text-left' }}">
+        {{ $props['titulo'] }}
+    </h4>
     @endif
 
     <div class="p-3 bg-gray-50 dark:bg-zinc-900 rounded border border-gray-200 dark:border-zinc-700 min-h-[80px]">
