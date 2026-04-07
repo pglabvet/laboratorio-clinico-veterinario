@@ -16,7 +16,7 @@ class MuestrasDetalleSheet implements FromArray, WithTitle, ShouldAutoSize, With
     private int $totalRows = 0;
     private int $headerRow = 0;
 
-    private const LAST_COL = 'M';
+    private const LAST_COL = 'F';
 
     public function __construct(
         private array $grupo,
@@ -62,16 +62,9 @@ class MuestrasDetalleSheet implements FromArray, WithTitle, ShouldAutoSize, With
             'Código',
             'Paciente',
             'Propietario',
-            'Especie',
-            'Raza',
-            'Edad',
-            'Sexo',
-            'Tipo Muestra',
-            'Estado Muestra',
             'Fecha Recepción',
             'Sucursal',
             'Tipo de Análisis',
-            'Estado Análisis',
         ];
 
         // Datos de muestras
@@ -80,23 +73,16 @@ class MuestrasDetalleSheet implements FromArray, WithTitle, ShouldAutoSize, With
                 $muestra->codigo_muestra,
                 $muestra->paciente_nombre,
                 $muestra->propietario_nombre,
-                $muestra->especie->nombre ?? 'N/A',
-                $muestra->raza ?: '-',
-                $muestra->edad ?? '-',
-                $muestra->sexo === 'M' ? 'Macho' : 'Hembra',
-                $muestra->tipo_muestra,
-                $muestra->estado,
                 $muestra->fecha_recepcion->format('d/m/Y'),
                 $muestra->sucursal->nombre ?? 'N/A',
             ];
 
             if ($muestra->analisis->isEmpty()) {
-                $rows[] = array_merge($base, ['Sin análisis', '-']);
+                $rows[] = array_merge($base, ['Sin análisis']);
             } else {
                 foreach ($muestra->analisis as $analisis) {
                     $rows[] = array_merge($base, [
                         $analisis->tipoAnalisis->nombre ?? 'Sin tipo',
-                        $analisis->estado,
                     ]);
                 }
             }
@@ -152,8 +138,8 @@ class MuestrasDetalleSheet implements FromArray, WithTitle, ShouldAutoSize, With
                     ]);
                 }
 
-                // Centrar columnas de datos cortos
-                foreach (['F', 'G', 'H', 'I', 'J', 'L', 'M'] as $col) {
+                // Centrar columnas de Fecha Recepción, Sucursal y Tipo de Análisis
+                foreach (['D', 'E', 'F'] as $col) {
                     $sheet->getStyle("{$col}{$hr}:{$col}{$this->totalRows}")
                         ->getAlignment()
                         ->setHorizontal(Alignment::HORIZONTAL_CENTER);

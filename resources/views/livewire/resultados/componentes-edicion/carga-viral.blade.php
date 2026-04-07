@@ -73,6 +73,7 @@
             window.__labvetData = window.__labvetData || {};
             window.__labvetData['{{ $index }}'] = data;
             $wire.set('componentesData.{{ $index }}.data', data);
+            window.dispatchEvent(new CustomEvent('datos-sincronizados', { detail: { index: {{ $index }} } }));
         },
         
         // Guardar la gráfica automáticamente al servidor

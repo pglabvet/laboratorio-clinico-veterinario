@@ -155,7 +155,7 @@ class CapturarResultados extends Component
             if (in_array($tipo, ['tabla-resultados', 'tabla-temporal']) && !empty($props['filas'])) {
                 foreach ($props['filas'] as $filaIndex => $fila) {
                     if (!empty($fila['reactivos'])) {
-                        $this->repeticionesData[$index][$filaIndex] = 1;
+                        $this->repeticionesData[$index][$filaIndex] = 0;
                     }
                 }
             }
@@ -164,7 +164,7 @@ class CapturarResultados extends Component
             if (in_array($tipo, ['campos-etiquetados', 'serologia']) && !empty($props['campos'])) {
                 foreach ($props['campos'] as $campoIndex => $campo) {
                     if (is_array($campo) && !empty($campo['reactivos'])) {
-                        $this->repeticionesData[$index]["c{$campoIndex}"] = 1;
+                        $this->repeticionesData[$index]["c{$campoIndex}"] = 0;
                     }
                 }
             }
@@ -175,19 +175,19 @@ class CapturarResultados extends Component
                     foreach ($props['secciones'] as $secIndex => $seccion) {
                         foreach ($seccion['campos'] ?? [] as $campoIndex => $campo) {
                             if (!empty($campo['reactivos'])) {
-                                $this->repeticionesData[$index]["s{$secIndex}"]["c{$campoIndex}"] = 1;
+                                $this->repeticionesData[$index]["s{$secIndex}"]["c{$campoIndex}"] = 0;
                             }
                         }
                     }
                 }
                 if (!empty($props['reactivos'])) {
-                    $this->repeticionesData[$index]['global'] = 1;
+                    $this->repeticionesData[$index]['global'] = 0;
                 }
             }
 
             // Nivel componente
             if (in_array($tipo, $tiposBloque) && !empty($props['reactivos'])) {
-                $this->repeticionesData[$index] = 1;
+                $this->repeticionesData[$index] = 0;
             }
         }
 

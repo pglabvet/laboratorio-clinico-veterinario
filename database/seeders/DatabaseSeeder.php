@@ -21,12 +21,12 @@ class DatabaseSeeder extends Seeder
             EspeciesSeeder::class ,
             VeterinariasSeeder::class ,
             VeterinariaTelefonosSeeder::class ,
-            //UnidadesMedidaSeeder::class,
-            //TiposAnalisisSeeder::class ,
-            //CategoriasInsumoSeeder::class,
-            //InsumosSeeder::class,
-            //EntradasInventarioSeeder::class,
-            //MuestrasSeeder::class,
+            UnidadesMedidaSeeder::class,
+            TiposAnalisisSeeder::class ,
+            CategoriasInsumoSeeder::class,
+            InsumosSeeder::class,
+            EntradasInventarioSeeder::class,
+            MuestrasSeeder::class,
         ]);
     }
 }
