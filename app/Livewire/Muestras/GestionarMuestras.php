@@ -10,7 +10,6 @@ use App\Models\Sucursal;
 use App\Models\TipoAnalisis;
 use App\Models\Veterinaria;
 use App\Services\EnvioResultadosService;
-use App\Services\MuestraService;
 use App\Services\PepsInventarioService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -27,39 +26,9 @@ class GestionarMuestras extends Component
 
     public $codigo_muestra;
 
-    public $tipo_muestra;
-
-    public $fecha_recepcion;
-
-    public $estado = Muestra::ESTADO_PENDIENTE;
-
-    public $observaciones;
-
     public $sucursal_id;
 
-    // Propiedades del formulario - Paciente
-    public $paciente_nombre;
-
-    public $especie_id;
-
-    public $raza;
-
-    public $edad;
-
-    public $sexo = 'M';
-
-    public $color;
-
-    public $propietario_nombre;
-
-    // Propiedades del formulario - Veterinaria y Análisis
-    public $veterinaria_id;
-
-    public $tipos_analisis_seleccionados = [];
-
     // Propiedades de control
-    public $modalAbierto = false;
-
     public $modalEliminar = false;
 
     public $modalVer = false;
@@ -83,64 +52,6 @@ class GestionarMuestras extends Component
     public $formatoPdfEnvio = 'completo';
 
     public $buscar = '';
-
-    public $modoEdicion = false;
-
-    // Propiedades de filtros
-    public $filtroEstado = '';
-
-    public $filtroEspecie = '';
-
-    public $filtroVeterinaria = '';
-
-    public $filtroSucursal = '';
-
-    public $filtroFechaDesde = '';
-
-    public $filtroFechaHasta = '';
-
-    public $filtroPeriodo = '';
-
-    // Propiedades de ordenamiento
-    public $sortBy = 'created_at';
-
-    public $sortDirection = 'desc';
-
-    // Reglas de validación
-    protected function rules()
-    {
-        return [
-            'paciente_nombre' => 'required|string|max:255',
-            'especie_id' => 'required|exists:especies,id',
-            'raza' => 'nullable|string|max:100',
-            'edad' => 'required|string|max:50',
-            'sexo' => 'required|in:M,H',
-            'color' => 'nullable|string|max:100',
-            'propietario_nombre' => 'required|string|max:255',
-            'veterinaria_id' => 'required|exists:veterinarias,id',
-            'sucursal_id' => 'required|exists:sucursales,id',
-            'tipo_muestra' => 'required|string|max:100',
-
-            'observaciones' => 'nullable|string',
-            'tipos_analisis_seleccionados' => 'required|array|min:1',
-            'tipos_analisis_seleccionados.*' => 'exists:tipos_analisis,id',
-        ];
-    }
-
-    // Mensajes de validación personalizados
-    protected $messages = [
-        'paciente_nombre.required' => 'El nombre del paciente es obligatorio.',
-        'especie_id.required' => 'Debe seleccionar una especie.',
-        'edad.required' => 'La edad del paciente es obligatoria.',
-        'sexo.required' => 'El sexo del paciente es obligatorio.',
-        'propietario_nombre.required' => 'El nombre del propietario es obligatorio.',
-        'veterinaria_id.required' => 'Debe seleccionar una veterinaria.',
-        'sucursal_id.required' => 'Debe seleccionar una sucursal.',
-        'tipo_muestra.required' => 'El tipo de muestra es obligatorio.',
-
-        'tipos_analisis_seleccionados.required' => 'Debe seleccionar al menos un tipo de análisis.',
-        'tipos_analisis_seleccionados.min' => 'Debe seleccionar al menos un tipo de análisis.',
-    ];
 
     /**
      * Inicializar componente
@@ -359,89 +270,25 @@ class GestionarMuestras extends Component
         $this->telefonoWhatsappSeleccionado = $telefonoPrincipal?->telefono ?? '';
     }
 
-    /**
-     * Guardar muestra (crear o actualizar)
-     */
-    public function guardar()
-    {
-        $this->validate();
+    // Propiedades de filtros
+    public $filtroEstado = '';
 
-        try {
-            DB::beginTransaction();
+    public $filtroEspecie = '';
 
-            // UC-B05: Validar stock antes de crear análisis
-            if (! $this->modoEdicion) {
-                $muestraService = app(MuestraService::class);
-                $resultado = $muestraService->validarStockPorTiposAnalisis($this->tipos_analisis_seleccionados, $this->sucursal_id);
-                if (! empty($resultado['warnings'])) {
-                    session()->flash('warning', '⚠️ ADVERTENCIA: Los siguientes insumos tienen stock bajo: '.implode(', ', $resultado['warnings']).'. Se recomienda reabastecer pronto.');
-                }
-            }
+    public $filtroVeterinaria = '';
 
-            if ($this->modoEdicion) {
-                $muestra = Muestra::findOrFail($this->muestra_id);
-                $muestra->update([
-                    'paciente_nombre' => $this->paciente_nombre,
-                    'especie_id' => $this->especie_id,
-                    'raza' => $this->raza,
-                    'edad' => $this->edad,
-                    'sexo' => $this->sexo,
-                    'color' => $this->color,
-                    'propietario_nombre' => $this->propietario_nombre,
-                    'veterinaria_id' => $this->veterinaria_id,
-                    'sucursal_id' => $this->sucursal_id,
-                    'tipo_muestra' => $this->tipo_muestra,
-                    'observaciones' => $this->observaciones,
-                ]);
+    public $filtroSucursal = '';
 
-                session()->flash('mensaje', 'Muestra actualizada exitosamente.');
-            } else {
-                // Generar código único de muestra
-                $muestraService = $muestraService ?? app(MuestraService::class);
-                $this->codigo_muestra = $muestraService->generarCodigoMuestra($this->sucursal_id);
+    public $filtroFechaDesde = '';
 
-                $muestra = Muestra::create([
-                    'codigo_muestra' => $this->codigo_muestra,
-                    'paciente_nombre' => $this->paciente_nombre,
-                    'especie_id' => $this->especie_id,
-                    'raza' => $this->raza,
-                    'edad' => $this->edad,
-                    'sexo' => $this->sexo,
-                    'color' => $this->color,
-                    'propietario_nombre' => $this->propietario_nombre,
-                    'veterinaria_id' => $this->veterinaria_id,
-                    'sucursal_id' => $this->sucursal_id,
-                    'tipo_muestra' => $this->tipo_muestra,
-                    'fecha_recepcion' => now(),
-                    'estado' => Muestra::ESTADO_PENDIENTE,
-                    'observaciones' => $this->observaciones,
-                ]);
+    public $filtroFechaHasta = '';
 
-                // Crear registros de análisis para cada tipo seleccionado
-                foreach ($this->tipos_analisis_seleccionados as $tipo_analisis_id) {
-                    Analisis::create([
-                        'muestra_id' => $muestra->id,
-                        'tipo_analisis_id' => $tipo_analisis_id,
-                        'bioquimico_id' => auth()->id(),
-                        'estado' => Analisis::ESTADO_PENDIENTE,
-                        'fecha_inicio' => now(),
-                    ]);
-                }
+    public $filtroPeriodo = '';
 
-                // Mostrar modal de código de barras
-                $this->muestraCodigoBarras = $muestra->load(['especie', 'veterinaria', 'sucursal']);
-                $this->modalCodigoBarras = true;
+    // Propiedades de ordenamiento
+    public $sortBy = 'created_at';
 
-                session()->flash('mensaje', 'Muestra registrada exitosamente.');
-            }
-
-            DB::commit();
-            $this->cerrarModal();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            session()->flash('error', 'Error al guardar la muestra: '.$e->getMessage());
-        }
-    }
+    public $sortDirection = 'desc';
 
     /**
      * Abrir modal de confirmación para eliminar
@@ -525,38 +372,6 @@ class GestionarMuestras extends Component
             $this->modalEliminar = false;
             $this->muestraAEliminar = null;
         }
-    }
-
-    /**
-     * Cerrar modal
-     */
-    public function cerrarModal()
-    {
-        $this->modalAbierto = false;
-        $this->resetearFormulario();
-        $this->resetValidation();
-    }
-
-    /**
-     * Resetear formulario
-     */
-    private function resetearFormulario()
-    {
-        $this->muestra_id = null;
-        $this->codigo_muestra = '';
-        $this->paciente_nombre = '';
-        $this->especie_id = null;
-        $this->raza = '';
-        $this->edad = '';
-        $this->sexo = 'M';
-        $this->color = '';
-        $this->propietario_nombre = '';
-        $this->veterinaria_id = null;
-        $this->tipo_muestra = '';
-        $this->observaciones = '';
-        $this->tipos_analisis_seleccionados = [];
-        $this->sucursal_id = auth()->user()->sucursal_id ?? Sucursal::first()?->id;
-        $this->estado = Muestra::ESTADO_PENDIENTE;
     }
 
     /**

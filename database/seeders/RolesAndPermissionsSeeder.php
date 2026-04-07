@@ -72,6 +72,7 @@ class RolesAndPermissionsSeeder extends Seeder
             // Muestras
             'ver-muestras',
             'crear-muestras',
+            'editar-muestras',
             'eliminar-muestras',
             'enviar-resultados-muestra',
             'ver-codigo-barras-muestra',
@@ -206,6 +207,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'ver-unidades-medida',
             'ver-muestras',
             'crear-muestras',
+            'editar-muestras',
             'ver-analisis',
             'ver-resultados',
             'registrar-resultados',

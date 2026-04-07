@@ -403,6 +403,18 @@
                                     />
                                     @endcan
 
+                                    {{-- Botón editar --}}
+                                    @can('editar-muestras')
+                                    <flux:button
+                                        :href="route('muestras.editar', $muestra->id)"
+                                        variant="ghost"
+                                        size="sm"
+                                        icon="pencil"
+                                        color="cyan"
+                                        title="Editar"
+                                    />
+                                    @endcan
+
                                     {{-- Botón eliminar --}}
                                     @can('eliminar-muestras')
                                     <flux:button
