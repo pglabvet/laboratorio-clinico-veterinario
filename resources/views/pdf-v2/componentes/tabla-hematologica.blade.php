@@ -142,7 +142,7 @@
                     <td style="text-align: center; color: #718096; border: 1px solid #cbd5e0; padding: 4px;">
                         {{ $difTemplate ? $generarTextoRango($difTemplate, 'rel_') : '' }}{{ $difTemplate ? ' %' : '' }}
                     </td>
-                    <td style="text-align: center; border: 1px solid #cbd5e0; padding: 4px;" class="{{ $claseClasificacion($clasifAbs) }}">{{ $valorAbs !== '' && $valorAbs !== null ? ($valorAbs . ' mm³') : '' }}</td>
+                    <td style="text-align: center; border: 1px solid #cbd5e0; padding: 4px;">{{ $valorAbs !== '' && $valorAbs !== null ? ($valorAbs . ' mm³') : '' }}</td>
                     <td style="text-align: center; color: #718096; border: 1px solid #cbd5e0; padding: 4px;">
                         {{ $difTemplate ? $generarTextoRango($difTemplate, 'abs_') : '' }}{{ $difTemplate ? ' mm³' : '' }}
                     </td>

@@ -7,10 +7,14 @@
     $indiceHemoglobina = null;
     foreach (($componente['propiedades']['parametros_principales'] ?? []) as $idx => $p) {
         $nombreLower = strtolower($p['nombre'] ?? '');
-        if (str_contains($nombreLower, 'leucocito')) $indiceLeucocitos = $idx;
-        if (str_contains($nombreLower, 'hematocrito')) $indiceHematocrito = $idx;
-        if (str_contains($nombreLower, 'eritrocito')) $indiceEritrocitos = $idx;
-        if (str_contains($nombreLower, 'hemoglobina')) $indiceHemoglobina = $idx;
+        if (str_contains($nombreLower, 'leucocito'))
+            $indiceLeucocitos = $idx;
+        if (str_contains($nombreLower, 'hematocrito'))
+            $indiceHematocrito = $idx;
+        if (str_contains($nombreLower, 'eritrocito'))
+            $indiceEritrocitos = $idx;
+        if (str_contains($nombreLower, 'hemoglobina'))
+            $indiceHemoglobina = $idx;
     }
 
     // Determinar índices de los índices eritrocitarios calculados
@@ -19,9 +23,12 @@
     $indiceCCMHb = null;
     foreach (($componente['propiedades']['indices'] ?? []) as $idx => $ind) {
         $nombreUpper = strtoupper(trim($ind['nombre'] ?? ''));
-        if (str_contains($nombreUpper, 'VCM') && !str_contains($nombreUpper, 'CCMHB')) $indiceVCM = $idx;
-        if (str_contains($nombreUpper, 'HBCM')) $indiceHbCM = $idx;
-        if (str_contains($nombreUpper, 'CCMHB') || str_contains($nombreUpper, 'CCMH')) $indiceCCMHb = $idx;
+        if (str_contains($nombreUpper, 'VCM') && !str_contains($nombreUpper, 'CCMHB'))
+            $indiceVCM = $idx;
+        if (str_contains($nombreUpper, 'HBCM'))
+            $indiceHbCM = $idx;
+        if (str_contains($nombreUpper, 'CCMHB') || str_contains($nombreUpper, 'CCMH'))
+            $indiceCCMHb = $idx;
     }
 
     // Generar texto de rango desde datos estructurados (con fallback a campos antiguos)
@@ -30,7 +37,7 @@
         $min = $item['rango_' . $infijo . 'min'] ?? $item['ref_' . $infijo . 'min'] ?? '';
         $max = $item['rango_' . $infijo . 'max'] ?? $item['ref_' . $infijo . 'max'] ?? '';
         $valor = $item['rango_' . $infijo . 'valor'] ?? '';
-        return match($tipo) {
+        return match ($tipo) {
             'min-max' => (!empty($min) || !empty($max)) ? $min . ' - ' . $max : '',
             'menor' => !empty($valor) ? '< ' . $valor : '',
             'menor-igual' => !empty($valor) ? '≤ ' . $valor : '',
@@ -40,9 +47,7 @@
         };
     };
 @endphp
-<div 
-    wire:ignore
-    x-data="{
+<div wire:ignore x-data="{
         datosExistentes: @js($componentesData[$index]['data'] ?? null),
         indiceLeucocitos: {{ $indiceLeucocitos !== null ? $indiceLeucocitos : 'null' }},
         indiceHematocrito: {{ $indiceHematocrito !== null ? $indiceHematocrito : 'null' }},
@@ -261,11 +266,6 @@
             return 'text-gray-900 dark:text-zinc-100';
         },
         claseDiferencialAbs(idx) {
-            const d = this.diferenciales[idx];
-            if (!d || !d.valor_abs) return 'text-gray-900 dark:text-zinc-100';
-            const c = this.clasificarConRango(parseFloat(d.valor_abs), d.rango_abs_tipo, d.rango_abs_min, d.rango_abs_max, d.rango_abs_valor);
-            if (c === 'bajo') return 'text-blue-600 dark:text-blue-400 font-bold';
-            if (c === 'alto') return 'text-red-600 dark:text-red-400 font-bold';
             return 'text-gray-900 dark:text-zinc-100';
         },
         claseIndice(idx) {
@@ -276,107 +276,135 @@
             if (c === 'alto') return 'text-red-600 dark:text-red-400 font-bold';
             return 'text-gray-900 dark:text-zinc-100';
         }
-    }"
-    class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:bg-zinc-900">
+    }" class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:bg-zinc-900">
     <div class="overflow-x-auto">
         <table class="w-full border border-gray-300 dark:border-zinc-700 text-xs">
             <thead>
                 <tr>
-                    <th colspan="3" class="border border-gray-300 dark:border-zinc-700 px-2 py-2 font-bold text-gray-900 dark:text-zinc-100">
+                    <th colspan="3"
+                        class="border border-gray-300 dark:border-zinc-700 px-2 py-2 font-bold text-gray-900 dark:text-zinc-100">
                         {{ $componente['propiedades']['titulo'] ?? 'CUADRO HEMÁTICO' }}
                     </th>
                     <th colspan="5" class="border border-gray-300 dark:border-zinc-700 px-2 py-2"></th>
                 </tr>
                 <tr class="bg-gray-100 dark:bg-zinc-900 text-center text-xs">
-                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100">CUADRO<br>HEMÁTICO</th>
-                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100">RESULTADO</th>
-                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100">VALORES DE REF</th>
+                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100">
+                        CUADRO<br>HEMÁTICO</th>
+                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100">
+                        RESULTADO</th>
+                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100">
+                        VALORES DE REF</th>
                     <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1"></th>
-                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100">VALOR REL</th>
-                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100">Val ref</th>
-                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100">VALOR ABS</th>
-                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100">Val ref</th>
+                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100">
+                        VALOR REL</th>
+                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100">
+                        Val ref</th>
+                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100">
+                        VALOR ABS</th>
+                    <th class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-gray-900 dark:text-zinc-100">
+                        Val ref</th>
                 </tr>
             </thead>
             <tbody>
                 @php
                     $maxRows = max(
-                        count($componente['propiedades']['parametros_principales'] ?? []), 
+                        count($componente['propiedades']['parametros_principales'] ?? []),
                         count($componente['propiedades']['diferenciales'] ?? [])
                     );
                 @endphp
-                
+
                 @for($i = 0; $i < $maxRows; $i++)
-                <tr>
-                    {{-- Parámetros Principales (Lado Izquierdo) --}}
-                    @if($i < count($componente['propiedades']['parametros_principales'] ?? []))
-                        @php $param = $componente['propiedades']['parametros_principales'][$i]; @endphp
-                        <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 font-semibold text-xs text-gray-900 dark:text-zinc-100">
-                            {{ $param['nombre'] }}
-                        </td>
-                        <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1">
-                            <template x-if="esParametroCalculado({{ $i }})">
-                                <span x-text="parametros[{{ $i }}].resultado" :class="claseParametro({{ $i }})" class="block w-full px-1 py-0.5 text-xs text-center"></span>
-                            </template>
-                            <template x-if="!esParametroCalculado({{ $i }})">
-                                <input type="text" x-model="parametros[{{ $i }}].resultado" @change="onParametroChange()" @blur="onParametroChange()" :class="claseParametro({{ $i }})" placeholder="Ingresar" class="w-full px-1 py-0.5 text-xs text-center border-0 focus:ring-1 focus:ring-blue-500 rounded bg-blue-50 dark:bg-blue-900/30 border-l-2 border-l-blue-400 dark:border-l-blue-500" />
-                            </template>
-                        </td>
-                        <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1 text-center text-xs text-gray-500 dark:text-zinc-400">
-                            {{ $generarTextoRango($param) }}@if($param['unidad']) <span class="text-gray-900 dark:text-zinc-100">{{ $param['unidad'] }}</span>@endif
-                        </td>
-                    @else
-                        <td class="border border-gray-300 dark:border-zinc-700" colspan="3"></td>
-                    @endif
-                    
-                    {{-- Diferenciales (Lado Derecho) --}}
-                    @if($i < count($componente['propiedades']['diferenciales'] ?? []))
-                        @php $dif = $componente['propiedades']['diferenciales'][$i]; @endphp
-                        <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 font-semibold text-xs text-gray-900 dark:text-zinc-100">
-                            {{ $dif['nombre'] }}
-                        </td>
-                        <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1">
-                            <input type="text" x-model="diferenciales[{{ $i }}].valor_rel" @change="onValorRelChange()" @blur="onValorRelChange()" :class="claseDiferencialRel({{ $i }})" placeholder="Ingresar" class="w-full px-1 py-0.5 text-xs text-center border-0 focus:ring-1 focus:ring-blue-500 rounded bg-blue-50 dark:bg-blue-900/30 border-l-2 border-l-blue-400 dark:border-l-blue-500" />
-                        </td>
-                        <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1 text-center text-xs text-gray-500 dark:text-zinc-400">
-                            {{ $generarTextoRango($dif, 'rel_') }} <span class="text-gray-900 dark:text-zinc-100">%</span>
-                        </td>
-                        <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1">
-                            <span x-text="diferenciales[{{ $i }}].valor_abs" :class="claseDiferencialAbs({{ $i }})" class="block w-full px-1 py-0.5 text-xs text-center"></span>
-                        </td>
-                        <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1 text-center text-xs text-gray-500 dark:text-zinc-400">
-                            {{ $generarTextoRango($dif, 'abs_') }} <span class="text-gray-900 dark:text-zinc-100">mm³</span>
-                        </td>
-                    @else
-                        <td class="border border-gray-300 dark:border-zinc-700" colspan="5"></td>
-                    @endif
-                </tr>
+                    <tr>
+                        {{-- Parámetros Principales (Lado Izquierdo) --}}
+                        @if($i < count($componente['propiedades']['parametros_principales'] ?? []))
+                            @php $param = $componente['propiedades']['parametros_principales'][$i]; @endphp
+                            <td
+                                class="border border-gray-300 dark:border-zinc-700 px-2 py-1 font-semibold text-xs text-gray-900 dark:text-zinc-100">
+                                {{ $param['nombre'] }}
+                            </td>
+                            <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1">
+                                <template x-if="esParametroCalculado({{ $i }})">
+                                    <span x-text="parametros[{{ $i }}].resultado" :class="claseParametro({{ $i }})"
+                                        class="block w-full px-1 py-0.5 text-xs text-center"></span>
+                                </template>
+                                <template x-if="!esParametroCalculado({{ $i }})">
+                                    <input type="text" x-model="parametros[{{ $i }}].resultado" @change="onParametroChange()"
+                                        @blur="onParametroChange()" :class="claseParametro({{ $i }})" placeholder="Ingresar"
+                                        class="w-full px-1 py-0.5 text-xs text-center border-0 focus:ring-1 focus:ring-blue-500 rounded bg-blue-50 dark:bg-blue-900/30 border-l-2 border-l-blue-400 dark:border-l-blue-500" />
+                                </template>
+                            </td>
+                            <td
+                                class="border border-gray-300 dark:border-zinc-700 px-1 py-1 text-center text-xs text-gray-500 dark:text-zinc-400">
+                                {{ $generarTextoRango($param) }}@if($param['unidad']) <span
+                                class="text-gray-900 dark:text-zinc-100">{{ $param['unidad'] }}</span>@endif
+                            </td>
+                        @else
+                            <td class="border border-gray-300 dark:border-zinc-700" colspan="3"></td>
+                        @endif
+
+                        {{-- Diferenciales (Lado Derecho) --}}
+                        @if($i < count($componente['propiedades']['diferenciales'] ?? []))
+                            @php $dif = $componente['propiedades']['diferenciales'][$i]; @endphp
+                            <td
+                                class="border border-gray-300 dark:border-zinc-700 px-2 py-1 font-semibold text-xs text-gray-900 dark:text-zinc-100">
+                                {{ $dif['nombre'] }}
+                            </td>
+                            <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1">
+                                <input type="text" x-model="diferenciales[{{ $i }}].valor_rel" @change="onValorRelChange()"
+                                    @blur="onValorRelChange()" :class="claseDiferencialRel({{ $i }})" placeholder="Ingresar"
+                                    class="w-full px-1 py-0.5 text-xs text-center border-0 focus:ring-1 focus:ring-blue-500 rounded bg-blue-50 dark:bg-blue-900/30 border-l-2 border-l-blue-400 dark:border-l-blue-500" />
+                            </td>
+                            <td
+                                class="border border-gray-300 dark:border-zinc-700 px-1 py-1 text-center text-xs text-gray-500 dark:text-zinc-400">
+                                {{ $generarTextoRango($dif, 'rel_') }} <span class="text-gray-900 dark:text-zinc-100">%</span>
+                            </td>
+                            <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1">
+                                <span x-text="diferenciales[{{ $i }}].valor_abs" :class="claseDiferencialAbs({{ $i }})"
+                                    class="block w-full px-1 py-0.5 text-xs text-center"></span>
+                            </td>
+                            <td
+                                class="border border-gray-300 dark:border-zinc-700 px-1 py-1 text-center text-xs text-gray-500 dark:text-zinc-400">
+                                {{ $generarTextoRango($dif, 'abs_') }} <span class="text-gray-900 dark:text-zinc-100">mm³</span>
+                            </td>
+                        @else
+                            <td class="border border-gray-300 dark:border-zinc-700" colspan="5"></td>
+                        @endif
+                    </tr>
                 @endfor
-                
+
                 {{-- Índices Eritrocitarios --}}
+                @php $componenteIndex = $index; @endphp
                 @foreach(($componente['propiedades']['indices'] ?? []) as $index => $indice)
-                <tr>
-                    @if($index === 0)
-                    <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 font-semibold text-xs text-gray-900 dark:text-zinc-100" rowspan="{{ count($componente['propiedades']['indices'] ?? []) }}">
-                        INDICES<br>ERITROCIT.
-                    </td>
-                    @endif
-                    <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-center text-xs text-gray-900 dark:text-zinc-100">
-                        {{ $indice['nombre'] }}
-                    </td>
-                    <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1">
-                        <template x-if="esIndiceCalculado({{ $index }})">
-                            <span x-text="indices[{{ $index }}].resultado" :class="claseIndice({{ $index }})" class="block w-full px-1 py-0.5 text-xs text-center"></span>
-                        </template>
-                        <template x-if="!esIndiceCalculado({{ $index }})">
-                            <input type="text" x-model="indices[{{ $index }}].resultado" @change="sincronizarConLivewire()" @blur="sincronizarConLivewire()" :class="claseIndice({{ $index }})" class="w-full px-1 py-0.5 text-xs border-0 focus:ring-1 focus:ring-blue-500 rounded bg-transparent" />
-                        </template>
-                    </td>
-                    <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-xs text-gray-500 dark:text-zinc-400">
-                        {{ $generarTextoRango($indice) ?: ($indice['referencia'] ?? '') }}@if($indice['unidad']) <span class="text-gray-900 dark:text-zinc-100">{{ $indice['unidad'] }}</span>@endif
-                    </td>
-                    <td class="border border-gray-300 dark:border-zinc-700" colspan="5"></td>
-                </tr>
+                    <tr>
+                        @if($index === 0)
+                            <td class="border border-gray-300 dark:border-zinc-700 px-2 py-1 font-semibold text-xs text-gray-900 dark:text-zinc-100"
+                                rowspan="{{ count($componente['propiedades']['indices'] ?? []) }}">
+                                INDICES<br>ERITROCIT.
+                            </td>
+                        @endif
+                        <td
+                            class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-center text-xs text-gray-900 dark:text-zinc-100">
+                            {{ $indice['nombre'] }}
+                        </td>
+                        <td class="border border-gray-300 dark:border-zinc-700 px-1 py-1">
+                            <template x-if="esIndiceCalculado({{ $index }})">
+                                <span x-text="indices[{{ $index }}].resultado" :class="claseIndice({{ $index }})"
+                                    class="block w-full px-1 py-0.5 text-xs text-center"></span>
+                            </template>
+                            <template x-if="!esIndiceCalculado({{ $index }})">
+                                <input type="text" x-model="indices[{{ $index }}].resultado"
+                                    @change="sincronizarConLivewire()" @blur="sincronizarConLivewire()"
+                                    :class="claseIndice({{ $index }})"
+                                    class="w-full px-1 py-0.5 text-xs border-0 focus:ring-1 focus:ring-blue-500 rounded bg-transparent" />
+                            </template>
+                        </td>
+                        <td
+                            class="border border-gray-300 dark:border-zinc-700 px-2 py-1 text-xs text-gray-500 dark:text-zinc-400">
+                            {{ $generarTextoRango($indice) ?: ($indice['referencia'] ?? '') }}@if($indice['unidad']) <span
+                            class="text-gray-900 dark:text-zinc-100">{{ $indice['unidad'] }}</span>@endif
+                        </td>
+                        <td class="border border-gray-300 dark:border-zinc-700" colspan="5"></td>
+                    </tr>
                 @endforeach
             </tbody>
         </table>
@@ -391,6 +419,6 @@
     {{-- Repeticiones (solo si hay reactivos asignados a nivel componente) --}}
     @include('livewire.resultados.componentes-edicion._repeticiones-reactivos', [
         'componente' => $componente,
-        'index' => $index,
+        'index' => $componenteIndex,
     ])
 </div>

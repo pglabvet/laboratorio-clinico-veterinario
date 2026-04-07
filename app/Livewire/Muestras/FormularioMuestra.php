@@ -118,6 +118,7 @@ class FormularioMuestra extends Component
         $this->muestra_id = $muestra->id;
         $this->codigo_muestra = $muestra->codigo_muestra;
         $this->tipo_muestra = $muestra->tipo_muestra;
+        $this->estado = $muestra->estado;
 
         $this->observaciones = $muestra->observaciones;
         $this->sucursal_id = $muestra->sucursal_id;
@@ -326,24 +327,30 @@ class FormularioMuestra extends Component
             }
 
             // Crear o actualizar muestra
+            $datosMuestra = [
+                'codigo_muestra' => $this->codigo_muestra,
+                'paciente_nombre' => $this->paciente_nombre,
+                'especie_id' => $this->especie_id,
+                'raza' => $this->raza,
+                'edad' => $this->edadCantidad.' '.$this->edadUnidad,
+                'sexo' => $this->sexo,
+                'color' => $this->color,
+                'propietario_nombre' => $this->propietario_nombre,
+                'veterinaria_id' => $this->veterinaria_id,
+                'sucursal_id' => $this->sucursal_id,
+                'tipo_muestra' => $this->tipo_muestra,
+                'fecha_recepcion' => $this->muestra_id ? Muestra::find($this->muestra_id)->fecha_recepcion : now(),
+                'observaciones' => $this->observaciones,
+            ];
+
+            // Solo establecer estado en creación; en edición se calcula por los análisis
+            if (! $this->muestra_id) {
+                $datosMuestra['estado'] = $this->estado;
+            }
+
             $muestra = Muestra::updateOrCreate(
                 ['id' => $this->muestra_id],
-                [
-                    'codigo_muestra' => $this->codigo_muestra,
-                    'paciente_nombre' => $this->paciente_nombre,
-                    'especie_id' => $this->especie_id,
-                    'raza' => $this->raza,
-                    'edad' => $this->edadCantidad.' '.$this->edadUnidad,
-                    'sexo' => $this->sexo,
-                    'color' => $this->color,
-                    'propietario_nombre' => $this->propietario_nombre,
-                    'veterinaria_id' => $this->veterinaria_id,
-                    'sucursal_id' => $this->sucursal_id,
-                    'tipo_muestra' => $this->tipo_muestra,
-                    'fecha_recepcion' => $this->muestra_id ? Muestra::find($this->muestra_id)->fecha_recepcion : now(),
-                    'estado' => $this->estado,
-                    'observaciones' => $this->observaciones,
-                ]
+                $datosMuestra
             );
 
             // Sincronizar análisis y descontar insumos
