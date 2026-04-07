@@ -79,6 +79,7 @@
             window.__labvetData = window.__labvetData || {};
             window.__labvetData['{{ $index }}'] = dataConDesc;
             $wire.set('componentesData.{{ $index }}.data', dataConDesc);
+            window.dispatchEvent(new CustomEvent('datos-sincronizados', { detail: { index: {{ $index }} } }));
         }
     }"
     class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:bg-zinc-900">
