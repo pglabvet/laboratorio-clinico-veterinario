@@ -84,7 +84,7 @@
             const hto = this.getHematocrito();
             if (hto > 0) {
                 // Valor crudo para Eritrocitos (sin redondeo intermedio)
-                const eritrocitosRaw = (hto * 10) / 47;
+                const eritrocitosRaw = (hto * 10) / 65;
                 // Valores intermedios con 1 decimal (solo para VCM, HbCM, CCMHb)
                 const eritrocitosBase = parseFloat(eritrocitosRaw.toFixed(1));
                 const hemoglobinaBase = parseFloat((hto / 3).toFixed(1));
@@ -221,6 +221,7 @@
             window.__labvetData = window.__labvetData || {};
             window.__labvetData['{{ $index }}'] = data;
             $wire.set('componentesData.{{ $index }}.data', data);
+            window.dispatchEvent(new CustomEvent('datos-sincronizados', { detail: { index: {{ $index }} } }));
         },
         clasificarConRango(res, rangoTipo, rangoMin, rangoMax, rangoValor) {
             if (isNaN(res)) return 'normal';
