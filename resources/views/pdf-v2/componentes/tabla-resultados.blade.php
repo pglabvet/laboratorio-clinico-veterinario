@@ -1,4 +1,20 @@
 {{-- Componente PDF V2: Tabla de Resultados (estilo datos sueltos) --}}
+@php
+    $tieneAlgunResultado = false;
+    if (!empty($resultado) && is_array($resultado)) {
+        foreach ($resultado as $fila) {
+            if (is_array($fila)) {
+                $val = trim($fila['col_0'] ?? '');
+                if ($val !== '' && $val !== '--') {
+                    $tieneAlgunResultado = true;
+                    break;
+                }
+            }
+        }
+    }
+@endphp
+
+@if($tieneAlgunResultado)
 @if(isset($componente['propiedades']['titulo']))
     <div class="component-title">{{ $componente['propiedades']['titulo'] }}</div>
 @endif
@@ -9,7 +25,6 @@
     </p>
 @endif
 
-@if(!empty($resultado) && is_array($resultado))
 <table>
     <thead>
         <tr>
@@ -151,6 +166,4 @@
         @endforeach
     </tbody>
 </table>
-@else
-<p style="color: #718096; font-style: italic;">Sin resultados</p>
 @endif
