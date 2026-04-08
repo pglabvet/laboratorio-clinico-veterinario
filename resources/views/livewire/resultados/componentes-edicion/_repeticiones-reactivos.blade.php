@@ -22,7 +22,7 @@
     
     // Tipos que usan reactivos a nivel de bloque completo
     $tiposBloque = ['antibiograma', 'examen-diferencial', 'examen-microscopico',
-                    'coproparasitologia-seriado', 'carga-viral', 'tabla-hematologica'];
+                    'coproparasitologia-seriado', 'carga-viral', 'tabla-hematologica', 'texto-libre', 'citologia'];
     
     // Determinar si hay reactivos según el tipo
     $tieneReactivos = false;
@@ -210,6 +210,22 @@
                 if (this.tipoComponente === 'carga-viral') {
                     const arr = Array.isArray(data) ? data : Object.values(data);
                     return arr.some(f => f && f.valor !== undefined && f.valor !== '' && f.valor !== null);
+                }
+                // tabla-dos-columnas
+                if (this.tipoComponente === 'tabla-dos-columnas') {
+                    const arr = Array.isArray(data) ? data : Object.values(data);
+                    return arr.some(c => c && c.valor !== undefined && c.valor !== '' && c.valor !== null);
+                }
+                // citologia
+                if (this.tipoComponente === 'citologia') {
+                    const tumor = (data.tumor ?? '').trim();
+                    return tumor !== '';
+                }
+                // texto-libre
+                if (this.tipoComponente === 'texto-libre') {
+                    const contenido = data.contenido ?? '';
+                    const limpio = contenido.replace(/<[^>]*>/g, '').trim();
+                    return limpio !== '' && limpio !== '\n';
                 }
                 // Genérico
                 if (typeof data === 'object') {
