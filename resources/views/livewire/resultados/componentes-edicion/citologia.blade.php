@@ -141,6 +141,12 @@
         </div>
         @endforeach
     </div>
+
+    {{-- Repeticiones (solo si hay reactivos asignados a nivel componente) --}}
+    @include('livewire.resultados.componentes-edicion._repeticiones-reactivos', [
+        'componente' => $componente,
+        'index' => $index,
+    ])
 </div>
 
 @push('scripts')
@@ -306,6 +312,7 @@
                 window.__labvetData = window.__labvetData || {};
                 window.__labvetData['{{ $index }}'] = data;
                 this.$wire.set('componentesData.{{ $index }}.data', data);
+                window.dispatchEvent(new CustomEvent('datos-sincronizados', { detail: { index: {{ $index }} } }));
             }
         }
     }
