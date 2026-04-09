@@ -251,7 +251,13 @@
             const p = this.parametros[idx];
             if (!p || !p.resultado) return 'text-gray-900 dark:text-zinc-100';
             // Limpiar separadores de miles (puntos) para parsear correctamente (ej: 4.900.000 → 4900000)
-            const valorLimpio = parseFloat(String(p.resultado).replace(/\./g, '').replace(/,/g, '.')) || 0;
+            const rawStr = String(p.resultado).trim();
+            // Detect if dots are used as thousands separators (e.g. 4.900.000 or 6.923.077)
+            // Pattern: digits grouped by dots in threes, with no trailing decimal part using dot
+            const isMilesSeparator = /^\d{1,3}(\.\d{3})+$/.test(rawStr);
+            const valorLimpio = isMilesSeparator
+                ? parseFloat(rawStr.replace(/\./g, '')) || 0
+                : parseFloat(rawStr.replace(/,/g, '.')) || 0;
             const c = this.clasificarConRango(valorLimpio, p.rango_tipo, p.rango_min, p.rango_max, p.rango_valor);
             if (c === 'bajo') return 'text-blue-600 dark:text-blue-400 font-bold';
             if (c === 'alto') return 'text-red-600 dark:text-red-400 font-bold';

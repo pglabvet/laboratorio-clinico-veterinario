@@ -461,7 +461,7 @@
           </td>
           <td>
             <span class="patient-label">Edad</span>
-            <span class="patient-value">{{ $muestra->eedad ?? 'N/A' }}</span>
+            <span class="patient-value">{{ $muestra->edad ?? 'N/A' }}</span>
           </td>
           <td>
             <span class="patient-label">Especie / Raza</span>
