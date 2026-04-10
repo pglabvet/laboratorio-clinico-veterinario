@@ -183,9 +183,9 @@ class PdfController extends Controller
             }
         }
 
-        // Verificar límite de descargas (máximo 10)
+        // Verificar límite de descargas (máximo 100)
         $totalDescargas = $tokenDescarga->logsDescarga()->count();
-        if ($totalDescargas >= 10) {
+        if ($totalDescargas >= 100) {
             abort(403, 'Se ha excedido el límite de descargas permitidas para este enlace.');
         }
 
