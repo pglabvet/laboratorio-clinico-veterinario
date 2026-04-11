@@ -229,10 +229,23 @@ class RevisarAnalisis extends Component
         if ($this->busqueda) {
             $busqueda = '%' . $this->busqueda . '%';
             $query->where(function ($q) use ($busqueda) {
+                // Buscar en muestra: código, paciente, propietario
                 $q->whereHas('muestra', function ($muestraQuery) use ($busqueda) {
                     $muestraQuery->whereRaw('unaccent(codigo_muestra) ilike unaccent(?)', [$busqueda])
                         ->orWhereRaw('unaccent(paciente_nombre) ilike unaccent(?)', [$busqueda])
                         ->orWhereRaw('unaccent(propietario_nombre) ilike unaccent(?)', [$busqueda]);
+                })
+                // Buscar en veterinaria
+                ->orWhereHas('muestra.veterinaria', function ($vetQuery) use ($busqueda) {
+                    $vetQuery->whereRaw('unaccent(nombre) ilike unaccent(?)', [$busqueda]);
+                })
+                // Buscar en tipo de análisis
+                ->orWhereHas('tipoAnalisis', function ($tipoQuery) use ($busqueda) {
+                    $tipoQuery->whereRaw('unaccent(nombre) ilike unaccent(?)', [$busqueda]);
+                })
+                // Buscar en sucursal
+                ->orWhereHas('muestra.sucursal', function ($sucQuery) use ($busqueda) {
+                    $sucQuery->whereRaw('unaccent(nombre) ilike unaccent(?)', [$busqueda]);
                 });
             });
         }

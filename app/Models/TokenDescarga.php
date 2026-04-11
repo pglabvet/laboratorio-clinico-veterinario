@@ -47,10 +47,10 @@ class TokenDescarga extends Model
      * Crear un token de descarga para un PDF
      * 
      * @param int $pdfId ID del PDF
-     * @param int $diasExpiracion Días hasta que expire el token (default: 14)
+     * @param int $diasExpiracion Días hasta que expire el token (default: 365)
      * @return self
      */
-    public static function crearParaPdf(int $pdfId, int $diasExpiracion = 14): self
+    public static function crearParaPdf(int $pdfId, int $diasExpiracion = 365): self
     {
         return self::create([
             'pdf_id' => $pdfId,

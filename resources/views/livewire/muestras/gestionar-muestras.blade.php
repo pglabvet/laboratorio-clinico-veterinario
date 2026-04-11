@@ -115,7 +115,7 @@
                     <flux:input 
                         wire:model.live.debounce.300ms="buscar"
                         icon="magnifying-glass"
-                        placeholder="Buscar por código, paciente, propietario..."
+                        placeholder="Buscar por código, paciente, propietario, veterinaria, especie o sucursal..."
                         class="w-full"
                     />
                 </div>
