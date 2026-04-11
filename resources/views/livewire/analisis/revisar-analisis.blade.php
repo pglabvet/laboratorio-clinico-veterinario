@@ -55,7 +55,7 @@
                     <flux:input 
                         wire:model.live.debounce.300ms="busqueda"
                         icon="magnifying-glass"
-                        placeholder="Buscar por código, paciente o propietario..."
+                        placeholder="Buscar por código, paciente, propietario, veterinaria, tipo o sucursal..."
                         class="w-full"
                     />
                 </div>
@@ -208,6 +208,9 @@
                             Paciente / Propietario
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
+                            Veterinaria
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
                             Tipo Análisis
                         </th>
                         <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
@@ -251,6 +254,9 @@
                                 <div class="text-neutral-500 dark:text-neutral-400">
                                     {{ $item->muestra->propietario_nombre }}
                                 </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-neutral-700 dark:text-neutral-300">
+                                {{ $item->muestra->veterinaria->nombre ?? 'N/A' }}
                             </td>
                             <td class="px-6 py-4 text-sm text-neutral-700 dark:text-neutral-300">
                                 {{ $item->tipoAnalisis->nombre }}
@@ -324,7 +330,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-6 py-12 text-center">
+                            <td colspan="8" class="px-6 py-12 text-center">
                                 <div class="flex flex-col items-center justify-center">
                                     <flux:icon.clipboard-document-list class="mb-3 h-12 w-12 text-neutral-400 dark:text-neutral-600" />
                                     <flux:heading size="lg" class="mb-1">No se encontraron análisis</flux:heading>
