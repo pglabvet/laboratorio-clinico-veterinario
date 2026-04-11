@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Mail;
 
 class EnvioResultadosService
 {
-    private const DIAS_EXPIRACION_ENLACE = 14;
+    private const DIAS_EXPIRACION_ENLACE = 365;
 
     protected AnalisisPdfService $pdfService;
 
