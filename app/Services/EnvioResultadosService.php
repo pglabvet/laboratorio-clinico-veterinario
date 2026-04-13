@@ -310,7 +310,7 @@ class EnvioResultadosService
             "------------------------------------\n".
             "*Descarga tu resultado aqui:*\n".
             $urlDescarga."\n\n".
-            "_Enlace valido por 14 dias_\n\n".
+            "_Enlace valido por 1 año_\n\n".
             '_Gracias por confiar en nosotros!_';
     }
 
@@ -335,7 +335,7 @@ class EnvioResultadosService
             $mensaje .= "{$numero}. *{$link['nombre']}*\n{$link['url']}\n\n";
         }
 
-        $mensaje .= "_Enlaces validos por 14 dias_\n\n".
+        $mensaje .= "_Enlaces validos por 1 año_\n\n".
             '_Gracias por confiar en nosotros!_';
 
         return $mensaje;
