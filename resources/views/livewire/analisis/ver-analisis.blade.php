@@ -12,8 +12,14 @@
                 </flux:button>
                 
             
-                @if($analisis->estado === 'Aprobado')
-                    {{-- Botones PDF para análisis aprobados --}}
+                @if($analisis->estado === 'Aprobado' || $analisis->estado === 'Enviado')
+                    {{-- Botón Editar para análisis aprobados/enviados --}}
+                    @can('actualizar-datos-analisis')
+                    <flux:button href="{{ route('analisis.editar', $analisis->id) }}" variant="outline" icon="pencil">
+                        Editar
+                    </flux:button>
+                    @endcan
+                    {{-- Botones PDF para análisis aprobados/enviados --}}
                     @can('descargar-pdf-analisis')
                     <flux:button href="{{ route('analisis.ver-pdf', $analisis->id) }}" target="_blank" variant="primary" icon="eye">
                         Ver PDF

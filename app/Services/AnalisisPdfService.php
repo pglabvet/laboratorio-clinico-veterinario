@@ -118,7 +118,7 @@ class AnalisisPdfService
 
     /**
      * Obtiene un PDF existente o genera uno nuevo si no existe.
-     * Uso principal: cuando el admin da click en "Ver PDF" o "Descargar PDF".
+     * Siempre regenera el archivo con datos actualizados.
      *
      * @return array{modelo: Pdf, ruta: string, nombre: string, fullPath: string}
      */
@@ -132,18 +132,8 @@ class AnalisisPdfService
             ->latest()
             ->first();
 
-        if ($pdfModel && Storage::disk('public')->exists($pdfModel->ruta_archivo)) {
-            // PDF existe en BD y en disco: reutilizar sin generar nada nuevo
-            return [
-                'ruta' => $pdfModel->ruta_archivo,
-                'modelo' => $pdfModel,
-                'nombre' => basename($pdfModel->ruta_archivo),
-                'fullPath' => Storage::disk('public')->path($pdfModel->ruta_archivo),
-            ];
-        }
-
-        if ($pdfModel && ! Storage::disk('public')->exists($pdfModel->ruta_archivo)) {
-            // Registro existe pero archivo no: regenerar solo el archivo
+        if ($pdfModel) {
+            // Registro existe: siempre regenerar el archivo con datos actualizados
             $token = $pdfModel->tokenVigente();
             if (! $token) {
                 $token = TokenDescarga::crearParaPdf($pdfModel->id);
