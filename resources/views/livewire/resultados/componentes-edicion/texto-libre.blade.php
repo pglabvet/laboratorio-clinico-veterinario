@@ -50,11 +50,13 @@
     x-data="{
         datoExistente: @js($componentesData[$index]['data'] ?? null),
         contenido: '',
+        incluirEnPdf: true,
         quill: null,
         init() {
             // Cargar dato existente
             if (this.datoExistente && typeof this.datoExistente === 'object' && this.datoExistente.contenido) {
                 this.contenido = this.datoExistente.contenido;
+                this.incluirEnPdf = this.datoExistente.incluir_en_pdf ?? true;
             } else if (typeof this.datoExistente === 'string') {
                 this.contenido = this.datoExistente;
             } else {
@@ -131,7 +133,8 @@
             const data = {
                 titulo: '{{ $componente['propiedades']['titulo'] ?? '' }}',
                 formato: '{{ $componente['propiedades']['formato'] ?? 'parrafos' }}',
-                contenido: this.contenido
+                contenido: this.contenido,
+                incluir_en_pdf: this.incluirEnPdf
             };
             window.__labvetData = window.__labvetData || {};
             window.__labvetData['{{ $index }}'] = data;
@@ -175,6 +178,20 @@
             ></div>
         </div>
     @endif
+
+    {{-- Checkbox para incluir/excluir del PDF --}}
+    <label class="flex items-center gap-2 mt-3 cursor-pointer select-none group">
+        <input 
+            type="checkbox" 
+            x-model="incluirEnPdf" 
+            @change="enviarDatos()"
+            class="rounded border-gray-300 dark:border-zinc-600 text-blue-600 shadow-sm focus:ring-blue-500 dark:bg-zinc-800 dark:checked:bg-blue-600"
+        >
+        <span class="text-sm text-gray-600 dark:text-zinc-400 group-hover:text-gray-800 dark:group-hover:text-zinc-200 transition-colors">
+            <i class="fas fa-file-pdf mr-1"></i>
+            Incluir este contenido en el PDF
+        </span>
+    </label>
 
     {{-- Repeticiones (solo si hay reactivos asignados a nivel componente) --}}
     @include('livewire.resultados.componentes-edicion._repeticiones-reactivos', [
