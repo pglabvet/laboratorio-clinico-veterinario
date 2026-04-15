@@ -184,6 +184,11 @@ class AnalisisPdfService
                 continue;
             }
 
+            // Respetar checkbox "Incluir en PDF" para texto-libre
+            if ($tipo === 'texto-libre' && is_array($valorResultado) && isset($valorResultado['incluir_en_pdf']) && $valorResultado['incluir_en_pdf'] === false) {
+                continue;
+            }
+
             // Buscar si hay gráfica guardada para este componente (nueva estructura año/mes)
             $chartPattern = storage_path("app/public/charts/*/*/{$analisis->id}_{$index}.png");
             $chartFiles = glob($chartPattern);

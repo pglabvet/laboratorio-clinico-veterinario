@@ -901,6 +901,16 @@
                                             >
                                                 Email
                                             </flux:button>
+                                            <flux:button
+                                                :href="$formatoPdfEnvio === 'limpio' ? route('analisis.pdf-limpio', $analisis->id) : route('analisis.pdf', $analisis->id)"
+                                                target="_blank"
+                                                variant="ghost"
+                                                icon="arrow-down-tray"
+                                                title="{{ $analisis->puedeSerEnviado() ? 'Descargar PDF (' . ($formatoPdfEnvio === 'limpio' ? 'Limpio' : 'Completo') . ')' : 'Solo se pueden descargar análisis aprobados' }}"
+                                                :disabled="!$analisis->puedeSerEnviado()"
+                                            >
+                                                PDF
+                                            </flux:button>
                                         </div>
                                     </td>
                                 </tr>
