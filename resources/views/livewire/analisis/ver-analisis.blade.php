@@ -372,12 +372,21 @@
                                                     $clasifVer = $clasificarResultadoVer($valorResultado, $ftVer);
                                                 }
                                             }
+
+                                            // Resaltado rojo para valores textuales "Intermedio" / "Resistente" en tabla-dos-columnas
+                                            $claseResaltadoTexto = '';
+                                            if ($tipo === 'tabla-dos-columnas') {
+                                                $valorTexto = $item['valor'] ?? $item['col_0'] ?? '';
+                                                if (in_array(trim($valorTexto), ['Intermedio', 'Resistente'])) {
+                                                    $claseResaltadoTexto = 'text-red-600 dark:text-red-400 font-bold';
+                                                }
+                                            }
                                         @endphp
                                         <tr class="border-b border-gray-200 dark:border-zinc-700 last:border-0">
                                             <td class="py-2 px-3 font-semibold bg-gray-50 dark:bg-zinc-800 w-1/3">
                                                 {{ $nombreItem }}
                                             </td>
-                                            <td class="py-2 px-3 {{ $claseClasificacion($clasifVer) }}">
+                                            <td class="py-2 px-3 {{ $claseResaltadoTexto ?: $claseClasificacion($clasifVer) }}">
                                                 @foreach($item as $key => $value)
                                                     @if($key !== 'nombre' && $key !== 'campo' && !empty($value))
                                                         {{ $value }}{{ !$loop->last ? ' | ' : '' }}

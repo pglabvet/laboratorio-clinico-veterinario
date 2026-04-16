@@ -95,11 +95,12 @@ class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:
                             <select
                                 x-model="datos['{{ $loop->parent->index }}_{{ $campoIndex }}'].valor"
                                 @change="sincronizarConLivewire()"
-                                class="w-full px-2 py-1 border-0 focus:ring-2 focus:ring-blue-500 rounded bg-white dark:bg-zinc-800 text-gray-900 dark:text-zinc-100">
-                                <option value="" class="bg-white dark:bg-zinc-800">-- Seleccionar --</option>
+                                class="w-full px-2 py-1 border-0 focus:ring-2 focus:ring-blue-500 rounded bg-transparent dark:bg-transparent text-gray-900 dark:text-zinc-100"
+                                :class="{ '!text-red-600 dark:!text-red-400 !font-bold': ['Intermedio', 'Resistente'].includes(datos['{{ $loop->parent->index }}_{{ $campoIndex }}']?.valor) }">
+                                <option value="" class="bg-white dark:bg-zinc-800 !text-gray-900 dark:!text-zinc-100">-- Seleccionar --</option>
                                 @foreach(explode(',', $campo['opciones'] ?? '') as $opcion)
                                     @if(trim($opcion) !== '')
-                                    <option value="{{ trim($opcion) }}" class="bg-white dark:bg-zinc-800">{{ trim($opcion) }}</option>
+                                    <option value="{{ trim($opcion) }}" class="bg-white dark:bg-zinc-800 !text-gray-900 dark:!text-zinc-100">{{ trim($opcion) }}</option>
                                     @endif
                                 @endforeach
                             </select>
