@@ -25,11 +25,12 @@
             <tbody>
                 @foreach($resultado as $fila)
                     @if(is_array($fila) && isset($fila['valor']) && $fila['valor'] !== '' && $fila['valor'] !== null)
+                    @php $valTdc = trim($fila['valor'] ?? $fila['resultado'] ?? ''); @endphp
                     <tr>
                         <td>
                             {{ $fila['campo'] ?? $fila['nombre'] ?? $fila['etiqueta'] ?? '' }}
                         </td>
-                        <td>{{ $fila['valor'] ?? $fila['resultado'] ?? '' }}</td>
+                        <td @if(in_array($valTdc, ['Intermedio', 'Resistente'])) class="resultado-critico" @endif>{{ $valTdc }}</td>
                     </tr>
                     @endif
                 @endforeach
@@ -65,11 +66,12 @@
                 </thead>
                 <tbody>
                     @foreach($filas as $fila)
+                    @php $valTdc = trim($fila['valor'] ?? $fila['resultado'] ?? ''); @endphp
                     <tr>
                         <td>
                             {{ $fila['campo'] ?? $fila['nombre'] ?? $fila['etiqueta'] ?? '' }}
                         </td>
-                        <td>{{ $fila['valor'] ?? $fila['resultado'] ?? '' }}</td>
+                        <td @if(in_array($valTdc, ['Intermedio', 'Resistente'])) class="resultado-critico" @endif>{{ $valTdc }}</td>
                     </tr>
                     @endforeach
                 </tbody>
