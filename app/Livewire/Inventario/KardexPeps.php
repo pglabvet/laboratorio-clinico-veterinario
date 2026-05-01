@@ -6,6 +6,7 @@ use App\Models\Insumo;
 use App\Models\CategoriaInsumo;
 use App\Models\Sucursal;
 use App\Services\PepsInventarioService;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Component;
 use Livewire\Attributes\Computed;
 
@@ -16,11 +17,19 @@ class KardexPeps extends Component
     public $filtro_categoria = '';
     public $fecha_desde = '';
     public $fecha_hasta = '';
-    public $kardexData = null;
+
+    // Solo totales livianos
+    public $saldoFinalCantidad = 0;
+    public $saldoFinalCosto = 0;
+    public $totalMovimientos = 0;
+    public $hayDatos = false;
 
     // Paginación manual
     public $paginaActual = 1;
     public $porPagina = 20;
+
+    // Clave de cache para identificar el dataset actual
+    public $cacheKey = '';
 
     #[Computed]
     public function sucursales()
@@ -49,109 +58,142 @@ class KardexPeps extends Component
     public function updatedSucursalId()
     {
         $this->paginaActual = 1;
-        $this->generarKardex();
+        $this->generarYCachearKardex();
     }
 
     public function updatedFiltroCategoria()
     {
         $this->insumo_id = '';
-        $this->kardexData = null;
         $this->paginaActual = 1;
-        $this->generarKardex();
+        $this->generarYCachearKardex();
     }
 
     public function updated($propertyName)
     {
         if (in_array($propertyName, ['insumo_id', 'fecha_desde', 'fecha_hasta'])) {
             $this->paginaActual = 1;
-            $this->generarKardex();
+            $this->generarYCachearKardex();
         }
     }
 
-    public function generarKardex()
+    /**
+     * Generar TODOS los registros del kardex UNA SOLA VEZ y guardarlos en cache.
+     * Las paginaciones posteriores leen directamente del cache sin regenerar.
+     */
+    private function generarYCachearKardex()
     {
-        $this->kardexData = null;
+        // Limpiar cache anterior
+        if ($this->cacheKey) {
+            Cache::forget($this->cacheKey);
+        }
+
+        $this->saldoFinalCantidad = 0;
+        $this->saldoFinalCosto = 0;
+        $this->totalMovimientos = 0;
+        $this->hayDatos = false;
+        $this->cacheKey = '';
 
         if (!$this->sucursal_id) {
             return;
         }
 
-        // Se permite generar con solo sucursal (muestra todos los insumos)
-
         try {
-            $service = app(PepsInventarioService::class);
+            $insumoIds = $this->getInsumoIds();
 
-            if ($this->insumo_id) {
-                // Kardex para un insumo específico
+            if (empty($insumoIds)) {
+                return;
+            }
+
+            $service = app(PepsInventarioService::class);
+            $registrosCombinados = [];
+            $saldoCantidad = 0;
+            $saldoCosto = 0;
+
+            foreach ($insumoIds as $insumoId) {
                 $kardex = $service->generarKardex(
-                    insumoId: (int) $this->insumo_id,
+                    insumoId: $insumoId,
                     sucursalId: (int) $this->sucursal_id,
                     fechaDesde: $this->fecha_desde ?: null,
                     fechaHasta: $this->fecha_hasta ?: null,
                 );
 
-                // Agregar nombre del insumo a cada registro
-                $insumo = Insumo::find($this->insumo_id);
-                foreach ($kardex['registros'] as &$registro) {
+                $insumo = Insumo::find($insumoId);
+                foreach ($kardex['registros'] as $registro) {
                     $registro['insumo_nombre'] = $insumo->nombre ?? '';
-                }
-                unset($registro);
-
-                $this->kardexData = $kardex;
-            } else {
-                // Kardex para múltiples insumos (por categoría o todos)
-                $queryInsumos = Insumo::where('estado', true);
-
-                if ($this->filtro_categoria) {
-                    $queryInsumos->where('categoria_id', $this->filtro_categoria);
+                    $registrosCombinados[] = $registro;
                 }
 
-                $insumosListado = $queryInsumos->orderBy('nombre')->get();
+                $saldoCantidad += $kardex['saldo_final_cantidad'];
+                $saldoCosto += $kardex['saldo_final_costo'];
+            }
 
-                if ($insumosListado->isEmpty()) {
-                    return;
-                }
-
-                $registrosCombinados = [];
-                $saldoFinalCantidad = 0;
-                $saldoFinalCosto = 0;
-
-                foreach ($insumosListado as $insumo) {
-                    $kardex = $service->generarKardex(
-                        insumoId: $insumo->id,
-                        sucursalId: (int) $this->sucursal_id,
-                        fechaDesde: $this->fecha_desde ?: null,
-                        fechaHasta: $this->fecha_hasta ?: null,
-                    );
-
-                    // Agregar nombre del insumo a cada registro
-                    foreach ($kardex['registros'] as $registro) {
-                        $registro['insumo_nombre'] = $insumo->nombre;
-                        $registrosCombinados[] = $registro;
-                    }
-
-                    $saldoFinalCantidad += $kardex['saldo_final_cantidad'];
-                    $saldoFinalCosto += $kardex['saldo_final_costo'];
-                }
-
-                // Ordenar por fecha
+            // Ordenar por fecha si hay múltiples insumos
+            if (count($insumoIds) > 1) {
                 usort($registrosCombinados, function ($a, $b) {
                     $dateA = \Carbon\Carbon::createFromFormat('d/m/Y', $a['fecha']);
                     $dateB = \Carbon\Carbon::createFromFormat('d/m/Y', $b['fecha']);
                     return $dateA->timestamp - $dateB->timestamp;
                 });
-
-                $this->kardexData = [
-                    'saldo_inicial_cantidad' => 0,
-                    'saldo_inicial_costo' => 0,
-                    'registros' => $registrosCombinados,
-                    'saldo_final_cantidad' => round($saldoFinalCantidad, 2),
-                    'saldo_final_costo' => round($saldoFinalCosto, 6),
-                ];
             }
+
+            $this->totalMovimientos = count($registrosCombinados);
+            $this->hayDatos = $this->totalMovimientos > 0;
+            $this->saldoFinalCantidad = round($saldoCantidad, 2);
+            $this->saldoFinalCosto = round(max(0, $saldoCosto), 6);
+
+            // Guardar en cache por 10 minutos (NO en propiedad pública de Livewire)
+            if ($this->hayDatos) {
+                $this->cacheKey = 'kardex_' . auth()->id() . '_' . md5(json_encode([
+                    $this->sucursal_id,
+                    $this->insumo_id,
+                    $this->filtro_categoria,
+                    $this->fecha_desde,
+                    $this->fecha_hasta,
+                ]));
+                Cache::put($this->cacheKey, $registrosCombinados, now()->addMinutes(10));
+            }
+
         } catch (\Exception $e) {
             session()->flash('error', 'Error al generar el Kardex: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Obtener los IDs de insumos según los filtros actuales
+     */
+    private function getInsumoIds(): array
+    {
+        if ($this->insumo_id) {
+            return [(int) $this->insumo_id];
+        }
+
+        $query = Insumo::where('estado', true);
+        if ($this->filtro_categoria) {
+            $query->where('categoria_id', $this->filtro_categoria);
+        }
+
+        return $query->pluck('id')->toArray();
+    }
+
+    /**
+     * Obtener registros paginados desde el cache.
+     * La generación costosa ya se hizo en generarYCachearKardex().
+     */
+    #[Computed]
+    public function registrosPaginados()
+    {
+        if (!$this->cacheKey || !$this->hayDatos) {
+            return [];
+        }
+
+        $registros = Cache::get($this->cacheKey, []);
+
+        if (empty($registros)) {
+            return [];
+        }
+
+        $offset = ($this->paginaActual - 1) * $this->porPagina;
+        return array_slice($registros, $offset, $this->porPagina);
     }
 
     /**
@@ -201,45 +243,16 @@ class KardexPeps extends Component
     }
 
     /**
-     * Obtener registros paginados para la vista
-     */
-    #[Computed]
-    public function registrosPaginados()
-    {
-        if (!$this->kardexData || empty($this->kardexData['registros'])) {
-            return [];
-        }
-
-        $registros = $this->kardexData['registros'];
-        $offset = ($this->paginaActual - 1) * $this->porPagina;
-
-        return array_slice($registros, $offset, $this->porPagina);
-    }
-
-    /**
      * Total de páginas
      */
     #[Computed]
     public function totalPaginas()
     {
-        if (!$this->kardexData || empty($this->kardexData['registros'])) {
+        if (!$this->hayDatos || $this->totalMovimientos <= 0) {
             return 1;
         }
 
-        return (int) ceil(count($this->kardexData['registros']) / $this->porPagina);
-    }
-
-    /**
-     * Total de registros
-     */
-    #[Computed]
-    public function totalRegistros()
-    {
-        if (!$this->kardexData || empty($this->kardexData['registros'])) {
-            return 0;
-        }
-
-        return count($this->kardexData['registros']);
+        return (int) ceil($this->totalMovimientos / $this->porPagina);
     }
 
     /**
@@ -273,7 +286,14 @@ class KardexPeps extends Component
 
     public function limpiarFiltros()
     {
-        $this->reset(['sucursal_id', 'insumo_id', 'filtro_categoria', 'fecha_desde', 'fecha_hasta', 'kardexData', 'paginaActual']);
+        if ($this->cacheKey) {
+            Cache::forget($this->cacheKey);
+        }
+        $this->reset(['sucursal_id', 'insumo_id', 'filtro_categoria', 'fecha_desde', 'fecha_hasta', 'paginaActual', 'cacheKey']);
+        $this->saldoFinalCantidad = 0;
+        $this->saldoFinalCosto = 0;
+        $this->totalMovimientos = 0;
+        $this->hayDatos = false;
     }
 
     public function render()
