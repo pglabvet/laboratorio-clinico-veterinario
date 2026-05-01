@@ -6,14 +6,14 @@ use App\Models\Insumo;
 use App\Models\Sucursal;
 use App\Models\CategoriaInsumo;
 use App\Services\PepsInventarioService;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
 class KardexExportController extends Controller
 {
     public function __construct(
         private PepsInventarioService $pepsService
-    ) {}
+    ) {
+    }
 
     private function obtenerDatos(Request $request): array
     {
@@ -91,9 +91,14 @@ class KardexExportController extends Controller
         }
 
         return compact(
-            'registros', 'titulo', 'sucursal',
-            'saldoFinalCantidad', 'saldoFinalCosto',
-            'mostrarColumnaInsumo', 'fechaDesde', 'fechaHasta'
+            'registros',
+            'titulo',
+            'sucursal',
+            'saldoFinalCantidad',
+            'saldoFinalCosto',
+            'mostrarColumnaInsumo',
+            'fechaDesde',
+            'fechaHasta'
         );
     }
 
@@ -141,8 +146,14 @@ class KardexExportController extends Controller
                 $headerRow[] = 'Insumo';
             }
             $headerRow = array_merge($headerRow, [
-                'Ini. Cant.', 'Entrada Cant.', 'Salida Cant.', 'Saldo Cant.',
-                'Ini. Costo (Bs)', 'Entrada Costo (Bs)', 'Salida Costo (Bs)', 'Saldo Costo (Bs)',
+                'Ini. Cant.',
+                'Entrada Cant.',
+                'Salida Cant.',
+                'Saldo Cant.',
+                'Ini. Costo (Bs)',
+                'Entrada Costo (Bs)',
+                'Salida Costo (Bs)',
+                'Saldo Costo (Bs)',
             ]);
             fputcsv($handle, $headerRow, ';');
 
@@ -178,9 +189,13 @@ class KardexExportController extends Controller
                 $totalsRow[] = '';
             }
             $totalsRow = array_merge($totalsRow, [
-                '', '', '',
+                '',
+                '',
+                '',
                 number_format($datos['saldoFinalCantidad'], 2, ',', '.'),
-                '', '', '',
+                '',
+                '',
+                '',
                 number_format($datos['saldoFinalCosto'], 2, ',', '.'),
             ]);
             fputcsv($handle, $totalsRow, ';');
@@ -192,7 +207,7 @@ class KardexExportController extends Controller
     }
 
     /**
-     * Exportar Kardex a PDF
+     * Exportar Kardex a PDF usando TCPDF
      */
     public function exportarPdf(Request $request)
     {
@@ -201,21 +216,152 @@ class KardexExportController extends Controller
 
         $datos = $this->obtenerDatos($request);
 
-        $pdf = Pdf::loadView('exports.kardex-pdf', [
-            'registros' => $datos['registros'],
-            'titulo' => $datos['titulo'],
-            'sucursalNombre' => $datos['sucursal']->nombre,
-            'saldoFinalCantidad' => $datos['saldoFinalCantidad'],
-            'saldoFinalCosto' => $datos['saldoFinalCosto'],
-            'mostrarColumnaInsumo' => $datos['mostrarColumnaInsumo'],
-            'fechaDesde' => $datos['fechaDesde'],
-            'fechaHasta' => $datos['fechaHasta'],
-        ])
-        ->setPaper('a4', 'landscape')
-        ->setOption(['margin-left' => 50, 'margin-right' => 50]);
+        $registros = $datos['registros'];
+        $sucursal = $datos['sucursal'];
+        $titulo = $datos['titulo'];
+        $mostrarColumnaInsumo = $datos['mostrarColumnaInsumo'];
+        $saldoFinalCantidad = $datos['saldoFinalCantidad'];
+        $saldoFinalCosto = $datos['saldoFinalCosto'];
+        $fechaDesde = $datos['fechaDesde'];
+        $fechaHasta = $datos['fechaHasta'];
+
+        $pdf = new \TCPDF('L', 'mm', 'A4', true, 'UTF-8');
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+        $pdf->SetAutoPageBreak(true, 15);
+        $pdf->SetMargins(10, 10, 10);
+        $pdf->SetFont('helvetica', '', 7);
+        $pdf->AddPage();
+
+        // Título
+        $pdf->SetFont('helvetica', 'B', 12);
+        $pdf->Cell(0, 6, mb_strtoupper($titulo), 0, 1, 'C');
+        $pdf->SetFont('helvetica', '', 9);
+        $pdf->Cell(0, 5, 'Sucursal: ' . $sucursal->nombre, 0, 1, 'C');
+
+        if ($fechaDesde || $fechaHasta) {
+            $desde = $fechaDesde ? \Carbon\Carbon::parse($fechaDesde)->format('d-m-Y') : 'Inicio';
+            $hasta = $fechaHasta ? \Carbon\Carbon::parse($fechaHasta)->format('d-m-Y') : now()->format('d-m-Y');
+            $pdf->Cell(0, 4, "Del {$desde} Al {$hasta}", 0, 1, 'C');
+        }
+
+        $pdf->SetFont('helvetica', 'I', 7);
+        $pdf->Cell(0, 4, '(Expresado en Bolivianos)', 0, 1, 'C');
+        $pdf->Ln(2);
+
+        // Anchos de columnas
+        $colsInfo = $mostrarColumnaInsumo
+            ? [25, 50, 40]
+            : [25, 65];
+
+        $colsData = [17, 17, 17, 20, 17, 17, 17, 20];
+        $allCols = array_merge($colsInfo, $colsData);
+        $tableWidth = array_sum($allCols);
+
+        $pageWidth = $pdf->getPageWidth() - 20;
+        $xStart = 10 + ($pageWidth - $tableWidth) / 2;
+
+        // Encabezado
+        $this->dibujarEncabezadoPdf($pdf, $xStart, $allCols, $colsInfo, $mostrarColumnaInsumo);
+
+        // Filas
+        $pdf->SetFont('helvetica', '', 7);
+        foreach ($registros as $reg) {
+            if ($pdf->GetY() > $pdf->getPageHeight() - 20) {
+                $pdf->AddPage();
+                $this->dibujarEncabezadoPdf($pdf, $xStart, $allCols, $colsInfo, $mostrarColumnaInsumo);
+                $pdf->SetFont('helvetica', '', 7);
+            }
+
+            $pdf->SetX($xStart);
+            $pdf->Cell($allCols[0], 4, $reg['fecha'], 1, 0, 'L');
+            $pdf->Cell($allCols[1], 4, $this->truncarTexto($reg['detalle'], $mostrarColumnaInsumo ? 30 : 40), 1, 0, 'L');
+            $colIdx = 2;
+            if ($mostrarColumnaInsumo) {
+                $pdf->Cell($allCols[$colIdx], 4, $this->truncarTexto($reg['insumo_nombre'] ?? '', 25), 1, 0, 'L');
+                $colIdx++;
+            }
+
+            $pdf->Cell($allCols[$colIdx++], 4, number_format($reg['inicio_cantidad'], 2), 1, 0, 'R');
+            $pdf->Cell($allCols[$colIdx++], 4, $reg['entrada_cantidad'] !== null ? number_format($reg['entrada_cantidad'], 2) : '', 1, 0, 'R');
+            $pdf->Cell($allCols[$colIdx++], 4, $reg['salida_cantidad'] !== null ? number_format($reg['salida_cantidad'], 2) : '', 1, 0, 'R');
+            $pdf->SetFont('helvetica', 'B', 7);
+            $pdf->Cell($allCols[$colIdx++], 4, number_format($reg['saldo_cantidad'], 2), 1, 0, 'R');
+            $pdf->SetFont('helvetica', '', 7);
+
+            $pdf->Cell($allCols[$colIdx++], 4, number_format($reg['inicio_costo'], 2), 1, 0, 'R');
+            $pdf->Cell($allCols[$colIdx++], 4, $reg['entrada_costo'] !== null ? number_format($reg['entrada_costo'], 2) : '', 1, 0, 'R');
+            $pdf->Cell($allCols[$colIdx++], 4, $reg['salida_costo'] !== null ? number_format($reg['salida_costo'], 2) : '', 1, 0, 'R');
+            $pdf->SetFont('helvetica', 'B', 7);
+            $pdf->Cell($allCols[$colIdx], 4, number_format($reg['saldo_costo'], 2), 1, 1, 'R');
+            $pdf->SetFont('helvetica', '', 7);
+        }
+
+        // Totales
+        if (count($registros) > 0) {
+            if ($pdf->GetY() > $pdf->getPageHeight() - 20) {
+                $pdf->AddPage();
+            }
+
+            $pdf->SetFont('helvetica', 'B', 8);
+            $pdf->SetFillColor(232, 232, 232);
+            $pdf->SetX($xStart);
+
+            $infoWidth = array_sum($colsInfo);
+            $pdf->Cell($infoWidth, 5, 'TOTALES FINALES', 1, 0, 'L', true);
+            $colIdx = count($colsInfo);
+            $pdf->Cell($allCols[$colIdx++], 5, '', 1, 0, 'R', true);
+            $pdf->Cell($allCols[$colIdx++], 5, '', 1, 0, 'R', true);
+            $pdf->Cell($allCols[$colIdx++], 5, '', 1, 0, 'R', true);
+            $pdf->Cell($allCols[$colIdx++], 5, number_format($saldoFinalCantidad, 2), 1, 0, 'R', true);
+            $pdf->Cell($allCols[$colIdx++], 5, '', 1, 0, 'R', true);
+            $pdf->Cell($allCols[$colIdx++], 5, '', 1, 0, 'R', true);
+            $pdf->Cell($allCols[$colIdx++], 5, '', 1, 0, 'R', true);
+            $pdf->Cell($allCols[$colIdx], 5, number_format($saldoFinalCosto, 2), 1, 1, 'R', true);
+        }
+
+        // Pie
+        $pdf->Ln(3);
+        $pdf->SetFont('helvetica', '', 6);
+        $pdf->Cell(0, 3, 'Laboratorio Clinico Veterinario - ' . now()->format('d/m/Y H:i'), 0, 1, 'R');
 
         $filename = $this->generarNombreArchivo($datos, 'pdf');
 
-        return $pdf->stream($filename);
+        return response($pdf->Output('', 'S'), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => "inline; filename=\"{$filename}\"",
+        ]);
+    }
+
+    private function dibujarEncabezadoPdf(\TCPDF $pdf, float $xStart, array $allCols, array $colsInfo, bool $mostrarInsumo): void
+    {
+        $pdf->SetFont('helvetica', 'B', 7);
+        $pdf->SetFillColor(232, 232, 232);
+        $pdf->SetX($xStart);
+
+        $headers = $mostrarInsumo ? ['FECHA', 'DETALLE', 'INSUMO'] : ['FECHA', 'DETALLE'];
+        foreach ($headers as $i => $h) {
+            $pdf->Cell($colsInfo[$i], 8, $h, 1, 0, 'C', true);
+        }
+
+        $ci = count($colsInfo);
+        $cantWidth = $allCols[$ci] + $allCols[$ci + 1] + $allCols[$ci + 2] + $allCols[$ci + 3];
+        $costoWidth = $allCols[$ci + 4] + $allCols[$ci + 5] + $allCols[$ci + 6] + $allCols[$ci + 7];
+
+        $pdf->Cell($cantWidth, 4, 'CANTIDADES', 1, 0, 'C', true);
+        $pdf->Cell($costoWidth, 4, 'COSTOS (BS)', 1, 1, 'C', true);
+
+        $pdf->SetX($xStart + array_sum($colsInfo));
+        $subHeaders = ['Ini', 'Ent', 'Sal', 'Saldo', 'Ini', 'Ent', 'Sal', 'Saldo'];
+        $colIdx = $ci;
+        foreach ($subHeaders as $sh) {
+            $pdf->Cell($allCols[$colIdx++], 4, $sh, 1, 0, 'C', true);
+        }
+        $pdf->Ln();
+    }
+
+    private function truncarTexto(string $texto, int $max): string
+    {
+        return mb_strlen($texto) > $max ? mb_substr($texto, 0, $max - 2) . '..' : $texto;
     }
 }

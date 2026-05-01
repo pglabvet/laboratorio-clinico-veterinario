@@ -110,7 +110,7 @@
     </div>
 
     {{-- Tabla Kardex --}}
-    @if($kardexData)
+    @if($hayDatos)
         <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700">
             <div class="p-6 border-b border-neutral-200 dark:border-neutral-700">
                 <div class="flex items-center justify-between">
@@ -130,10 +130,10 @@
                         <div>
                             <p class="text-xs text-neutral-500 dark:text-neutral-400">Saldo Final</p>
                             <p class="text-lg font-bold text-neutral-900 dark:text-neutral-100">
-                                {{ \App\Helpers\FormatoHelper::dinamico($kardexData['saldo_final_cantidad']) }} uds
+                                {{ \App\Helpers\FormatoHelper::dinamico($saldoFinalCantidad) }} uds
                             </p>
                             <p class="text-sm font-semibold text-blue-600 dark:text-blue-400">
-                                Bs {{ \App\Helpers\FormatoHelper::dinamico($kardexData['saldo_final_costo']) }}
+                                Bs {{ \App\Helpers\FormatoHelper::dinamico($saldoFinalCosto) }}
                             </p>
                         </div>
                         {{-- Botones de exportación --}}
@@ -159,7 +159,21 @@
                 </div>
             </div>
 
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto relative" style="min-height: 200px;">
+                {{-- Loading centrado sobre la tabla --}}
+                <div wire:loading
+                     class="absolute inset-0 z-10 bg-white/80 dark:bg-neutral-800/80 backdrop-blur-[2px] rounded-b-lg">
+                    <div class="sticky top-[45%] flex justify-center py-8">
+                        <div class="flex flex-col items-center gap-3">
+                            <div class="relative">
+                                <div class="h-10 w-10 rounded-full border-[3px] border-neutral-200 dark:border-neutral-600"></div>
+                                <div class="absolute inset-0 h-10 w-10 rounded-full border-[3px] border-transparent border-t-blue-600 dark:border-t-blue-400 animate-spin"></div>
+                            </div>
+                            <span class="text-sm font-medium text-neutral-500 dark:text-neutral-400">Cargando datos…</span>
+                        </div>
+                    </div>
+                </div>
+
                 <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
                     <thead class="bg-neutral-50 dark:bg-neutral-900">
                         <tr>
@@ -287,7 +301,7 @@
                     </tbody>
 
                     {{-- Pie de tabla con totales --}}
-                    @if($this->totalRegistros > 0)
+                    @if($totalMovimientos > 0)
                     <tfoot>
                         <tr class="bg-neutral-100 dark:bg-neutral-700">
                             <td colspan="3" class="px-4 py-3 text-sm font-bold text-neutral-900 dark:text-neutral-100">
@@ -295,11 +309,11 @@
                             </td>
                             <td colspan="3"></td>
                             <td class="px-3 py-3 text-center text-sm font-bold text-neutral-900 dark:text-neutral-100">
-                                {{ \App\Helpers\FormatoHelper::dinamico($kardexData['saldo_final_cantidad']) }}
+                                {{ \App\Helpers\FormatoHelper::dinamico($saldoFinalCantidad) }}
                             </td>
                             <td colspan="3"></td>
                             <td class="px-3 py-3 text-center text-sm font-bold text-blue-700 dark:text-blue-300 bg-blue-100/50 dark:bg-blue-900/20">
-                                Bs {{ \App\Helpers\FormatoHelper::dinamico($kardexData['saldo_final_costo']) }}
+                                Bs {{ \App\Helpers\FormatoHelper::dinamico($saldoFinalCosto) }}
                             </td>
                         </tr>
                     </tfoot>
@@ -315,13 +329,13 @@
                             Mostrando 
                             <span class="font-medium">{{ (($paginaActual - 1) * $porPagina) + 1 }}</span>
                             a 
-                            <span class="font-medium">{{ min($paginaActual * $porPagina, $this->totalRegistros) }}</span>
+                            <span class="font-medium">{{ min($paginaActual * $porPagina, $totalMovimientos) }}</span>
                             de 
-                            <span class="font-medium">{{ $this->totalRegistros }}</span>
+                            <span class="font-medium">{{ $totalMovimientos }}</span>
                             movimientos
                         </p>
                         
-                        <div class="flex items-center gap-2">
+                        <div class="flex items-center gap-2" wire:key="pagination-{{ $paginaActual }}">
                             <flux:button 
                                 wire:click="paginaAnterior"
                                 variant="outline"
@@ -345,13 +359,13 @@
                                     for ($i = max(2, $current - 1); $i <= min($totalPags - 1, $current + 1); $i++) {
                                         $pages[] = $i;
                                     }
-                                    if ($current < $totalPags - 2) $pages[] = '...';
+                                    if ($current < $totalPags - 2) $pages[] = '..';
                                     $pages[] = $totalPags;
                                 }
                             @endphp
 
                             @foreach($pages as $page)
-                                @if($page === '...')
+                                @if(is_string($page))
                                     <span class="px-2 text-neutral-400 dark:text-neutral-500">…</span>
                                 @else
                                     <flux:button 
@@ -388,7 +402,17 @@
         </div>
     @else
         <div class="bg-white dark:bg-neutral-900 rounded-lg border border-neutral-200 dark:border-neutral-700 p-12 text-center">
-            <div class="flex flex-col items-center justify-center text-neutral-500 dark:text-neutral-400">
+            {{-- Spinner cuando se selecciona una sucursal por primera vez --}}
+            <div wire:loading.flex class="flex-col items-center justify-center text-neutral-500 dark:text-neutral-400">
+                <div class="relative mb-4">
+                    <div class="h-12 w-12 rounded-full border-[3px] border-neutral-200 dark:border-neutral-600"></div>
+                    <div class="absolute inset-0 h-12 w-12 rounded-full border-[3px] border-transparent border-t-blue-600 dark:border-t-blue-400 animate-spin"></div>
+                </div>
+                <p class="text-lg font-medium">Generando Kardex…</p>
+                <p class="text-sm mt-1">Esto puede tomar unos segundos</p>
+            </div>
+            {{-- Mensaje por defecto cuando no hay carga --}}
+            <div wire:loading.remove class="flex flex-col items-center justify-center text-neutral-500 dark:text-neutral-400">
                 <flux:icon.funnel class="mb-3 size-16" />
                 <p class="text-lg font-medium">Seleccione una sucursal</p>
                 <p class="text-sm mt-1">Escoja una sucursal para generar el Kardex PEPS. Opcionalmente filtre por categoría o insumo específico</p>
