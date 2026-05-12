@@ -191,6 +191,16 @@
             },
 
             initAllEditors() {
+                // Verificar que Quill está disponible globalmente
+                if (typeof Quill === 'undefined') {
+                    console.warn('[Citología] Quill no está disponible. Usando editores de respaldo.');
+                    for (let i = 0; i < this.secciones.length; i++) {
+                        const ref = this.$refs['editor_' + i];
+                        if (ref) this.mostrarFallbackSeccion(ref, i);
+                    }
+                    return;
+                }
+                
                 for (let i = 0; i < this.secciones.length; i++) {
                     const ref = this.$refs['editor_' + i];
                     if (!ref || this.quillEditors[i]) continue;
@@ -198,54 +208,118 @@
                     const seccion = this.secciones[i];
                     const tipo = seccion.tipo || 'editable';
 
-                    this.quillEditors[i] = new Quill(ref, {
-                        theme: 'snow',
-                        placeholder: 'Escriba aquí...',
-                        modules: {
-                            toolbar: [
-                                ['bold', 'italic', 'underline', 'strike'],
-                                [{ 'list': 'ordered' }],
-                                ['clean']
-                            ]
-                        }
-                    });
-
-                    // Cargar contenido inicial
-                    let contenidoInicial = this.contenidos[i] || '';
-
-                    if (!contenidoInicial) {
-                        if (tipo === 'editable' || tipo === 'con_tumor') {
-                            contenidoInicial = seccion.texto_base || '';
-                            if (tipo === 'con_tumor' && this.tumorSeleccionado) {
-                                contenidoInicial += ' <strong>' + this.tumorSeleccionado + '</strong>';
+                    try {
+                        this.quillEditors[i] = new Quill(ref, {
+                            theme: 'snow',
+                            placeholder: 'Escriba aquí...',
+                            modules: {
+                                toolbar: [
+                                    ['bold', 'italic', 'underline', 'strike'],
+                                    [{ 'list': 'ordered' }],
+                                    ['clean']
+                                ]
                             }
-                        } else if (tipo === 'dependiente' && this.tumorSeleccionado) {
-                            const textosMap = seccion.textos_por_tumor || {};
-                            contenidoInicial = textosMap[this.tumorSeleccionado] || '';
-                        }
-                    }
-
-                    if (contenidoInicial) {
-                        if (contenidoInicial.includes('<')) {
-                            this.quillEditors[i].root.innerHTML = contenidoInicial;
-                        } else {
-                            const lineas = contenidoInicial.split(/\r?\n/);
-                            let html = '';
-                            lineas.forEach(l => { html += `<p>${l || '<br>'}</p>`; });
-                            this.quillEditors[i].root.innerHTML = html;
-                        }
-                    }
-
-                    this.contenidos[i] = this.quillEditors[i].root.innerHTML;
-
-                    // Sincronizar en cada cambio
-                    ((idx) => {
-                        this.quillEditors[idx].on('text-change', () => {
-                            this.contenidos[idx] = this.quillEditors[idx].root.innerHTML;
-                            this.enviarDatos();
                         });
-                    })(i);
+                        
+                        // Verificar que el editor se creó correctamente
+                        if (!this.quillEditors[i] || !this.quillEditors[i].root) {
+                            throw new Error('Quill no inicializó correctamente para sección ' + i);
+                        }
+
+                        // Cargar contenido inicial
+                        let contenidoInicial = this.contenidos[i] || '';
+
+                        if (!contenidoInicial) {
+                            if (tipo === 'editable' || tipo === 'con_tumor') {
+                                contenidoInicial = seccion.texto_base || '';
+                                if (tipo === 'con_tumor' && this.tumorSeleccionado) {
+                                    contenidoInicial += ' <strong>' + this.tumorSeleccionado + '</strong>';
+                                }
+                            } else if (tipo === 'dependiente' && this.tumorSeleccionado) {
+                                const textosMap = seccion.textos_por_tumor || {};
+                                contenidoInicial = textosMap[this.tumorSeleccionado] || '';
+                            }
+                        }
+
+                        if (contenidoInicial) {
+                            if (contenidoInicial.includes('<')) {
+                                this.quillEditors[i].root.innerHTML = contenidoInicial;
+                            } else {
+                                const lineas = contenidoInicial.split(/\r?\n/);
+                                let html = '';
+                                lineas.forEach(l => { html += `<p>${l || '<br>'}</p>`; });
+                                this.quillEditors[i].root.innerHTML = html;
+                            }
+                        }
+
+                        this.contenidos[i] = this.quillEditors[i].root.innerHTML;
+
+                        // Sincronizar en cada cambio
+                        ((idx) => {
+                            this.quillEditors[idx].on('text-change', () => {
+                                this.contenidos[idx] = this.quillEditors[idx].root.innerHTML;
+                                this.enviarDatos();
+                            });
+                        })(i);
+                        
+                        // Verificación post-inicialización: asegurar que el editor es funcional
+                        ((idx, refEl) => {
+                            setTimeout(() => {
+                                const editor = this.quillEditors[idx];
+                                if (!editor) return;
+                                try {
+                                    const textoAntes = editor.getText();
+                                    editor.insertText(0, '\u200B');
+                                    const textoDespues = editor.getText();
+                                    editor.deleteText(0, 1);
+                                    
+                                    if (textoAntes === textoDespues) {
+                                        console.warn('[Citología] Editor sección ' + idx + ' no responde. Activando fallback.');
+                                        this.quillEditors[idx] = null;
+                                        this.mostrarFallbackSeccion(refEl, idx);
+                                    }
+                                } catch (e) {
+                                    console.warn('[Citología] Verificación post-init falló para sección ' + idx + ':', e);
+                                    this.quillEditors[idx] = null;
+                                    this.mostrarFallbackSeccion(refEl, idx);
+                                }
+                            }, 300);
+                        })(i, ref);
+                    } catch (e) {
+                        console.error('[Citología] Error al inicializar Quill para sección ' + i + ':', e);
+                        this.quillEditors[i] = null;
+                        this.mostrarFallbackSeccion(ref, i);
+                    }
                 }
+            },
+            
+            mostrarFallbackSeccion(container, seccionIndex) {
+                container.innerHTML = '';
+                const ta = document.createElement('textarea');
+                ta.rows = 6;
+                ta.placeholder = 'Escriba aquí...';
+                ta.style.cssText = 'width:100%;min-height:120px;padding:12px;border:1px solid #3f3f46;border-radius:0.5rem;background:#18181b;color:#f4f4f5;font-size:14px;resize:vertical;font-family:inherit;line-height:1.6;';
+                
+                // Cargar contenido existente
+                const contenido = this.contenidos[seccionIndex] || '';
+                if (contenido) {
+                    if (contenido.includes('<')) {
+                        const temp = document.createElement('div');
+                        temp.innerHTML = contenido;
+                        ta.value = temp.textContent || temp.innerText || '';
+                    } else {
+                        ta.value = contenido;
+                    }
+                }
+                
+                ((idx) => {
+                    ta.addEventListener('input', () => {
+                        this.contenidos[idx] = ta.value;
+                        this.enviarDatos();
+                    });
+                })(seccionIndex);
+                
+                container.appendChild(ta);
             },
 
             onTumorChange() {

@@ -843,12 +843,32 @@ class CapturarResultados extends Component
             case 'texto-libre':
                 // Solo guardar si el contenido/valor no está vacío
                 if (is_array($data)) {
+                    // Sanitizar HTML: misma whitelist que usa el PDF
+                    $tagsPermitidos = '<p><strong><b><em><i><u><s><ul><ol><li><br>';
+                    if (isset($data['contenido']) && is_string($data['contenido'])) {
+                        $data['contenido'] = strip_tags($data['contenido'], $tagsPermitidos);
+                    }
+                    if (isset($data['valor']) && is_string($data['valor'])) {
+                        $data['valor'] = strip_tags($data['valor'], $tagsPermitidos);
+                    }
+
                     return (! empty($data['valor']) || ! empty($data['contenido'])) ? $data : null;
                 }
 
                 return ! empty($data) ? $data : null;
 
             case 'citologia':
+                // Sanitizar HTML en secciones de citología
+                $tagsPermitidos = '<p><strong><b><em><i><u><s><ul><ol><li><br>';
+                if (is_array($data) && ! empty($data['secciones'])) {
+                    foreach ($data['secciones'] as &$sec) {
+                        if (isset($sec['contenido']) && is_string($sec['contenido'])) {
+                            $sec['contenido'] = strip_tags($sec['contenido'], $tagsPermitidos);
+                        }
+                    }
+                    unset($sec);
+                }
+
                 // Guardar si hay tumor seleccionado o secciones con contenido
                 if (is_array($data)) {
                     if (! empty($data['tumor'])) return $data;

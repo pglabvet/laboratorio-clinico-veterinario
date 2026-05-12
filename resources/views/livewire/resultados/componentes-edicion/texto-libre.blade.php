@@ -52,6 +52,7 @@
         contenido: '',
         incluirEnPdf: true,
         quill: null,
+        usandoFallback: false,
         init() {
             // Cargar dato existente
             if (this.datoExistente && typeof this.datoExistente === 'object' && this.datoExistente.contenido) {
@@ -86,44 +87,116 @@
             const container = this.$refs.quillEditor;
             if (!container || this.quill) return;
             
-            // Determinar placeholder
-            const customPlaceholder = @js($componente['propiedades']['contenido'] ?? '');
+            // Verificar que Quill está disponible globalmente
+            if (typeof Quill === 'undefined') {
+                console.warn('[TextoLibre] Quill no está disponible. Usando editor de respaldo.');
+                this.mostrarFallback(container);
+                return;
+            }
             
-            this.quill = new Quill(container, {
-                theme: 'snow',
-                placeholder: customPlaceholder || 'Escriba el texto aquí...',
-                modules: {
-                    toolbar: [
-                        ['bold', 'italic', 'underline', 'strike'],
-                        [{ 'list': 'ordered'}],
-                        ['clean']
-                    ]
+            try {
+                // Determinar placeholder
+                const customPlaceholder = @js($componente['propiedades']['contenido'] ?? '');
+                
+                this.quill = new Quill(container, {
+                    theme: 'snow',
+                    placeholder: customPlaceholder || 'Escriba el texto aquí...',
+                    modules: {
+                        toolbar: [
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ 'list': 'ordered'}],
+                            ['clean']
+                        ]
+                    }
+                });
+                
+                // Verificar que el editor se creó correctamente
+                if (!this.quill || !this.quill.root) {
+                    throw new Error('Quill no inicializó correctamente');
                 }
-            });
+                
+                // Cargar contenido existente
+                if (this.contenido) {
+                    // Si es HTML, establecerlo directamente
+                    if (this.contenido.includes('<')) {
+                        this.quill.root.innerHTML = this.contenido;
+                    } else {
+                        // Si es texto plano, convertir cada línea en un párrafo nativo de Quill
+                        // Esto evita que Quill agregue saltos dobles indeseados.
+                        const lineas = this.contenido.split(/\r?\n/);
+                        let htmlContenido = '';
+                        lineas.forEach(linea => {
+                            htmlContenido += `<p>${linea || '<br>'}</p>`;
+                        });
+                        this.quill.root.innerHTML = htmlContenido;
+                    }
+                }
+                
+                // Sincronizar en cada cambio de texto
+                this.quill.on('text-change', () => {
+                    this.contenido = this.quill.root.innerHTML;
+                    // Sincronizar con Livewire después de cada cambio
+                    this.enviarDatos();
+                });
+                
+                // Verificación post-inicialización: asegurar que el editor es funcional
+                // Chrome 148 puede cargar Quill sin error pero el contenteditable no responde
+                setTimeout(() => {
+                    if (!this.quill || this.usandoFallback) return;
+                    try {
+                        const textoAntes = this.quill.getText();
+                        this.quill.insertText(0, '\u200B'); // Zero-width space (invisible)
+                        const textoDespues = this.quill.getText();
+                        // Limpiar el carácter de prueba
+                        this.quill.deleteText(0, 1);
+                        
+                        if (textoAntes === textoDespues) {
+                            // El editor no respondió a la inserción — está inutilizable
+                            console.warn('[TextoLibre] Quill cargó pero no responde. Activando fallback.');
+                            this.quill = null;
+                            this.mostrarFallback(container);
+                        }
+                    } catch (e) {
+                        console.warn('[TextoLibre] Verificación post-init falló:', e);
+                        this.quill = null;
+                        this.mostrarFallback(container);
+                    }
+                }, 300);
+            } catch (e) {
+                console.error('[TextoLibre] Error al inicializar Quill:', e);
+                // Limpiar intento fallido
+                this.quill = null;
+                this.mostrarFallback(container);
+            }
+        },
+        mostrarFallback(container) {
+            this.usandoFallback = true;
+            container.innerHTML = '';
+            const ta = document.createElement('textarea');
+            ta.rows = 8;
+            ta.placeholder = @js($componente['propiedades']['contenido'] ?? '') || 'Escriba el texto aquí...';
+            ta.style.cssText = 'width:100%;min-height:150px;padding:12px;border:1px solid #3f3f46;border-radius:0.5rem;background:#18181b;color:#f4f4f5;font-size:14px;resize:vertical;font-family:inherit;line-height:1.6;';
             
-            // Cargar contenido existente
+            // Cargar contenido existente (convertir HTML a texto plano si es necesario)
             if (this.contenido) {
-                // Si es HTML, establecerlo directamente
                 if (this.contenido.includes('<')) {
-                    this.quill.root.innerHTML = this.contenido;
+                    const temp = document.createElement('div');
+                    temp.innerHTML = this.contenido;
+                    ta.value = temp.textContent || temp.innerText || '';
                 } else {
-                    // Si es texto plano, convertir cada línea en un párrafo nativo de Quill
-                    // Esto evita que Quill agregue saltos dobles indeseados.
-                    const lineas = this.contenido.split(/\r?\n/);
-                    let htmlContenido = '';
-                    lineas.forEach(linea => {
-                        htmlContenido += `<p>${linea || '<br>'}</p>`;
-                    });
-                    this.quill.root.innerHTML = htmlContenido;
+                    ta.value = this.contenido;
                 }
             }
             
-            // Sincronizar en cada cambio de texto
-            this.quill.on('text-change', () => {
-                this.contenido = this.quill.root.innerHTML;
-                // Sincronizar con Livewire después de cada cambio
+            ta.addEventListener('input', () => {
+                this.contenido = ta.value;
                 this.enviarDatos();
             });
+            ta.addEventListener('blur', () => {
+                this.enviarDatos();
+            });
+            
+            container.appendChild(ta);
         },
         enviarDatos() {
             // Si es Quill, obtener HTML
@@ -166,11 +239,12 @@
             ></textarea>
         </div>
     @else
-        {{-- Editor Quill para párrafos con formato --}}
+        {{-- Editor Quill para párrafos con formato (con fallback automático si falla) --}}
         <div class="quill-editor-container">
             <label class="block text-xs text-gray-500 dark:text-zinc-400 mb-2">
                 <i class="fas fa-align-left mr-1"></i>
-                Texto con formato (negrita, cursiva, listas)
+                <span x-show="!usandoFallback">Texto con formato (negrita, cursiva, listas)</span>
+                <span x-show="usandoFallback" x-cloak>Texto libre (modo compatible)</span>
             </label>
             <div 
                 x-ref="quillEditor"
