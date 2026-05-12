@@ -1,0 +1,130 @@
+{{-- Componente de edición: Tabla de Dos Columnas --}}
+@php
+    // Pre-calcular todos los campos para evitar errores de sintaxis en JavaScript
+    $todosCampos = [];
+    foreach(($componente['propiedades']['secciones'] ?? []) as $seccionIndex => $seccion) {
+        foreach(($seccion['campos'] ?? []) as $campoIndex => $campo) {
+            $nombreCampo = $campo['nombre'] ?? '';
+            if ($nombreCampo) {
+                $key = $seccionIndex . '_' . $campoIndex;
+                $todosCampos[$key] = [
+                    'seccion' => $seccion['subtitulo'] ?? '',
+                    'campo' => $nombreCampo,
+                    'valor' => ''
+                ];
+            }
+        }
+    }
+@endphp
+
+<div 
+    wire:ignore
+    x-data="{
+    datosExistentes: @js($componentesData[$index]['data'] ?? []),
+    datos: @js($todosCampos),
+    init() {
+        // Convertir a array si es objeto (ocurre cuando PHP array_filter preserva keys no secuenciales)
+        let existentes = this.datosExistentes;
+        if (existentes && !Array.isArray(existentes)) {
+            existentes = Object.values(existentes);
+        }
+
+        // Cargar datos existentes buscando por nombre de campo
+        if (Array.isArray(existentes) && existentes.length > 0) {
+            Object.keys(this.datos).forEach(key => {
+                const campoName = this.datos[key].campo;
+                const match = existentes.find(item => item && item.campo === campoName);
+                if (match) {
+                    this.datos[key].valor = match.valor || '';
+                }
+            });
+        }
+        
+        // Escuchar evento de guardado para forzar sincronización
+        window.addEventListener('antes-de-guardar', () => {
+            this.sincronizarConLivewire();
+        });
+        
+        // Sincronizar antes de cualquier acción de Livewire (como hace campos-etiquetados)
+        window.addEventListener('livewire:initialized', () => {
+            Livewire.hook('morph.updating', () => {
+                this.sincronizarConLivewire();
+            });
+        });
+    },
+    sincronizarConLivewire() {
+        const data = Object.values(this.datos);
+        window.__labvetData = window.__labvetData || {};
+        window.__labvetData['{{ $index }}'] = data;
+        $wire.set('componentesData.{{ $index }}.data', data);
+        window.dispatchEvent(new CustomEvent('datos-sincronizados', { detail: { index: {{ $index }} } }));
+    }
+}"
+class="border border-gray-200 dark:border-zinc-700 rounded-lg p-4 bg-white dark:bg-zinc-900">
+    @if(isset($componente['propiedades']['titulo']))
+    <h4 class="font-bold text-gray-800 dark:text-zinc-100 text-center text-lg mb-4">
+        {{ $componente['propiedades']['titulo'] }}
+    </h4>
+    @endif
+
+    <div class="overflow-x-auto">
+        <table class="w-full border border-gray-300 dark:border-zinc-700 text-sm">
+            @foreach($componente['propiedades']['secciones'] ?? [] as $seccion)
+                {{-- Subtítulo de sección si existe --}}
+                @if($seccion['subtitulo'] ?? null)
+                <tr>
+                    <td colspan="2" class="bg-gray-100 dark:bg-zinc-900 border border-gray-300 dark:border-zinc-700 px-3 py-2 font-bold text-center text-gray-900 dark:text-zinc-100">
+                        {{ $seccion['subtitulo'] }}
+                    </td>
+                </tr>
+                @endif
+
+                {{-- Campos de la sección --}}
+                @foreach($seccion['campos'] ?? [] as $campoIndex => $campo)
+                    @php $nombreCampo = $campo['nombre'] ?? ''; @endphp
+                    @if($nombreCampo)
+                    <tr>
+                        {{-- Label fijo --}}
+                        <td class="border border-gray-300 dark:border-zinc-700 px-3 py-2 font-semibold bg-gray-50 dark:bg-zinc-900 w-1/3 text-gray-900 dark:text-zinc-100">
+                            {{ $nombreCampo }}
+                        </td>
+                        
+                        {{-- Input/Select editable --}}
+                        <td class="border border-gray-300 dark:border-zinc-700 px-2 py-2">
+                            @if(($campo['tipo_input'] ?? 'input') === 'select')
+                            <select
+                                x-model="datos['{{ $loop->parent->index }}_{{ $campoIndex }}'].valor"
+                                @change="sincronizarConLivewire()"
+                                class="w-full px-2 py-1 border-0 focus:ring-2 focus:ring-blue-500 rounded bg-transparent dark:bg-transparent text-gray-900 dark:text-zinc-100"
+                                :class="{ '!text-red-600 dark:!text-red-400 !font-bold': ['Intermedio', 'Resistente'].includes(datos['{{ $loop->parent->index }}_{{ $campoIndex }}']?.valor) }">
+                                <option value="" class="bg-white dark:bg-zinc-800 !text-gray-900 dark:!text-zinc-100">-- Seleccionar --</option>
+                                @foreach(explode(',', $campo['opciones'] ?? '') as $opcion)
+                                    @if(trim($opcion) !== '')
+                                    <option value="{{ trim($opcion) }}" class="bg-white dark:bg-zinc-800 !text-gray-900 dark:!text-zinc-100">{{ trim($opcion) }}</option>
+                                    @endif
+                                @endforeach
+                            </select>
+                            @else
+                            <input 
+                                type="text"
+                                x-model="datos['{{ $loop->parent->index }}_{{ $campoIndex }}'].valor"
+                                @change="sincronizarConLivewire()"
+                                @blur="sincronizarConLivewire()"
+                                placeholder="Completar..."
+                                class="w-full px-2 py-1 border-0 focus:ring-2 focus:ring-blue-500 rounded bg-transparent text-gray-900 dark:text-zinc-100 placeholder-gray-400 dark:placeholder-zinc-500"
+                            />
+                            @endif
+                        </td>
+                    </tr>
+                    @endif
+                @endforeach
+            @endforeach
+        </table>
+    </div>
+
+    {{-- Repeticiones por campo (solo si hay reactivos asignados) --}}
+    @include('livewire.resultados.componentes-edicion._repeticiones-reactivos', [
+        'componente' => $componente,
+        'index' => $index,
+    ])
+</div>

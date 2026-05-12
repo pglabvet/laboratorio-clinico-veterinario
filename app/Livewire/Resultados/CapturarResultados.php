@@ -1,0 +1,1126 @@
+<?php
+
+namespace App\Livewire\Resultados;
+
+use App\Models\Analisis;
+use App\Models\PlantillaFormulario;
+use App\Models\Resultado;
+use App\Services\PepsInventarioService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Livewire\Component;
+use Livewire\WithFileUploads;
+
+class CapturarResultados extends Component
+{
+    use WithFileUploads;
+
+    public $analisis;
+
+    public $plantilla;
+
+    public $resultados = [];
+
+    public $modoEdicion = false;
+
+    public $modoRevision = false; // Para mostrar botones de aprobar/rechazar
+
+    // Propiedades para capturar datos dinámicos de componentes
+    public $componentesData = [];
+
+    // Propiedades para rechazo
+    public $mostrarModalRechazo = false;
+
+    public $observacionesRechazo = '';
+
+    // Propiedades para manejo de imágenes
+    public $imagenes = [];
+
+    // Repeticiones por componente/fila para descuento de reactivos
+    public $repeticionesData = [];
+
+    // Error persistente de stock insuficiente (se muestra como banner en la vista)
+    public $errorStock = '';
+
+    public function mount($analisisId)
+    {
+        // Cargar el análisis con todas sus relaciones
+        $this->analisis = Analisis::with([
+            'muestra.especie',
+            'muestra.veterinaria',
+            'muestra.sucursal',
+            'tipoAnalisis.plantillas',
+            'bioquimico',
+            'resultados',
+        ])->findOrFail($analisisId);
+
+        // Primero intentar usar la plantilla específica asignada al análisis
+        if ($this->analisis->plantilla_formulario_id) {
+            $this->plantilla = PlantillaFormulario::find($this->analisis->plantilla_formulario_id);
+        }
+
+        // Si no hay plantilla asignada, buscar una plantilla activa del tipo de análisis (fallback)
+        if (! $this->plantilla) {
+            $this->plantilla = $this->analisis->tipoAnalisis
+                ->plantillas()
+                ->where('activo', true)
+                ->first();
+        }
+
+        // Verificar que existe una plantilla
+        if (! $this->plantilla) {
+            session()->flash('error', 'Este tipo de análisis no tiene una plantilla activa asignada.');
+
+            return redirect()->route('muestras.index');
+        }
+
+        // Inicializar resultados vacíos para cada componente
+        $this->inicializarResultados();
+
+        // Si el análisis ya tiene resultados, cargarlos (modo edición)
+        if ($this->analisis->resultados->isNotEmpty()) {
+            $this->modoEdicion = true;
+            $this->cargarResultadosExistentes();
+        }
+
+        // Detectar si es modo revisión (análisis en revisión, aprobado o enviado)
+        if (in_array($this->analisis->estado, [Analisis::ESTADO_EN_REVISION, Analisis::ESTADO_APROBADO, Analisis::ESTADO_ENVIADO])) {
+            $this->modoRevision = true;
+        }
+
+        // Inicializar datos de repeticiones desde la plantilla
+        $this->inicializarRepeticiones();
+    }
+
+    private function inicializarResultados()
+    {
+        // Inicializar array para almacenar datos de cada componente
+        foreach ($this->plantilla->componentes as $index => $componente) {
+            $this->componentesData[$index] = [
+                'tipo' => $componente['tipo'],
+                'data' => [],
+            ];
+
+            // Inicializar array de imágenes si el componente es campo-imagenes
+            if ($componente['tipo'] === 'campo-imagenes') {
+                $this->imagenes[$index] = [
+                    'imagen1' => null,
+                    'imagen2' => null,
+                    'preview1' => null,
+                    'preview2' => null,
+                ];
+            }
+        }
+    }
+
+    /**
+     * Cargar resultados existentes para modo edición
+     */
+    private function cargarResultadosExistentes()
+    {
+        // Indexar resultados por indice para acceso directo
+        $resultadosPorIndice = $this->analisis->resultados->keyBy('indice');
+
+        foreach ($this->plantilla->componentes as $index => $componente) {
+            $tipo = $componente['tipo'];
+
+            if (isset($resultadosPorIndice[$index])) {
+                $resultado = $resultadosPorIndice[$index];
+                $this->componentesData[$index]['data'] = $resultado->valor;
+
+                // Si es campo-imagenes, marcar que tiene imágenes guardadas
+                if ($tipo === 'campo-imagenes') {
+                    $this->imagenes[$index]['preview1'] = $resultado->valor['imagen1'] ?? null;
+                    $this->imagenes[$index]['preview2'] = $resultado->valor['imagen2'] ?? null;
+                }
+            }
+        }
+    }
+
+    /**
+     * Inicializar datos de repeticiones para componentes con reactivos
+     */
+    private function inicializarRepeticiones()
+    {
+        // Tipos que aplican insumos a nivel de TODO el componente
+        $tiposBloque = ['antibiograma', 'examen-diferencial', 'examen-microscopico',
+                        'coproparasitologia-seriado', 'carga-viral', 'tabla-hematologica', 'citologia'];
+
+        foreach ($this->plantilla->componentes as $index => $componente) {
+            $tipo = $componente['tipo'];
+            $props = $componente['propiedades'] ?? [];
+
+            // Por fila — tabla-resultados y tabla-temporal
+            if (in_array($tipo, ['tabla-resultados', 'tabla-temporal']) && !empty($props['filas'])) {
+                foreach ($props['filas'] as $filaIndex => $fila) {
+                    if (!empty($fila['reactivos'])) {
+                        $this->repeticionesData[$index][$filaIndex] = 0;
+                    }
+                }
+            }
+
+            // Por campo — campos-etiquetados y serologia
+            if (in_array($tipo, ['campos-etiquetados', 'serologia']) && !empty($props['campos'])) {
+                foreach ($props['campos'] as $campoIndex => $campo) {
+                    if (is_array($campo) && !empty($campo['reactivos'])) {
+                        $this->repeticionesData[$index]["c{$campoIndex}"] = 0;
+                    }
+                }
+            }
+
+            // Por campo anidado — tabla-dos-columnas
+            if ($tipo === 'tabla-dos-columnas') {
+                if (!empty($props['secciones'])) {
+                    foreach ($props['secciones'] as $secIndex => $seccion) {
+                        foreach ($seccion['campos'] ?? [] as $campoIndex => $campo) {
+                            if (!empty($campo['reactivos'])) {
+                                $this->repeticionesData[$index]["s{$secIndex}"]["c{$campoIndex}"] = 0;
+                            }
+                        }
+                    }
+                }
+                if (!empty($props['reactivos'])) {
+                    $this->repeticionesData[$index]['global'] = 0;
+                }
+            }
+
+            // Nivel componente
+            if (in_array($tipo, $tiposBloque) && !empty($props['reactivos'])) {
+                $this->repeticionesData[$index] = 0;
+            }
+        }
+
+        // Si hay resultados existentes, cargar repeticiones guardadas
+        if ($this->modoEdicion) {
+            $resultadosPorIndice = $this->analisis->resultados->keyBy('indice');
+            foreach ($resultadosPorIndice as $indice => $resultado) {
+                $componente = $this->plantilla->componentes[$indice] ?? null;
+                if (!$componente) continue;
+
+                $tipo = $componente['tipo'];
+                $props = $componente['propiedades'] ?? [];
+
+                if (in_array($tipo, ['tabla-resultados', 'tabla-temporal']) && !empty($props['filas'])) {
+                    foreach ($props['filas'] as $filaIndex => $fila) {
+                        if (!empty($fila['reactivos'])) {
+                            $this->repeticionesData[$indice][$filaIndex] = $resultado->repeticiones ?? 1;
+                        }
+                    }
+                }
+
+                if (in_array($tipo, ['campos-etiquetados', 'serologia']) && !empty($props['campos'])) {
+                    foreach ($props['campos'] as $campoIndex => $campo) {
+                        if (is_array($campo) && !empty($campo['reactivos'])) {
+                            $this->repeticionesData[$indice]["c{$campoIndex}"] = $resultado->repeticiones ?? 1;
+                        }
+                    }
+                }
+
+                if ($tipo === 'tabla-dos-columnas') {
+                    if (!empty($props['secciones'])) {
+                        foreach ($props['secciones'] as $secIndex => $seccion) {
+                            foreach ($seccion['campos'] ?? [] as $campoIndex => $campo) {
+                                if (!empty($campo['reactivos'])) {
+                                    $this->repeticionesData[$indice]["s{$secIndex}"]["c{$campoIndex}"] = $resultado->repeticiones ?? 1;
+                                }
+                            }
+                        }
+                    }
+                    if (!empty($props['reactivos'])) {
+                        $this->repeticionesData[$indice]['global'] = $resultado->repeticiones ?? 1;
+                    }
+                }
+
+                if (in_array($tipo, $tiposBloque) && !empty($props['reactivos'])) {
+                    $this->repeticionesData[$indice] = $resultado->repeticiones ?? 1;
+                }
+            }
+        }
+    }
+
+    /**
+     * Descontar reactivos al finalizar resultados.
+     * Soporta múltiples reactivos (array reactivos[]) por componente/fila/campo.
+     * Calcula la diferencia exacta entre lo que requiere estar procesado y lo consumido históricamente.
+     */
+    private function descontarReactivosPorParametro()
+    {
+        $pepsService = app(\App\Services\PepsInventarioService::class);
+        $sucursalId = $this->analisis->muestra->sucursal_id;
+        $codigoMuestra = $this->analisis->muestra->codigo_muestra;
+        $tipoNombre = $this->analisis->tipoAnalisis->nombre ?? 'Análisis';
+
+        // Traer todo el historial para calcular saldos exactos
+        $movimientosHistoricos = \App\Models\MovimientoInventario::where('tipo_movimiento', 'CONSUMO_ANALISIS')
+            ->where('sucursal_id', $sucursalId)
+            ->where('observacion', 'ilike', "%Muestra: {$codigoMuestra}%")
+            ->where('observacion', 'ilike', "%Análisis: {$tipoNombre}%")
+            ->get();
+
+        $tiposBloque = ['antibiograma', 'examen-diferencial', 'examen-microscopico', 'coproparasitologia-seriado', 'carga-viral', 'tabla-hematologica', 'citologia'];
+
+        foreach ($this->plantilla->componentes as $index => $componente) {
+            $tipo = $componente['tipo'];
+            $props = $componente['propiedades'] ?? [];
+
+            $resultado = $this->analisis->resultados()->where('indice', $index)->first();
+            $valorActual = $resultado ? ($resultado->valor ?? []) : [];
+
+            // ─── POR FILA: tabla-resultados, tabla-temporal ───
+            if (in_array($tipo, ['tabla-resultados', 'tabla-temporal']) && !empty($props['filas'])) {
+                foreach ($props['filas'] as $filaIndex => $fila) {
+                    $reactivos = $fila['reactivos'] ?? [];
+                    if (empty($reactivos)) continue;
+
+                    $rowActual = $valorActual[$filaIndex] ?? [];
+
+                    $estaLlena = false;
+                    if ($tipo === 'tabla-resultados') {
+                        $estaLlena = isset($rowActual['col_0']) && $rowActual['col_0'] !== '' && $rowActual['col_0'] !== null;
+                    } else {
+                        $estaLlena = isset($rowActual['resultado']) && $rowActual['resultado'] !== '' && $rowActual['resultado'] !== null;
+                    }
+
+                    $repeticionesRequeridas = $estaLlena ? (int) ($this->repeticionesData[$index][$filaIndex] ?? 1) : 0;
+                    $nombreFila = $fila['nombre'] ?? $fila['analisis'] ?? "Fila " . ($filaIndex + 1);
+                    $observacionFila = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre}, Parámetro: {$nombreFila}";
+
+                    $this->procesarDiferenciaInventario(
+                        $pepsService, $reactivos, $sucursalId, $observacionFila, $repeticionesRequeridas, $movimientosHistoricos
+                    );
+                }
+
+            // ─── POR CAMPO: campos-etiquetados ───
+            } elseif ($tipo === 'campos-etiquetados' && !empty($props['campos'])) {
+                $camposGuardados = $valorActual['campos'] ?? $valorActual;
+                if (!is_array($camposGuardados)) $camposGuardados = [];
+
+                foreach ($props['campos'] as $campoIndex => $campo) {
+                    $reactivos = $campo['reactivos'] ?? [];
+                    if (empty($reactivos)) continue;
+
+                    $nombreCampo = $campo['nombre'] ?? '';
+                    $match = collect($camposGuardados)->first(fn($item) => is_array($item) && ($item['nombre'] ?? '') === $nombreCampo);
+                    $estaLleno = $match && isset($match['valor']) && $match['valor'] !== '' && $match['valor'] !== null;
+                    $repeticionesRequeridas = $estaLleno ? (int) ($this->repeticionesData[$index]["c{$campoIndex}"] ?? 1) : 0;
+                    $observacionCampo = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre}, Campo: {$campo['nombre']}";
+
+                    $this->procesarDiferenciaInventario(
+                        $pepsService, $reactivos, $sucursalId, $observacionCampo, $repeticionesRequeridas, $movimientosHistoricos
+                    );
+                }
+
+            // ─── POR CAMPO: serologia ───
+            } elseif ($tipo === 'serologia' && !empty($props['campos'])) {
+                $camposGuardados = is_array($valorActual) ? $valorActual : [];
+
+                foreach ($props['campos'] as $campoIndex => $campo) {
+                    if (!is_array($campo)) continue;
+                    $reactivos = $campo['reactivos'] ?? [];
+                    if (empty($reactivos)) continue;
+
+                    $nombreCampo = $campo['nombre'] ?? '';
+                    $match = collect($camposGuardados)->first(fn($item) => is_array($item) && ($item['campo'] ?? '') === $nombreCampo);
+                    $estaLleno = $match && isset($match['valor']) && $match['valor'] !== '' && $match['valor'] !== null;
+                    $repeticionesRequeridas = $estaLleno ? (int) ($this->repeticionesData[$index]["c{$campoIndex}"] ?? 1) : 0;
+                    $observacionCampo = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre}, Campo: {$campo['nombre']}";
+
+                    $this->procesarDiferenciaInventario(
+                        $pepsService, $reactivos, $sucursalId, $observacionCampo, $repeticionesRequeridas, $movimientosHistoricos
+                    );
+                }
+
+            // ─── POR CAMPO ANIDADO Y GLOBAL : tabla-dos-columnas ───
+            } elseif ($tipo === 'tabla-dos-columnas') {
+                $camposGuardados = is_array($valorActual) ? $valorActual : [];
+
+                if (!empty($props['secciones'])) {
+                    foreach ($props['secciones'] as $secIndex => $seccion) {
+                        foreach ($seccion['campos'] ?? [] as $campoIndex => $campo) {
+                            $reactivos = $campo['reactivos'] ?? [];
+                            if (empty($reactivos)) continue;
+
+                            $nombreCampo = $campo['nombre'] ?? '';
+                            $match = collect($camposGuardados)->first(fn($item) => is_array($item) && ($item['campo'] ?? '') === $nombreCampo);
+                            $estaLleno = $match && isset($match['valor']) && $match['valor'] !== '' && $match['valor'] !== null;
+                            $repeticionesRequeridas = $estaLleno ? (int) ($this->repeticionesData[$index]["s{$secIndex}"]["c{$campoIndex}"] ?? 1) : 0;
+                            $observacionCampo = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre}, Campo: {$campo['nombre']}";
+
+                            $this->procesarDiferenciaInventario(
+                                $pepsService, $reactivos, $sucursalId, $observacionCampo, $repeticionesRequeridas, $movimientosHistoricos
+                            );
+                        }
+                    }
+                }
+
+                if (!empty($props['reactivos'])) {
+                    $estaLleno = false;
+                    foreach ($camposGuardados as $item) {
+                        if (is_array($item) && isset($item['valor']) && $item['valor'] !== '' && $item['valor'] !== null) {
+                            $estaLleno = true;
+                            break;
+                        }
+                    }
+                    $repeticionesRequeridas = $estaLleno ? (int) ($this->repeticionesData[$index]['global'] ?? 1) : 0;
+                    $observacionComp = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre} (Global)";
+
+                    $this->procesarDiferenciaInventario(
+                        $pepsService, $props['reactivos'], $sucursalId, $observacionComp, $repeticionesRequeridas, $movimientosHistoricos
+                    );
+                }
+
+            // ─── NIVEL COMPONENTE: antibiograma, examen-diferencial, etc. ───
+            } elseif (in_array($tipo, $tiposBloque) && !empty($props['reactivos'])) {
+                $estaLleno = false;
+                if ($tipo === 'tabla-hematologica') {
+                    $estaLleno = !empty($valorActual['parametros'] ?? [])
+                             || !empty($valorActual['diferenciales'] ?? [])
+                             || !empty($valorActual['indices'] ?? []);
+                } elseif ($tipo === 'coproparasitologia-seriado') {
+                    $estaLleno = !empty($valorActual['campos'] ?? []);
+                } else {
+                    $estaLleno = !empty($valorActual);
+                }
+                $repeticionesRequeridas = $estaLleno ? (int) ($this->repeticionesData[$index] ?? 1) : 0;
+                $observacionComp = "Consumo reactivo - Muestra: {$codigoMuestra}, Análisis: {$tipoNombre}";
+
+                $this->procesarDiferenciaInventario(
+                    $pepsService, $props['reactivos'], $sucursalId, $observacionComp, $repeticionesRequeridas, $movimientosHistoricos
+                );
+            }
+        }
+    }
+
+    /**
+     * Aplica el consumo de inventario para un parámetro particular.
+     * Lanza excepción si no hay stock suficiente (propagada a finalizarYEnviar).
+     */
+    private function procesarDiferenciaInventario(
+        \App\Services\PepsInventarioService $pepsService,
+        array $reactivos,
+        int $sucursalId,
+        string $observacionParticular,
+        float $repeticionesRequeridas,
+        $movimientosHistoricos
+    ) {
+        foreach ($reactivos as $reactivo) {
+            if (empty($reactivo['reactivo_id'])) continue;
+            
+            $cantidadRequerida = (float) ($reactivo['cantidad'] ?? 1) * $repeticionesRequeridas;
+            
+            $consumoHistorico = abs($movimientosHistoricos
+                ->where('observacion', $observacionParticular)
+                ->where('insumo_id', $reactivo['reactivo_id'])
+                ->sum('cantidad'));
+
+            $diferencia = round($cantidadRequerida - $consumoHistorico, 4);
+
+            if ($diferencia > 0) {
+                // Faltan consumir — si no hay stock, la excepción se propaga
+                $pepsService->registrarConsumoAnalisis(
+                    insumoId: (int) $reactivo['reactivo_id'],
+                    sucursalId: $sucursalId,
+                    cantidad: $diferencia,
+                    usuarioId: auth()->id(),
+                    observacion: $observacionParticular
+                );
+            } 
+            // IMPORTANTE: Si $diferencia < 0 (Ej: Borraron una fila al editar un resultado),
+            // NO DEVOLVEMOS el reactivo al stock. En la vida real, un reactivo químico procesado 
+            // no se puede regresar al frasco original. Queda registrado como consumido (merma).
+        }
+    }
+
+    /**
+     * Actualizar imagen cuando se sube
+     */
+    public function updatedImagenes($value, $key)
+    {
+        // $key viene en formato: "0.imagen1" o "0.imagen2"
+        $parts = explode('.', $key);
+        $componentIndex = $parts[0];
+        $imagenKey = $parts[1];
+
+        // Validar imagen
+        $this->validate([
+            "imagenes.{$componentIndex}.{$imagenKey}" => 'image|max:10240', // 10MB máx
+        ], [
+            "imagenes.{$componentIndex}.{$imagenKey}.image" => 'El archivo debe ser una imagen',
+            "imagenes.{$componentIndex}.{$imagenKey}.max" => 'La imagen no debe superar 10MB',
+        ]);
+    }
+
+    /**
+     * Eliminar una imagen guardada previamente
+     */
+    public function eliminarImagenGuardada($index, $previewKey)
+    {
+        if (isset($this->imagenes[$index][$previewKey])) {
+            // Limpiar el preview para que la imagen no se muestre más
+            $this->imagenes[$index][$previewKey] = null;
+
+            session()->flash('success', 'Imagen eliminada. Los cambios se aplicarán al guardar.');
+        }
+    }
+
+    public function guardarBorrador($datosJS = [])
+    {
+        if (! empty($datosJS)) {
+            $this->aplicarDatosDesdeJS($datosJS);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Obtener las imágenes que se van a mantener
+            $imagenesAMantener = [];
+            foreach ($this->imagenes as $index => $imagenData) {
+                if (! empty($imagenData['preview1'])) {
+                    $imagenesAMantener[] = $imagenData['preview1'];
+                }
+                if (! empty($imagenData['preview2'])) {
+                    $imagenesAMantener[] = $imagenData['preview2'];
+                }
+            }
+
+            // Eliminar solo las imágenes que NO se van a mantener
+            $imagenesAnteriores = $this->analisis->resultados()->where('tipo', 'campo-imagenes')->get();
+            foreach ($imagenesAnteriores as $resultado) {
+                if (isset($resultado->valor['imagen1']) && ! in_array($resultado->valor['imagen1'], $imagenesAMantener)) {
+                    Storage::disk('public')->delete($resultado->valor['imagen1']);
+                }
+                if (isset($resultado->valor['imagen2']) && ! in_array($resultado->valor['imagen2'], $imagenesAMantener)) {
+                    Storage::disk('public')->delete($resultado->valor['imagen2']);
+                }
+            }
+
+            // Marcar los IDs de resultados que actualizamos para borrar el resto
+            $resultadosAfectados = [];
+
+            $resultadosGuardados = 0;
+
+            // Guardar todos los resultados de componentes dinámicos
+            foreach ($this->componentesData as $index => $componenteData) {
+                $componente = $this->plantilla->componentes[$index];
+
+                // Manejar componente de imágenes
+                if ($componenteData['tipo'] === 'campo-imagenes' && isset($this->imagenes[$index])) {
+                    $imagenesGuardadas = [];
+
+                    // Guardar imagen 1
+                    if (! empty($this->imagenes[$index]['imagen1'])) {
+                        // Nueva imagen subida
+                        $path1 = $this->imagenes[$index]['imagen1']->store('analisis/imagenes', 'public');
+                        $imagenesGuardadas['imagen1'] = $path1;
+                    } elseif (! empty($this->imagenes[$index]['preview1'])) {
+                        // Mantener imagen anterior (no fue eliminada ni reemplazada)
+                        $imagenesGuardadas['imagen1'] = $this->imagenes[$index]['preview1'];
+                    }
+
+                    // Guardar imagen 2
+                    if (! empty($this->imagenes[$index]['imagen2'])) {
+                        // Nueva imagen subida
+                        $path2 = $this->imagenes[$index]['imagen2']->store('analisis/imagenes', 'public');
+                        $imagenesGuardadas['imagen2'] = $path2;
+                    } elseif (! empty($this->imagenes[$index]['preview2'])) {
+                        // Mantener imagen anterior (no fue eliminada ni reemplazada)
+                        $imagenesGuardadas['imagen2'] = $this->imagenes[$index]['preview2'];
+                    }
+
+                    // Guardar en BD si hay imágenes
+                    if (! empty($imagenesGuardadas)) {
+                        $resultado = Resultado::updateOrCreate(
+                            [
+                                'analisis_id' => $this->analisis->id,
+                                'tipo' => 'campo-imagenes',
+                                'indice' => $index,
+                            ],
+                            [
+                                'valor' => $imagenesGuardadas,
+                                'fuera_rango' => false,
+                            ]
+                        );
+                        $resultadosAfectados[] = $resultado->id;
+
+                        $resultadosGuardados++;
+                    }
+
+                    continue;
+                }
+
+                // Solo guardar si hay datos y no están vacíos
+                if (! empty($componenteData['data'])) {
+                    // Filtrar datos vacíos dependiendo del tipo
+                    $datosParaGuardar = $this->filtrarDatosVacios($componenteData['data'], $componenteData['tipo']);
+
+                    if (! empty($datosParaGuardar)) {
+                        $resultado = Resultado::updateOrCreate(
+                            [
+                                'analisis_id' => $this->analisis->id,
+                                'tipo' => $componenteData['tipo'],
+                                'indice' => $index,
+                            ],
+                            [
+                                'valor' => $datosParaGuardar,
+                                'fuera_rango' => false,
+                            ]
+                        );
+                        $resultadosAfectados[] = $resultado->id;
+
+                        $resultadosGuardados++;
+                    }
+                }
+            }
+
+            // Eliminar resultados que ya no existen en el formulario
+            $this->analisis->resultados()->whereNotIn('id', $resultadosAfectados)->delete();
+
+            // NO actualizar estado ni fecha_finalizacion - permanece en captura
+
+            DB::commit();
+
+            // Guardar el código de muestra en sesión para que se cargue automáticamente
+            session()->put('codigo_escaneado', $this->analisis->muestra->codigo_muestra);
+
+            return redirect()
+                ->route('muestras.escanear')
+                ->with('success', "Borrador guardado correctamente. Se guardaron {$resultadosGuardados} componente(s).");
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error al guardar borrador:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            session()->flash('error', 'Error al guardar borrador: '.$e->getMessage());
+        }
+    }
+
+    public function finalizarYEnviar($datosJS = [])
+    {
+        if (! empty($datosJS)) {
+            $this->aplicarDatosDesdeJS($datosJS);
+        }
+
+        try {
+            $this->errorStock = '';
+            DB::beginTransaction();
+
+            // Si es modo edición, eliminar resultados anteriores
+            if ($this->modoEdicion) {
+                // Obtener las imágenes que se van a mantener
+                $imagenesAMantener = [];
+                foreach ($this->imagenes as $index => $imagenData) {
+                    if (! empty($imagenData['preview1'])) {
+                        $imagenesAMantener[] = $imagenData['preview1'];
+                    }
+                    if (! empty($imagenData['preview2'])) {
+                        $imagenesAMantener[] = $imagenData['preview2'];
+                    }
+                }
+
+                // Eliminar solo las imágenes que NO se van a mantener
+                $imagenesAnteriores = $this->analisis->resultados()->where('tipo', 'campo-imagenes')->get();
+                foreach ($imagenesAnteriores as $resultado) {
+                    if (isset($resultado->valor['imagen1']) && ! in_array($resultado->valor['imagen1'], $imagenesAMantener)) {
+                        Storage::disk('public')->delete($resultado->valor['imagen1']);
+                    }
+                    if (isset($resultado->valor['imagen2']) && ! in_array($resultado->valor['imagen2'], $imagenesAMantener)) {
+                        Storage::disk('public')->delete($resultado->valor['imagen2']);
+                    }
+                }
+            }
+
+            // Marcar los IDs de resultados que actualizamos para borrar el resto
+            $resultadosAfectados = [];
+
+            $resultadosGuardados = 0;
+
+            // Guardar todos los resultados de componentes dinámicos
+            foreach ($this->componentesData as $index => $componenteData) {
+                $componente = $this->plantilla->componentes[$index];
+
+                // Manejar componente de imágenes
+                if ($componenteData['tipo'] === 'campo-imagenes' && isset($this->imagenes[$index])) {
+                    $imagenesGuardadas = [];
+
+                    // Guardar imagen 1
+                    if (! empty($this->imagenes[$index]['imagen1'])) {
+                        $path1 = $this->imagenes[$index]['imagen1']->store('analisis/imagenes', 'public');
+                        $imagenesGuardadas['imagen1'] = $path1;
+                    } elseif (! empty($this->imagenes[$index]['preview1'])) {
+                        $imagenesGuardadas['imagen1'] = $this->imagenes[$index]['preview1'];
+                    }
+
+                    // Guardar imagen 2
+                    if (! empty($this->imagenes[$index]['imagen2'])) {
+                        $path2 = $this->imagenes[$index]['imagen2']->store('analisis/imagenes', 'public');
+                        $imagenesGuardadas['imagen2'] = $path2;
+                    } elseif (! empty($this->imagenes[$index]['preview2'])) {
+                        $imagenesGuardadas['imagen2'] = $this->imagenes[$index]['preview2'];
+                    }
+
+                    // Guardar en BD si hay imágenes
+                    if (! empty($imagenesGuardadas)) {
+                        $resultado = Resultado::updateOrCreate(
+                            [
+                                'analisis_id' => $this->analisis->id,
+                                'tipo' => 'campo-imagenes',
+                                'indice' => $index,
+                            ],
+                            [
+                                'valor' => $imagenesGuardadas,
+                                'fuera_rango' => false,
+                            ]
+                        );
+                        $resultadosAfectados[] = $resultado->id;
+
+                        $resultadosGuardados++;
+                    }
+
+                    continue;
+                }
+
+                // Solo guardar si hay datos y no están vacíos
+                if (! empty($componenteData['data'])) {
+                    // Filtrar datos vacíos dependiendo del tipo
+                    $datosParaGuardar = $this->filtrarDatosVacios($componenteData['data'], $componenteData['tipo']);
+
+                    if (! empty($datosParaGuardar)) {
+                        $resultado = Resultado::updateOrCreate(
+                            [
+                                'analisis_id' => $this->analisis->id,
+                                'tipo' => $componenteData['tipo'],
+                                'indice' => $index,
+                            ],
+                            [
+                                'valor' => $datosParaGuardar,
+                                'fuera_rango' => false,
+                            ]
+                        );
+                        $resultadosAfectados[] = $resultado->id;
+
+                        $resultadosGuardados++;
+                    }
+                }
+            }
+
+            // Eliminar resultados que ya no existen en el formulario
+            $this->analisis->resultados()->whereNotIn('id', $resultadosAfectados)->delete();
+
+            // Actualizar estado del análisis a 'En revision'
+            // (El modelo Analisis sincroniza automáticamente el estado de la muestra)
+            $this->analisis->update([
+                'estado' => Analisis::ESTADO_EN_REVISION,
+                'fecha_finalizacion' => now(),
+            ]);
+
+            // Descontar reactivos por parámetro
+            $this->descontarReactivosPorParametro();
+
+            DB::commit();
+
+            // Guardar el código de muestra en sesión para que se cargue automáticamente
+            session()->put('codigo_escaneado', $this->analisis->muestra->codigo_muestra);
+
+            session()->flash('success', "Resultados enviados correctamente. Se guardaron {$resultadosGuardados} componente(s).");
+
+            return redirect()->route('muestras.escanear');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Error al guardar resultados:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            $this->errorStock = $e->getMessage();
+        }
+    }
+
+    /**
+     * Filtrar datos vacíos según el tipo de componente
+     */
+    private function filtrarDatosVacios($data, $tipo)
+    {
+        if (empty($data)) {
+            return null;
+        }
+
+        switch ($tipo) {
+            case 'antibiograma':
+                // Filtrar filas donde todas las columnas estén vacías
+                return array_values(array_filter($data, function ($fila) {
+                    return ! empty($fila['sensible']) || ! empty($fila['intermedio']) || ! empty($fila['resistente']);
+                }));
+
+            case 'lista_items':
+                // Ya viene filtrado desde el frontend
+                return array_filter($data);
+
+            case 'tabla-resultados':
+                // NO filtrar filas individuales: los índices deben coincidir con las filas
+                // de la plantilla para que al recargar resultados, cada valor caiga en su fila
+                // correcta. El descuento de reactivos ya maneja filas sin resultado (col_0 vacío).
+                return $data;
+
+            case 'campos-etiquetados':
+                // Estructura: {titulo, campos: [{nombre, valor}, ...]}
+                if (isset($data['campos']) && is_array($data['campos'])) {
+                    $data['campos'] = array_values(array_filter($data['campos'], function ($item) {
+                        return is_array($item) && (
+                            (isset($item['valor']) && $item['valor'] !== '' && $item['valor'] !== null) ||
+                            (isset($item['resultado']) && $item['resultado'] !== '' && $item['resultado'] !== null)
+                        );
+                    }));
+
+                    return (! empty($data['campos']) || ! empty($data['titulo'])) ? $data : null;
+                }
+
+                // Fallback: array plano
+                return array_values(array_filter($data, function ($item) {
+                    if (is_array($item)) {
+                        return (isset($item['valor']) && $item['valor'] !== '' && $item['valor'] !== null) ||
+                               (isset($item['resultado']) && $item['resultado'] !== '' && $item['resultado'] !== null);
+                    }
+
+                    return $item !== '' && $item !== null;
+                }));
+
+            case 'tabla-dos-columnas':
+            case 'serologia':
+                // Filtrar campos con valor vacío y re-indexar para mantener array JSON válido
+                // Preservar entradas _meta (metadatos como descripcion seleccionada)
+                return array_values(array_filter($data, function ($item) {
+                    if (is_array($item)) {
+                        // Preservar metadatos
+                        if (isset($item['_meta'])) {
+                            return !empty($item['valor']);
+                        }
+                        return (isset($item['valor']) && $item['valor'] !== '' && $item['valor'] !== null) ||
+                               (isset($item['resultado']) && $item['resultado'] !== '' && $item['resultado'] !== null);
+                    }
+
+                    return $item !== '' && $item !== null;
+                }));
+
+            case 'examen-microscopico':
+            case 'examen-diferencial':
+                // Filtrar filas que tengan resultado ingresado
+                return array_values(array_filter($data, function ($fila) {
+                    return isset($fila['resultado']) && $fila['resultado'] !== '' && $fila['resultado'] !== null;
+                }));
+
+            case 'tabla-temporal':
+                // Filtrar filas que tengan resultado ingresado
+                return array_values(array_filter($data, function ($fila) {
+                    return isset($fila['resultado']) && $fila['resultado'] !== '' && $fila['resultado'] !== null;
+                }));
+
+            case 'tabla-hematologica':
+                // Filtrar valores vacíos en cada sección y re-indexar
+                // Nota: NO usar empty() porque empty("0") === true y descartaría valores legítimos de 0
+                if (isset($data['parametros'])) {
+                    $data['parametros'] = array_values(array_filter($data['parametros'], function ($p) {
+                        return isset($p['resultado']) && $p['resultado'] !== '' && $p['resultado'] !== null;
+                    }));
+                }
+                if (isset($data['diferenciales'])) {
+                    $data['diferenciales'] = array_values(array_filter($data['diferenciales'], function ($d) {
+                        return (isset($d['valor_rel']) && $d['valor_rel'] !== '' && $d['valor_rel'] !== null) ||
+                               (isset($d['valor_abs']) && $d['valor_abs'] !== '' && $d['valor_abs'] !== null);
+                    }));
+                }
+                if (isset($data['indices'])) {
+                    $data['indices'] = array_values(array_filter($data['indices'], function ($i) {
+                        return isset($i['resultado']) && $i['resultado'] !== '' && $i['resultado'] !== null;
+                    }));
+                }
+
+                return $data;
+
+            case 'campo-texto':
+            case 'texto-libre':
+                // Solo guardar si el contenido/valor no está vacío
+                if (is_array($data)) {
+                    // Sanitizar HTML: misma whitelist que usa el PDF
+                    $tagsPermitidos = '<p><strong><b><em><i><u><s><ul><ol><li><br>';
+                    if (isset($data['contenido']) && is_string($data['contenido'])) {
+                        $data['contenido'] = strip_tags($data['contenido'], $tagsPermitidos);
+                    }
+                    if (isset($data['valor']) && is_string($data['valor'])) {
+                        $data['valor'] = strip_tags($data['valor'], $tagsPermitidos);
+                    }
+
+                    return (! empty($data['valor']) || ! empty($data['contenido'])) ? $data : null;
+                }
+
+                return ! empty($data) ? $data : null;
+
+            case 'citologia':
+                // Sanitizar HTML en secciones de citología
+                $tagsPermitidos = '<p><strong><b><em><i><u><s><ul><ol><li><br>';
+                if (is_array($data) && ! empty($data['secciones'])) {
+                    foreach ($data['secciones'] as &$sec) {
+                        if (isset($sec['contenido']) && is_string($sec['contenido'])) {
+                            $sec['contenido'] = strip_tags($sec['contenido'], $tagsPermitidos);
+                        }
+                    }
+                    unset($sec);
+                }
+
+                // Guardar si hay tumor seleccionado o secciones con contenido
+                if (is_array($data)) {
+                    if (! empty($data['tumor'])) return $data;
+                    if (! empty($data['secciones'])) {
+                        foreach ($data['secciones'] as $sec) {
+                            if (! empty($sec['contenido'])) return $data;
+                        }
+                    }
+                    return null;
+                }
+                return ! empty($data) ? $data : null;
+
+            case 'carga-viral':
+                // Filtrar campos que tengan valor ingresado y re-indexar
+                return array_values(array_filter($data, function ($campo) {
+                    return isset($campo['valor']) && $campo['valor'] !== '' && $campo['valor'] !== null;
+                }));
+
+            case 'coproparasitologia-seriado':
+                // Data structure: { campos: [...], fechas: [...] }
+                // Filter campos that have at least one non-empty value in valores array
+                if (! isset($data['campos']) || ! is_array($data['campos'])) {
+                    return null;
+                }
+                $camposFiltrados = array_values(array_filter($data['campos'], function ($campo) {
+                    $valores = $campo['valores'] ?? [];
+                    if (! is_array($valores)) {
+                        $valores = array_values((array) $valores);
+                    }
+
+                    return collect($valores)->contains(fn ($v) => ! empty($v));
+                }));
+                if (empty($camposFiltrados)) {
+                    return null;
+                }
+
+                return [
+                    'campos' => $camposFiltrados,
+                    'fechas' => $data['fechas'] ?? [],
+                ];
+
+            default:
+                return $data;
+        }
+    }
+
+    public function aprobarAnalisis($datosJS = [])
+    {
+        if (! empty($datosJS)) {
+            $this->aplicarDatosDesdeJS($datosJS);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Primero guardar todos los cambios de resultados
+            $this->guardarResultadosInterno();
+
+            // Luego aprobar el análisis
+            $this->analisis->update([
+                'estado' => Analisis::ESTADO_APROBADO,
+                'aprobador_id' => auth()->id(),
+                'fecha_aprobacion' => now(),
+            ]);
+
+            // (El modelo Analisis sincroniza automáticamente el estado de la muestra)
+
+            DB::commit();
+
+            session()->flash('success', 'Análisis aprobado exitosamente');
+
+            return redirect()->route('analisis.revisar');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            session()->flash('error', 'Error al aprobar el análisis: '.$e->getMessage());
+        }
+    }
+
+    /**
+     * Aplica los datos recolectados desde JavaScript directamente a componentesData.
+     * Esto garantiza que los datos lleguen incluso si $wire.set() no se procesó.
+     */
+    private function aplicarDatosDesdeJS(array $datosJS): void
+    {
+        foreach ($datosJS as $index => $data) {
+            $index = (int) $index;
+            if (isset($this->componentesData[$index])) {
+                $this->componentesData[$index]['data'] = $data;
+            }
+        }
+    }
+
+    /**
+     * Método interno para guardar resultados sin cambiar estado
+     */
+    private function guardarResultadosInterno()
+    {
+        // Obtener las imágenes que se van a mantener
+        $imagenesAMantener = [];
+        foreach ($this->imagenes as $index => $imagenData) {
+            if (! empty($imagenData['preview1'])) {
+                $imagenesAMantener[] = $imagenData['preview1'];
+            }
+            if (! empty($imagenData['preview2'])) {
+                $imagenesAMantener[] = $imagenData['preview2'];
+            }
+        }
+
+        // Eliminar solo las imágenes que NO se van a mantener
+        $imagenesAnteriores = $this->analisis->resultados()->where('tipo', 'campo-imagenes')->get();
+        foreach ($imagenesAnteriores as $resultado) {
+            if (isset($resultado->valor['imagen1']) && ! in_array($resultado->valor['imagen1'], $imagenesAMantener)) {
+                Storage::disk('public')->delete($resultado->valor['imagen1']);
+            }
+            if (isset($resultado->valor['imagen2']) && ! in_array($resultado->valor['imagen2'], $imagenesAMantener)) {
+                Storage::disk('public')->delete($resultado->valor['imagen2']);
+            }
+        }
+
+        // Eliminar todos los resultados anteriores de la BD
+        $this->analisis->resultados()->delete();
+
+        // Guardar todos los resultados de componentes dinámicos
+        foreach ($this->componentesData as $index => $componenteData) {
+            $componente = $this->plantilla->componentes[$index];
+
+            // Manejar componente de imágenes
+            if ($componenteData['tipo'] === 'campo-imagenes' && isset($this->imagenes[$index])) {
+                $imagenesGuardadas = [];
+
+                // Guardar imagen 1
+                if (! empty($this->imagenes[$index]['imagen1'])) {
+                    $path1 = $this->imagenes[$index]['imagen1']->store('analisis/imagenes', 'public');
+                    $imagenesGuardadas['imagen1'] = $path1;
+                } elseif (! empty($this->imagenes[$index]['preview1'])) {
+                    $imagenesGuardadas['imagen1'] = $this->imagenes[$index]['preview1'];
+                }
+
+                // Guardar imagen 2
+                if (! empty($this->imagenes[$index]['imagen2'])) {
+                    $path2 = $this->imagenes[$index]['imagen2']->store('analisis/imagenes', 'public');
+                    $imagenesGuardadas['imagen2'] = $path2;
+                } elseif (! empty($this->imagenes[$index]['preview2'])) {
+                    $imagenesGuardadas['imagen2'] = $this->imagenes[$index]['preview2'];
+                }
+
+                if (! empty($imagenesGuardadas)) {
+                    Resultado::create([
+                        'analisis_id' => $this->analisis->id,
+                        'tipo' => 'campo-imagenes',
+                        'indice' => $index,
+                        'valor' => $imagenesGuardadas,
+                        'fuera_rango' => false,
+                    ]);
+                }
+
+                continue;
+            }
+
+            // Solo guardar si hay datos y no están vacíos
+            if (! empty($componenteData['data'])) {
+                $datosParaGuardar = $this->filtrarDatosVacios($componenteData['data'], $componenteData['tipo']);
+
+                if (! empty($datosParaGuardar)) {
+                    Resultado::create([
+                        'analisis_id' => $this->analisis->id,
+                        'tipo' => $componenteData['tipo'],
+                        'indice' => $index,
+                        'valor' => $datosParaGuardar,
+                        'fuera_rango' => false,
+                    ]);
+                }
+            }
+        }
+    }
+
+    /**
+     * Actualizar datos en modo revisión sin cambiar estado
+     */
+    public function actualizarDatosRevision($datosJS = [])
+    {
+        if (! empty($datosJS)) {
+            $this->aplicarDatosDesdeJS($datosJS);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Guardar los cambios de resultados
+            $this->guardarResultadosInterno();
+
+            DB::commit();
+
+            session()->flash('success', 'Datos actualizados correctamente.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            session()->flash('error', 'Error al actualizar los datos: '.$e->getMessage());
+        }
+    }
+
+    public function abrirModalRechazo()
+    {
+        $this->mostrarModalRechazo = true;
+        $this->observacionesRechazo = '';
+    }
+
+    public function rechazarAnalisis()
+    {
+        $this->validate([
+            'observacionesRechazo' => 'required|min:10',
+        ], [
+            'observacionesRechazo.required' => 'Debe indicar el motivo del rechazo',
+            'observacionesRechazo.min' => 'El motivo debe tener al menos 10 caracteres',
+        ]);
+
+        try {
+            $this->analisis->update([
+                'estado' => Analisis::ESTADO_PENDIENTE, // Volver a pendiente para que lo corrijan
+                'aprobador_id' => auth()->id(),
+                'observaciones_aprobador' => $this->observacionesRechazo,
+                'fecha_aprobacion' => now(),
+            ]);
+
+            $this->mostrarModalRechazo = false;
+            session()->flash('success', 'Análisis rechazado. El bioquímico deberá corregirlo.');
+
+            return redirect()->route('analisis.revisar');
+
+        } catch (\Exception $e) {
+            session()->flash('error', 'Error al rechazar el análisis: '.$e->getMessage());
+        }
+    }
+
+    public function cancelar()
+    {
+        if ($this->modoRevision) {
+            return redirect()->route('analisis.revisar');
+        }
+
+        return redirect()->route('muestras.index');
+    }
+
+    public function descargarPdf()
+    {
+        return redirect()->route('analisis.pdf', $this->analisis->id);
+    }
+
+    public function render()
+    {
+        return view('livewire.resultados.capturar-resultados')
+            ->layout('components.layouts.app');
+    }
+}
