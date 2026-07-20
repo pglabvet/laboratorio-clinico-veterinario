@@ -145,7 +145,7 @@ class CapturarResultados extends Component
     {
         // Tipos que aplican insumos a nivel de TODO el componente
         $tiposBloque = ['antibiograma', 'examen-diferencial', 'examen-microscopico',
-                        'coproparasitologia-seriado', 'carga-viral', 'tabla-hematologica', 'citologia'];
+                        'coproparasitologia-seriado', 'carga-viral', 'panel-qpcr', 'tabla-hematologica', 'citologia'];
 
         foreach ($this->plantilla->componentes as $index => $componente) {
             $tipo = $componente['tipo'];
@@ -258,7 +258,7 @@ class CapturarResultados extends Component
             ->where('observacion', 'ilike', "%Análisis: {$tipoNombre}%")
             ->get();
 
-        $tiposBloque = ['antibiograma', 'examen-diferencial', 'examen-microscopico', 'coproparasitologia-seriado', 'carga-viral', 'tabla-hematologica', 'citologia'];
+        $tiposBloque = ['antibiograma', 'examen-diferencial', 'examen-microscopico', 'coproparasitologia-seriado', 'carga-viral', 'panel-qpcr', 'tabla-hematologica', 'citologia'];
 
         foreach ($this->plantilla->componentes as $index => $componente) {
             $tipo = $componente['tipo'];
@@ -880,6 +880,22 @@ class CapturarResultados extends Component
                     return null;
                 }
                 return ! empty($data) ? $data : null;
+
+            case 'panel-qpcr':
+                // Nueva estructura: $data[pi][ci] = ['etiqueta'=>'', 'tipo'=>'', 'valor'=>'']
+                // Guardar si al menos un campo de cualquier patógeno tiene valor ingresado
+                if (!is_array($data)) return null;
+                $tieneAlgunDato = false;
+                foreach ($data as $pi => $camposPatogeno) {
+                    if (!is_array($camposPatogeno)) continue;
+                    foreach ($camposPatogeno as $ci => $campo) {
+                        if (is_array($campo) && isset($campo['valor']) && $campo['valor'] !== '' && $campo['valor'] !== null) {
+                            $tieneAlgunDato = true;
+                            break 2;
+                        }
+                    }
+                }
+                return $tieneAlgunDato ? $data : null;
 
             case 'carga-viral':
                 // Filtrar campos que tengan valor ingresado y re-indexar
