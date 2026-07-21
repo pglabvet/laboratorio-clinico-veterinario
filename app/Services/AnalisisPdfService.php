@@ -209,10 +209,33 @@ class AnalisisPdfService
 
             $componentesConDatos[$index] = [
                 'componente' => $componente,
-                'resultado' => $resultado?->valor ?? [],
-                'tipo' => $tipo,
+                'resultado'  => $resultado?->valor ?? [],
+                'tipo'       => $tipo,
                 'chartImage' => $chartBase64,
             ];
+
+            // Para panel-qpcr: cargar las gráficas individuales de cada patógeno
+            if ($tipo === 'panel-qpcr') {
+                $patogenos = $componente['propiedades']['patogenos'] ?? [];
+                $chartImages = [];
+                foreach ($patogenos as $pi => $patogeno) {
+                    // Buscar con estructura año/mes
+                    $pPattern = storage_path("app/public/charts/*/*/{$analisis->id}_{$index}_{$pi}.png");
+                    $pFiles   = glob($pPattern);
+                    $pPath    = $pFiles[0] ?? null;
+
+                    // Fallback plano
+                    if (!$pPath) {
+                        $pOld = storage_path("app/public/charts/{$analisis->id}_{$index}_{$pi}.png");
+                        if (file_exists($pOld)) $pPath = $pOld;
+                    }
+
+                    if ($pPath && file_exists($pPath)) {
+                        $chartImages[$pi] = 'data:image/png;base64,' . base64_encode(file_get_contents($pPath));
+                    }
+                }
+                $componentesConDatos[$index]['chartImages'] = $chartImages;
+            }
         }
 
         $esLimpio = $formato === 'limpio';
@@ -329,6 +352,14 @@ class AnalisisPdfService
                 || ! empty($valor['secciones']),
 
             'campo-imagenes' => collect($valor)->contains(fn ($img) => ! empty($img)),
+
+            // panel-qpcr: nueva estructura valores[pi][ci] = {etiqueta, tipo, valor}
+            'panel-qpcr' => collect($valor)->contains(function ($camposPatogeno) {
+                if (!is_array($camposPatogeno)) return false;
+                return collect($camposPatogeno)->contains(function ($campo) {
+                    return is_array($campo) && isset($campo['valor']) && $campo['valor'] !== '' && $campo['valor'] !== null;
+                });
+            }),
 
             default => count($valor) > 0,
         };

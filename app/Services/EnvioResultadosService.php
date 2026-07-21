@@ -299,6 +299,7 @@ class EnvioResultadosService
     {
         $muestra = $analisis->muestra;
         $sucursal = $muestra->sucursal->nombre ?? 'N/A';
+        $veterinaria = $muestra->veterinaria->nombre ?? 'N/A';
 
         return "*PG LABVET LABORATORIO CLINICO VETERINARIO*\n".
             "_{$sucursal}_\n".
@@ -306,27 +307,30 @@ class EnvioResultadosService
             "*Paciente:* {$muestra->paciente_nombre}\n".
             "*Propietario:* {$muestra->propietario_nombre}\n".
             '*Analisis:* '.($analisis->tipoAnalisis->nombre ?? 'N/A')."\n".
-            "*Codigo:* {$muestra->codigo_muestra}\n\n".
+            "*Codigo:* {$muestra->codigo_muestra}\n".
+            "*Veterinaria:* {$veterinaria}\n\n".
             "------------------------------------\n".
             "*Descarga tu resultado aqui:*\n".
             $urlDescarga."\n\n".
             "_Enlace valido por 1 año_\n\n".
-            '_Gracias por confiar en nosotros!_';
+            'Gracias por confiar en nosotros!';
     }
 
-    /**
+    /** 
      * Construir mensaje de WhatsApp para múltiples análisis.
      */
     private function construirMensajeWhatsAppMultiple(Muestra $muestra, array $linksDescarga): string
     {
         $sucursal = $muestra->sucursal->nombre ?? 'N/A';
+        $veterinaria = $muestra->veterinaria->nombre ?? 'N/A';
 
         $mensaje = "*PGLABVET LABORATORIO CLINICO VETERINARIO*\n".
             "_{$sucursal}_\n".
             "------------------------------------\n\n".
             "*Paciente:* {$muestra->paciente_nombre}\n".
             "*Propietario:* {$muestra->propietario_nombre}\n".
-            "*Codigo:* {$muestra->codigo_muestra}\n\n".
+            "*Codigo:* {$muestra->codigo_muestra}\n".
+            "*Veterinaria:* {$veterinaria}\n\n".
             "------------------------------------\n".
             "*Resultados disponibles:*\n\n";
 

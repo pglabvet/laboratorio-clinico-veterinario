@@ -148,6 +148,34 @@ class PdfController extends Controller
     }
 
     /**
+     * Guarda la imagen de gráfica de un patógeno específico dentro de un Panel qPCR.
+     * Nombre de archivo: {analisisId}_{component_index}_{patogeno_index}.png
+     */
+    public function guardarGraficaPanel(Request $request, int $analisisId)
+    {
+        $request->validate([
+            'image'          => 'required|string',
+            'component_index' => 'required|integer',
+            'patogeno_index'  => 'required|integer',
+        ]);
+
+        $analisis = Analisis::findOrFail($analisisId);
+
+        $image = $request->input('image');
+        $image = str_replace('data:image/png;base64,', '', $image);
+        $image = str_replace(' ', '+', $image);
+        $imageData = base64_decode($image);
+
+        $componentIndex = $request->input('component_index');
+        $patogenoIndex  = $request->input('patogeno_index');
+
+        $path = 'charts/'.date('Y/m')."/{$analisisId}_{$componentIndex}_{$patogenoIndex}.png";
+        \Storage::disk('public')->put($path, $imageData);
+
+        return response()->json(['success' => true, 'path' => $path]);
+    }
+
+    /**
      * Descarga un PDF usando un código corto (ruta pública, URL corta)
      */
     public function descargarPorCodigoCorto(string $codigo)

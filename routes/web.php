@@ -180,6 +180,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/analisis/{analisisId}/guardar-grafica', [PdfController::class, 'guardarGrafica'])
         ->name('analisis.guardar-grafica');
 
+    // Guardar gráfica de panel qPCR (por patógeno)
+    Route::post('/analisis/{analisisId}/guardar-grafica-panel', [PdfController::class, 'guardarGraficaPanel'])
+        ->name('analisis.guardar-grafica-panel');
+
     // Muestras Rechazadas
     Route::get('/muestras-rechazadas', \App\Livewire\MuestrasRechazadas\ListarMuestrasRechazadas::class)
         ->middleware('can:ver-muestras-rechazadas')

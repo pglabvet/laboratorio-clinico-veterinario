@@ -37,6 +37,7 @@ class Muestra extends Model
         'fecha_recepcion',
         'estado',
         'observaciones',
+        'diagnostico',
     ];
 
     protected $casts = [
