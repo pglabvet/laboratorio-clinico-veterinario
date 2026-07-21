@@ -43,6 +43,7 @@ class GestionarPlantillas extends Component
         'serologia' => 'Serología',
         'tabla-temporal' => 'Tabla Temporal con Gráfica',
         'carga-viral' => 'Carga Viral qPCR',
+        'panel-qpcr' => 'Panel qPCR (Múltiples Patógenos)',
         'campos-etiquetados' => 'Lista de Campos Etiquetados',
         'texto-libre' => 'Texto Libre',
         'lista-items' => 'Lista de Items',
@@ -369,6 +370,49 @@ class GestionarPlantillas extends Component
                         'unidad' => 'ug/dL',
                     ],
                 ],
+            ],
+            'panel-qpcr' => [
+                'patogenos' => [
+                    [
+                        'titulo'          => 'DETECCIÓN POR qPCR EN TIEMPO REAL',
+                        'siglas'          => 'FeLV',
+                        'nombre_completo' => 'Virus de la Leucemia Felina',
+                        'umbral_valor'    => 10,
+                        'umbral_exponente'=> 5,
+                        'unidad'          => 'copias/ml',
+                        'campos'          => [
+                            ['etiqueta' => 'MUESTRA ANALIZADA', 'tipo' => 'texto'],
+                            ['etiqueta' => 'RESULTADO',         'tipo' => 'select'],
+                            ['etiqueta' => 'CARGA VIRAL',       'tipo' => 'numero_cientifico'],
+                        ],
+                        'interpretaciones' => [
+                            'no_detectado' => ['descripcion' => 'Sin detección de ADN viral en la muestra analizada.'],
+                            'regresivo'    => ['descripcion' => 'Carga viral baja, posible infección en fase de resolución.'],
+                            'progresivo'   => ['descripcion' => 'Carga viral alta, infección activa y progresiva.'],
+                        ],
+                        'mostrar_grafica' => true,
+                    ],
+                    [
+                        'titulo'          => 'DETECCIÓN POR qPCR EN TIEMPO REAL',
+                        'siglas'          => 'FIV',
+                        'nombre_completo' => 'Virus de Inmunodeficiencia Felina',
+                        'umbral_valor'    => 10,
+                        'umbral_exponente'=> 5,
+                        'unidad'          => 'copias/ml',
+                        'campos'          => [
+                            ['etiqueta' => 'MUESTRA ANALIZADA', 'tipo' => 'texto'],
+                            ['etiqueta' => 'RESULTADO',         'tipo' => 'select'],
+                            ['etiqueta' => 'CARGA VIRAL',       'tipo' => 'numero_cientifico'],
+                        ],
+                        'interpretaciones' => [
+                            'no_detectado' => ['descripcion' => 'Sin detección de ADN viral en la muestra analizada.'],
+                            'regresivo'    => ['descripcion' => 'Carga viral baja, posible infección en fase de resolución.'],
+                            'progresivo'   => ['descripcion' => 'Carga viral alta, infección activa y progresiva.'],
+                        ],
+                        'mostrar_grafica' => true,
+                    ],
+                ],
+                'reactivos' => [],
             ],
             'carga-viral' => [
                 'titulo' => 'DETECCIÓN POR qPCR EN TIEMPO REAL',

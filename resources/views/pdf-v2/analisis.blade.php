@@ -490,6 +490,14 @@
             <span class="patient-value">{{ $muestra->created_at ? $muestra->created_at->format('d/m/Y') : 'N/A' }}</span>
           </td>
         </tr>
+        @if(!empty($muestra->diagnostico))
+        <tr>
+          <td colspan="4" style="padding-top: 8px;">
+            <span class="patient-label">Diagnóstico</span>
+            <span class="patient-value">{{ $muestra->diagnostico }}</span>
+          </td>
+        </tr>
+        @endif
       </table>
     </div>
 
@@ -511,9 +519,10 @@
       <div class="{{ $cssClass }}">
         @if(view()->exists('pdf-v2.componentes.' . $tipo))
           @include('pdf-v2.componentes.' . $tipo, [
-            'componente' => $componente,
-            'resultado' => $resultado,
-            'chartImage' => $chartImage
+            'componente'  => $componente,
+            'resultado'   => $resultado,
+            'chartImage'  => $chartImage,
+            'chartImages' => $item['chartImages'] ?? [],
           ])
         @endif
       </div>

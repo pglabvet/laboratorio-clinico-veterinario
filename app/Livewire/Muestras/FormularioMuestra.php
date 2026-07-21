@@ -30,6 +30,8 @@ class FormularioMuestra extends Component
 
     public $observaciones = 'Sin Observaciones';
 
+    public $diagnostico;
+
     public $sucursal_id;
 
     // Propiedades del formulario - Paciente
@@ -81,6 +83,7 @@ class FormularioMuestra extends Component
             'tipo_muestra' => 'required|string|max:100',
 
             'observaciones' => 'nullable|string',
+            'diagnostico'   => 'nullable|string',
             'analisisSeleccionados' => 'required|array|min:1',
         ];
     }
@@ -121,6 +124,7 @@ class FormularioMuestra extends Component
         $this->estado = $muestra->estado;
 
         $this->observaciones = $muestra->observaciones;
+        $this->diagnostico   = $muestra->diagnostico;
         $this->sucursal_id = $muestra->sucursal_id;
 
         $this->paciente_nombre = $muestra->paciente_nombre;
@@ -341,6 +345,7 @@ class FormularioMuestra extends Component
                 'tipo_muestra' => $this->tipo_muestra,
                 'fecha_recepcion' => $this->muestra_id ? Muestra::find($this->muestra_id)->fecha_recepcion : now(),
                 'observaciones' => $this->observaciones,
+                'diagnostico'   => $this->diagnostico,
             ];
 
             // Solo establecer estado en creación; en edición se calcula por los análisis

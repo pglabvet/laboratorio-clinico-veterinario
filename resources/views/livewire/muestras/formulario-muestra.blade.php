@@ -150,6 +150,18 @@
                         placeholder="Ej: Dorado"
                     />
                 </div>
+
+                {{-- Fila 4: Diagnóstico --}}
+                <div class="grid grid-cols-1 items-start gap-6 mb-6">
+                    <div>
+                        <flux:textarea 
+                            wire:model="diagnostico"
+                            label="Diagnóstico"
+                            placeholder="Diagnóstico presuntivo o clínico del paciente"
+                            rows="2"
+                        />
+                    </div>
+                </div>
             </div>
 
             {{-- Sección 2: Información de la Muestra --}}
