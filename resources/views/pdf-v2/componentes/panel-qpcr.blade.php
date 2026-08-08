@@ -4,6 +4,7 @@
     $patogenos      = $propiedades['patogenos']  ?? [];
     $datosPatogenos = is_array($resultado) ? $resultado : [];
     $chartImages    = $chartImages ?? [];
+    $patogenosRenderizados = 0;
 @endphp
 
 @foreach($patogenos as $pi => $patogeno)
@@ -20,6 +21,29 @@
 
     // Datos del patógeno: nueva estructura valores[pi][ci] = {etiqueta, tipo, valor}
     $datosP = $datosPatogenos[$pi] ?? [];
+
+    // Verificar si este patógeno tiene al menos un campo con valor ingresado
+    $tieneValores = false;
+    foreach ($camposP as $ci => $campoDef) {
+        $datoC = $datosP[$ci] ?? null;
+        if (is_array($datoC) && isset($datoC['valor']) && $datoC['valor'] !== '' && $datoC['valor'] !== null) {
+            $tieneValores = true;
+            break;
+        } elseif (is_string($datoC) && $datoC !== '') {
+            $tieneValores = true;
+            break;
+        }
+    }
+@endphp
+
+{{-- Saltar patógenos sin datos ingresados --}}
+@if(!$tieneValores)
+    @continue
+@endif
+
+@php
+    $esElPrimeroRenderizado = ($patogenosRenderizados === 0);
+    $patogenosRenderizados++;
 
     // Construir lista de campos con sus valores y calcular interpretación
     $camposConValor   = [];
@@ -50,11 +74,10 @@
         $interpretacion = $cargaViral < $umbralValor ? 'regresivo' : 'progresivo';
     }
 
-    $esPrimero = ($pi === array_key_first($patogenos));
 @endphp
 
-{{-- Salto de página entre patógenos (no antes del primero) --}}
-@if(!$esPrimero)
+{{-- Salto de página entre patógenos (no antes del primero renderizado) --}}
+@if(!$esElPrimeroRenderizado)
     <div style="page-break-before: always;"></div>
 @endif
 
