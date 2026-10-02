@@ -492,10 +492,14 @@ class GestionarMuestras extends Component
         $muestras = Muestra::query()
             ->with(['especie', 'veterinaria', 'sucursal'])
             ->withCount('analisis')
-            // Filtrar por sucursal del usuario si no tiene vista general ni permiso multi-sucursal
+            // Filtro de sucursal:
+            // - Admin (vista-general-sistema): sin filtro, ve todo.
+            // - Bioquímico (ver-muestras-multisucursal): ve su sucursal por defecto;
+            //   si selecciona una sucursal en el filtro, ese dropdown lo reemplaza.
+            // - Rol sin permiso multi-sucursal: siempre filtrado a su sucursal.
             ->when(
                 ! auth()->user()->can('vista-general-sistema') &&
-                ! auth()->user()->can('ver-muestras-multisucursal'),
+                (! auth()->user()->can('ver-muestras-multisucursal') || empty($this->filtroSucursal)),
                 function ($query) {
                     $query->where('sucursal_id', auth()->user()->sucursal_id);
                 }
