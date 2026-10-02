@@ -25,10 +25,14 @@ class MuestrasExportController extends Controller
         // Consultar muestras con sus relaciones
         $muestras = Muestra::query()
             ->with(['especie', 'veterinaria', 'sucursal', 'analisis.tipoAnalisis'])
-            // Filtrar por sucursal del usuario si no tiene vista general
-            ->when(!auth()->user()->can('vista-general-sistema'), function ($query) {
-                $query->where('sucursal_id', auth()->user()->sucursal_id);
-            })
+            // Filtrar por sucursal si no tiene vista general ni permiso multi-sucursal
+            ->when(
+                ! auth()->user()->can('vista-general-sistema') &&
+                ! auth()->user()->can('ver-muestras-multisucursal'),
+                function ($query) {
+                    $query->where('sucursal_id', auth()->user()->sucursal_id);
+                }
+            )
             ->when($filtroEstado, function ($query) use ($filtroEstado) {
                 $query->where('estado', $filtroEstado);
             })

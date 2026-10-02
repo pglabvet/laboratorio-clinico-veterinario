@@ -81,6 +81,7 @@ class RolesAndPermissionsSeeder extends Seeder
 
             // Vista general del sistema
             'vista-general-sistema', // Ver datos de TODAS las sucursales (sin este permiso, solo ve su sucursal)
+            'ver-muestras-multisucursal', // Ver muestras de todas las sucursales (para bioquímicos multi-sucursal)
 
             // Análisis
             'ver-analisis',
@@ -229,9 +230,11 @@ class RolesAndPermissionsSeeder extends Seeder
             'mostrar-detalle-muestra',
             'mostrar-detalle-especie',
             'mostrar-detalle-tipo-analisis',
-            // Muestras extra
-            'enviar-resultados-muestra',
+            // Muestras extra: visibilidad multi-sucursal y filtro
+            'ver-muestras-multisucursal',
+            'filtro-de-sucursal-muestra',
             'ver-codigo-barras-muestra',
+            // Nota: 'enviar-resultados-muestra' eliminado — solo el Administrador envía resultados al cliente
             // Muestras rechazadas
             'ver-muestras-rechazadas',
             'crear-muestras-rechazadas',
