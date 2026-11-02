@@ -53,9 +53,13 @@ class EscanearMuestra extends Component
             'analisis.plantillaFormulario'
         ])
             ->where('codigo_muestra', $this->codigo_muestra)
-            ->when(!auth()->user()->can('vista-general-sistema'), function ($query) {
-            $query->where('sucursal_id', auth()->user()->sucursal_id);
-        })
+            ->when(
+                ! auth()->user()->can('vista-general-sistema') &&
+                ! auth()->user()->can('ver-muestras-multisucursal'),
+                function ($query) {
+                    $query->where('sucursal_id', auth()->user()->sucursal_id);
+                }
+            )
             ->first();
 
         if (!$this->muestra) {
