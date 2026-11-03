@@ -154,9 +154,9 @@ class PdfController extends Controller
     public function guardarGraficaPanel(Request $request, int $analisisId)
     {
         $request->validate([
-            'image'          => 'required|string',
+            'image' => 'required|string',
             'component_index' => 'required|integer',
-            'patogeno_index'  => 'required|integer',
+            'patogeno_index' => 'required|integer',
         ]);
 
         $analisis = Analisis::findOrFail($analisisId);
@@ -167,7 +167,7 @@ class PdfController extends Controller
         $imageData = base64_decode($image);
 
         $componentIndex = $request->input('component_index');
-        $patogenoIndex  = $request->input('patogeno_index');
+        $patogenoIndex = $request->input('patogeno_index');
 
         $path = 'charts/'.date('Y/m')."/{$analisisId}_{$componentIndex}_{$patogenoIndex}.png";
         \Storage::disk('public')->put($path, $imageData);
@@ -196,17 +196,16 @@ class PdfController extends Controller
             abort(404, 'El PDF no fue encontrado.');
         }
 
-        // Verificar que el archivo existe, si no, regenerarlo (solo el archivo, sin crear registros nuevos)
-        if (! Storage::disk('public')->exists($pdf->ruta_archivo)) {
-            try {
-                $analisis = $pdf->analisis;
-                if ($analisis) {
-                    $qrUrl = $tokenDescarga->getUrlDescarga();
-                    $this->pdfService->renderizarPdf($analisis, $pdf->ruta_archivo, $qrUrl);
-                } else {
-                    abort(404, 'El archivo PDF no existe y no se puede regenerar.');
-                }
-            } catch (\Exception $e) {
+        // Regenerar el archivo si falta o si el análisis se editó después de enviarlo
+        // (solo el archivo, sin crear registros nuevos)
+        if (! $pdf->analisis) {
+            abort(404, 'El análisis de este PDF ya no existe.');
+        }
+
+        try {
+            $this->pdfService->regenerarSiDesactualizado($pdf, $tokenDescarga);
+        } catch (\Exception $e) {
+            if (! Storage::disk('public')->exists($pdf->ruta_archivo)) {
                 abort(404, 'El archivo PDF no existe: '.$e->getMessage());
             }
         }
@@ -237,4 +236,3 @@ class PdfController extends Controller
         ]);
     }
 }
-

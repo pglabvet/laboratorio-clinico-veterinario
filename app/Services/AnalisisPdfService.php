@@ -164,6 +164,48 @@ class AnalisisPdfService
     }
 
     /**
+     * Regenera el archivo de un PDF ya enviado si falta o si el análisis, la muestra,
+     * sus resultados o sus gráficas cambiaron después de generarlo.
+     * Así los enlaces enviados por WhatsApp/Email siempre muestran la información actual.
+     */
+    public function regenerarSiDesactualizado(Pdf $pdf, TokenDescarga $token): void
+    {
+        $analisis = $pdf->analisis;
+        $existe = Storage::disk('public')->exists($pdf->ruta_archivo);
+
+        if ($existe && Storage::disk('public')->lastModified($pdf->ruta_archivo) >= $this->ultimaModificacion($analisis)) {
+            return;
+        }
+
+        $esLimpio = str_ends_with(strtoupper($pdf->ruta_archivo), '_L.PDF');
+        $formato = $esLimpio ? 'limpio' : 'completo';
+
+        $this->renderizarPdf($analisis, $pdf->ruta_archivo, $esLimpio ? null : $token->getUrlDescarga(), $formato);
+    }
+
+    /**
+     * Momento (timestamp) del último cambio que afecta el contenido del PDF del análisis.
+     */
+    private function ultimaModificacion(Analisis $analisis): int
+    {
+        $fechas = [
+            $analisis->updated_at?->getTimestamp(),
+            $analisis->muestra?->updated_at?->getTimestamp(),
+            $analisis->resultados()->max('updated_at') ? strtotime($analisis->resultados()->max('updated_at')) : null,
+        ];
+
+        $graficas = array_merge(
+            glob(storage_path("app/public/charts/*/*/{$analisis->id}_*.png")) ?: [],
+            glob(storage_path("app/public/charts/{$analisis->id}_*.png")) ?: [],
+        );
+        foreach ($graficas as $grafica) {
+            $fechas[] = filemtime($grafica);
+        }
+
+        return (int) max(array_filter($fechas) ?: [0]);
+    }
+
+    /**
      * Prepara los datos para la vista del PDF
      */
     private function prepararDatos(Analisis $analisis, PlantillaFormulario $plantilla, ?string $qrUrl = null, string $formato = 'completo'): array
@@ -209,8 +251,8 @@ class AnalisisPdfService
 
             $componentesConDatos[$index] = [
                 'componente' => $componente,
-                'resultado'  => $resultado?->valor ?? [],
-                'tipo'       => $tipo,
+                'resultado' => $resultado?->valor ?? [],
+                'tipo' => $tipo,
                 'chartImage' => $chartBase64,
             ];
 
@@ -221,17 +263,19 @@ class AnalisisPdfService
                 foreach ($patogenos as $pi => $patogeno) {
                     // Buscar con estructura año/mes
                     $pPattern = storage_path("app/public/charts/*/*/{$analisis->id}_{$index}_{$pi}.png");
-                    $pFiles   = glob($pPattern);
-                    $pPath    = $pFiles[0] ?? null;
+                    $pFiles = glob($pPattern);
+                    $pPath = $pFiles[0] ?? null;
 
                     // Fallback plano
-                    if (!$pPath) {
+                    if (! $pPath) {
                         $pOld = storage_path("app/public/charts/{$analisis->id}_{$index}_{$pi}.png");
-                        if (file_exists($pOld)) $pPath = $pOld;
+                        if (file_exists($pOld)) {
+                            $pPath = $pOld;
+                        }
                     }
 
                     if ($pPath && file_exists($pPath)) {
-                        $chartImages[$pi] = 'data:image/png;base64,' . base64_encode(file_get_contents($pPath));
+                        $chartImages[$pi] = 'data:image/png;base64,'.base64_encode(file_get_contents($pPath));
                     }
                 }
                 $componentesConDatos[$index]['chartImages'] = $chartImages;
@@ -355,7 +399,10 @@ class AnalisisPdfService
 
             // panel-qpcr: nueva estructura valores[pi][ci] = {etiqueta, tipo, valor}
             'panel-qpcr' => collect($valor)->contains(function ($camposPatogeno) {
-                if (!is_array($camposPatogeno)) return false;
+                if (! is_array($camposPatogeno)) {
+                    return false;
+                }
+
                 return collect($camposPatogeno)->contains(function ($campo) {
                     return is_array($campo) && isset($campo['valor']) && $campo['valor'] !== '' && $campo['valor'] !== null;
                 });
