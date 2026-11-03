@@ -504,6 +504,7 @@
     <hr class="separator">
 
     {{-- Componentes dinámicos --}}
+    @php $cargasViralesRenderizadas = 0; @endphp
     @foreach($componentesConDatos as $index => $item)
       @php
         $componente = $item['componente'];
@@ -512,11 +513,14 @@
         $chartImage = $item['chartImage'] ?? null;
 
         // Componentes pequeños que NO deben cortarse entre páginas
-        $componentesPequenos = ['subtitulo', 'campo-texto', 'texto-libre', 'campo-imagenes', 'citologia'];
+        $componentesPequenos = ['subtitulo', 'campo-texto', 'texto-libre', 'campo-imagenes', 'citologia', 'carga-viral'];
         $cssClass = in_array($tipo, $componentesPequenos) ? 'component-no-break' : 'component';
+
+        // Cada carga viral (una enfermedad) va en su propia hoja: desde la segunda, empieza en hoja nueva
+        $saltoDePagina = $tipo === 'carga-viral' && $cargasViralesRenderizadas++ > 0;
       @endphp
 
-      <div class="{{ $cssClass }}">
+      <div class="{{ $cssClass }}" @if($saltoDePagina) style="page-break-before: always;" @endif>
         @if(view()->exists('pdf-v2.componentes.' . $tipo))
           @include('pdf-v2.componentes.' . $tipo, [
             'componente'  => $componente,
