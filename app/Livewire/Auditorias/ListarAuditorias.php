@@ -2,10 +2,13 @@
 
 namespace App\Livewire\Auditorias;
 
+use App\Models\Analisis;
 use App\Models\Auditoria;
+use App\Models\Muestra;
 use App\Models\User;
-use Livewire\Component;
+use App\Services\AuditoriaLegibleService;
 use Livewire\Attributes\Computed;
+use Livewire\Component;
 use Livewire\WithPagination;
 
 /**
@@ -119,14 +122,23 @@ class ListarAuditorias extends Component
      *
      * Siempre ordena por más reciente primero.
      */
-    public function render()
+    public function render(AuditoriaLegibleService $legible)
     {
         $query = Auditoria::query()
             ->with('user'); // Eager loading del usuario para evitar N+1 queries
 
-        // Filtro de búsqueda en descripción
+        // Búsqueda: en la descripción o por código de muestra (incluye sus análisis)
         if ($this->busqueda !== '') {
-            $query->whereRaw('unaccent(descripcion) ilike unaccent(?)', ["%{$this->busqueda}%"]);
+            $muestraIds = Muestra::whereRaw('unaccent(codigo_muestra) ilike unaccent(?)', ["%{$this->busqueda}%"])
+                ->limit(50)
+                ->pluck('id');
+            $analisisIds = Analisis::whereIn('muestra_id', $muestraIds)->pluck('id');
+
+            $query->where(function ($q) use ($muestraIds, $analisisIds) {
+                $q->whereRaw('unaccent(descripcion) ilike unaccent(?)', ["%{$this->busqueda}%"])
+                    ->orWhere(fn ($q) => $q->where('entidad', 'Muestra')->whereIn('entidad_id', $muestraIds))
+                    ->orWhere(fn ($q) => $q->where('entidad', 'Analisis')->whereIn('entidad_id', $analisisIds));
+            });
         }
 
         // Filtro por usuario
@@ -156,15 +168,28 @@ class ListarAuditorias extends Component
         // Obtener los datos paginados (20 por página)
         $auditorias = $query->orderBy('created_at', 'desc')->paginate(20);
 
+        // Frases legibles para cada fila (quién, qué hizo, dónde)
+        $legible->precargar($auditorias->getCollection());
+        $eventos = $auditorias->getCollection()->mapWithKeys(fn ($a) => [$a->id => $legible->describir($a)]);
+
         // Obtener detalle si hay una auditoría seleccionada
         $detalle = null;
+        $eventoDetalle = null;
+        $datosDetalle = [];
         if ($this->auditoriaSeleccionada) {
             $detalle = Auditoria::with('user')->find($this->auditoriaSeleccionada);
+            if ($detalle) {
+                $eventoDetalle = $legible->describir($detalle);
+                $datosDetalle = $detalle->accion === 'actualizar' ? [] : $legible->datosRegistro($detalle);
+            }
         }
 
         return view('livewire.auditorias.listar-auditorias', [
             'auditorias' => $auditorias,
+            'eventos' => $eventos,
             'detalle' => $detalle,
+            'eventoDetalle' => $eventoDetalle,
+            'datosDetalle' => $datosDetalle,
         ]);
     }
 
