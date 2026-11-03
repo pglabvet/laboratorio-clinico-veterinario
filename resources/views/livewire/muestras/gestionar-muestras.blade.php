@@ -587,6 +587,11 @@
         @endif
     </flux:modal>
 
+    {{-- Formulario flotante de cobro (muestra recién registrada) --}}
+    @if($cobroMuestraId)
+        <livewire:cobros.registrar-cobro-muestra :muestra-id="$cobroMuestraId" :key="'cobro-muestra-'.$cobroMuestraId" />
+    @endif
+
     {{-- Modal de código de barras --}}
     <flux:modal wire:model="modalCodigoBarras" class="w-full max-w-2xl">
         @if($muestraCodigoBarras)
