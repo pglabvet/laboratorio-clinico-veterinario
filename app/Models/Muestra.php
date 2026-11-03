@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Picqer\Barcode\BarcodeGeneratorSVG;
 
 class Muestra extends Model
@@ -74,6 +75,14 @@ class Muestra extends Model
     public function analisis(): HasMany
     {
         return $this->hasMany(Analisis::class);
+    }
+
+    /**
+     * Relación con cobro
+     */
+    public function cobro(): HasOne
+    {
+        return $this->hasOne(Cobro::class);
     }
 
     /**

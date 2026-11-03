@@ -286,6 +286,11 @@
                                 return 'dashboard';
                             }
 
+                            // Todos los permisos del módulo Cobros van en su propia sección
+                            if (str_contains($nombre, 'cobro')) {
+                                return 'cobros';
+                            }
+
                             // Si tiene mapeo especial, usar ese grupo
                             if (isset($permisosEspeciales[$nombre])) {
                                 return $permisosEspeciales[$nombre];
@@ -419,6 +424,11 @@
                                 // Si está en la lista de permisos de Dashboard
                                 if (in_array($nombre, $permisosDashboard)) {
                                     return 'dashboard';
+                                }
+
+                                // Todos los permisos del módulo Cobros van en su propia sección
+                                if (str_contains($nombre, 'cobro')) {
+                                    return 'cobros';
                                 }
                                 
                                 // Para otros permisos, tomar todo después del primer guión
