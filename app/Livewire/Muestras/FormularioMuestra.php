@@ -85,7 +85,7 @@ class FormularioMuestra extends Component
             'tipo_muestra' => 'required|string|max:100',
 
             'observaciones' => 'nullable|string',
-            'diagnostico'   => 'nullable|string',
+            'diagnostico' => 'required|string',
             'analisisSeleccionados' => 'required|array|min:1',
         ];
     }
@@ -101,6 +101,7 @@ class FormularioMuestra extends Component
         'veterinaria_id.required' => 'Debe seleccionar una veterinaria.',
         'sucursal_id.required' => 'Debe seleccionar una sucursal.',
         'tipo_muestra.required' => 'El tipo de muestra es obligatorio.',
+        'diagnostico.required' => 'El diagnóstico es obligatorio.',
 
         'analisisSeleccionados.required' => 'Debe agregar al menos un análisis.',
         'analisisSeleccionados.min' => 'Debe agregar al menos un análisis.',
@@ -126,7 +127,7 @@ class FormularioMuestra extends Component
         $this->estado = $muestra->estado;
 
         $this->observaciones = $muestra->observaciones;
-        $this->diagnostico   = $muestra->diagnostico;
+        $this->diagnostico = $muestra->diagnostico;
         $this->sucursal_id = $muestra->sucursal_id;
 
         $this->paciente_nombre = $muestra->paciente_nombre;
@@ -347,7 +348,7 @@ class FormularioMuestra extends Component
                 'tipo_muestra' => $this->tipo_muestra,
                 'fecha_recepcion' => $this->muestra_id ? Muestra::find($this->muestra_id)->fecha_recepcion : now(),
                 'observaciones' => $this->observaciones,
-                'diagnostico'   => $this->diagnostico,
+                'diagnostico' => $this->diagnostico,
             ];
 
             // Solo establecer estado en creación; en edición se calcula por los análisis
@@ -362,7 +363,7 @@ class FormularioMuestra extends Component
 
             // Sincronizar análisis y descontar insumos
             $pepsService = app(PepsInventarioService::class);
-            
+
             // Obtener análisis que ya existen en la base de datos para esta muestra
             $analisisEnDB = $muestra->analisis()->get();
             $idsAConservar = [];
@@ -417,15 +418,13 @@ class FormularioMuestra extends Component
                 if ($analisis->estado !== Analisis::ESTADO_PENDIENTE) {
                     throw new \Exception("No se puede eliminar el análisis de '{$analisis->tipoAnalisis->nombre}' porque ya se encuentra en estado: {$analisis->estado}.");
                 }
-                
+
                 // Revertir consumos físicos de Materiales de Toma asociados a este análisis eliminado
                 $movimientosConsumo = \App\Models\MovimientoInventario::where('tipo_movimiento', 'CONSUMO_ANALISIS')
                     ->where('sucursal_id', $muestra->sucursal_id)
                     ->where('observacion', 'ilike', "%Muestra: {$muestra->codigo_muestra}%")
                     ->where('observacion', 'ilike', "%Análisis: {$analisis->tipoAnalisis->nombre}%")
                     ->get();
-                    
-                
 
                 foreach ($movimientosConsumo as $movimiento) {
                     $pepsService->revertirConsumoAnalisis(
@@ -437,7 +436,7 @@ class FormularioMuestra extends Component
                         observacion: "Devolución automática (Edición Muestra) - Muestra: {$muestra->codigo_muestra}"
                     );
                 }
-                
+
                 $analisis->delete();
             }
 

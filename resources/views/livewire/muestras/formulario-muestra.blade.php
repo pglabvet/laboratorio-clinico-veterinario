@@ -154,11 +154,13 @@
                 {{-- Fila 4: Diagnóstico --}}
                 <div class="grid grid-cols-1 items-start gap-6 mb-6">
                     <div>
-                        <flux:textarea 
+                        <flux:label>Diagnóstico <span class="text-red-500">*</span></flux:label>
+                        <flux:textarea
                             wire:model="diagnostico"
-                            label="Diagnóstico"
                             placeholder="Diagnóstico presuntivo o clínico del paciente"
+                            :error="$errors->first('diagnostico')"
                             rows="2"
+                            class="mt-1"
                         />
                     </div>
                 </div>
