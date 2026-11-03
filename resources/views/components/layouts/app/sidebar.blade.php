@@ -45,6 +45,15 @@
         </flux:sidebar.group>
         @endcan
 
+        {{-- Cobros --}}
+        @can('ver-cobros')
+        <flux:sidebar.group :heading="__('Cobros')" class="grid">
+            <flux:sidebar.item icon="banknotes" :href="route('cobros.index')" :current="request()->routeIs('cobros.*')" wire:navigate>
+                {{ __('Cobros') }}
+            </flux:sidebar.item>
+        </flux:sidebar.group>
+        @endcan
+
         {{-- Configuración: se configura una vez --}}
         @canany(['ver-sucursales', 'ver-especies', 'ver-veterinarias', 'ver-tipos-analisis', 'ver-plantillas'])
         <flux:sidebar.group :heading="__('Catálogos')" class="grid">

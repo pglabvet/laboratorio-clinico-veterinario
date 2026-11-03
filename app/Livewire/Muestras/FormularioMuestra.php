@@ -9,9 +9,11 @@ use App\Models\PlantillaFormulario;
 use App\Models\Sucursal;
 use App\Models\TipoAnalisis;
 use App\Models\Veterinaria;
+use App\Services\CobroService;
 use App\Services\MuestraService;
 use App\Services\PepsInventarioService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -437,6 +439,12 @@ class FormularioMuestra extends Component
                 }
                 
                 $analisis->delete();
+            }
+
+            // Nueva muestra: crear su cobro en estado Pendiente (se completa en el formulario flotante).
+            // hasTable evita que falle el registro si se despliega antes de ejecutar las migraciones.
+            if (! $this->muestra_id && Schema::hasTable('cobros')) {
+                app(CobroService::class)->crearParaMuestra($muestra, auth()->id());
             }
 
             DB::commit();
