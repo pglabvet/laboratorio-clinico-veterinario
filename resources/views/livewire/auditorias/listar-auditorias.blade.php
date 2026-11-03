@@ -4,7 +4,7 @@
     {{-- ========================================== --}}
     <div class="mb-6">
         <flux:heading size="xl" class="mb-1">Auditorías del Sistema</flux:heading>
-        <flux:subheading>Registro de todas las acciones realizadas por los usuarios</flux:subheading>
+        <flux:subheading>Quién hizo qué, dónde y cuándo en el sistema</flux:subheading>
     </div>
 
     {{-- ========================================== --}}
@@ -54,7 +54,7 @@
                     <flux:input
                         wire:model.live.debounce.300ms="busqueda"
                         icon="magnifying-glass"
-                        placeholder="Buscar..."
+                        placeholder="Buscar por código de muestra o descripción..."
                         class="w-full"
                     />
                 </div>
@@ -103,7 +103,7 @@
                     <div class="w-full sm:w-auto">
                         <flux:dropdown>
                             <flux:button variant="outline" icon="bolt" icon-trailing="chevron-down">
-                                {{ $filtroAccion ? ucfirst($filtroAccion) : 'Acción' }}
+                                {{ ['crear' => 'Creaciones', 'actualizar' => 'Modificaciones', 'eliminar' => 'Eliminaciones'][$filtroAccion] ?? 'Acción' }}
                             </flux:button>
                             <flux:menu>
                                 <flux:menu.item wire:click="$set('filtroAccion', '')" icon="bars-3">
@@ -111,13 +111,13 @@
                                 </flux:menu.item>
                                 <flux:menu.separator />
                                 <flux:menu.item wire:click="$set('filtroAccion', 'crear')" icon="plus-circle">
-                                    Crear
+                                    Creaciones
                                 </flux:menu.item>
                                 <flux:menu.item wire:click="$set('filtroAccion', 'actualizar')" icon="pencil-square">
-                                    Actualizar
+                                    Modificaciones
                                 </flux:menu.item>
                                 <flux:menu.item wire:click="$set('filtroAccion', 'eliminar')" icon="trash">
-                                    Eliminar
+                                    Eliminaciones
                                 </flux:menu.item>
                             </flux:menu>
                         </flux:dropdown>
@@ -127,11 +127,11 @@
                     <div class="w-full sm:w-auto">
                         <flux:dropdown>
                             <flux:button variant="outline" icon="cube" icon-trailing="chevron-down">
-                                {{ $filtroEntidad ? (\App\Models\Auditoria::nombresEntidades()[$filtroEntidad] ?? $filtroEntidad) : 'Entidad' }}
+                                {{ $filtroEntidad ? (\App\Models\Auditoria::nombresEntidades()[$filtroEntidad] ?? $filtroEntidad) : 'Módulo' }}
                             </flux:button>
                             <flux:menu>
                                 <flux:menu.item wire:click="$set('filtroEntidad', '')" icon="bars-3">
-                                    Todas las entidades
+                                    Todos los módulos
                                 </flux:menu.item>
                                 <flux:menu.separator />
                                 @foreach($this->entidades as $entidad)
@@ -159,277 +159,181 @@
     </div>
 
 
+    @php
+        $colores = [
+            'green' => 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+            'amber' => 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
+            'blue' => 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
+            'red' => 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
+            'violet' => 'bg-violet-100 text-violet-600 dark:bg-violet-900/30 dark:text-violet-400',
+            'zinc' => 'bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400',
+        ];
+    @endphp
+
     {{-- ========================================== --}}
-    {{-- TABLA DE AUDITORÍAS                         --}}
-    {{-- Muestra el listado paginado de registros    --}}
+    {{-- TABLA: Cuándo | Quién | Qué hizo | Dónde    --}}
     {{-- ========================================== --}}
-    <div class="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
-        <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
-            <thead class="bg-zinc-50 dark:bg-zinc-800">
-                <tr>
-                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                        <div class="flex items-center gap-1">
-                            Fecha
-                            <flux:icon name="arrow-down" class="size-3" />
-                            <span class="text-[10px] font-normal normal-case text-zinc-400">(más reciente)</span>
-                        </div>
-                    </th>
-                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                        Usuario
-                    </th>
-                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                        Acción
-                    </th>
-                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                        Entidad
-                    </th>
-                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                        Descripción
-                    </th>
-                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                        IP
-                    </th>
-                    <th class="px-4 py-3 text-center text-xs font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                        Detalle
-                    </th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-zinc-200 bg-white dark:divide-zinc-700 dark:bg-zinc-900">
-                @forelse($auditorias as $auditoria)
-                    <tr class="transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
-                        {{-- FECHA: Formato legible con hora --}}
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-zinc-600 dark:text-zinc-300">
-                            <div>{{ $auditoria->created_at->format('d/m/Y') }}</div>
-                            <div class="text-xs text-zinc-400">{{ $auditoria->created_at->format('H:i:s') }}</div>
-                        </td>
-
-                        {{-- USUARIO: Quién realizó la acción --}}
-                        <td class="whitespace-nowrap px-4 py-3 text-sm">
-                            <div class="flex items-center gap-2">
-                                {{-- Avatar con las iniciales del usuario --}}
-                                @if($auditoria->user)
-                                    <flux:avatar size="xs" name="{{ $auditoria->user->name }}" />
-                                    <span class="text-zinc-800 dark:text-zinc-200">{{ $auditoria->user->name }}</span>
-                                @else
-                                    <flux:avatar size="xs" name="S" />
-                                    <span class="text-zinc-400 italic">Sistema</span>
-                                @endif
-                            </div>
-                        </td>
-
-                        {{-- ACCIÓN: Badge con color según el tipo --}}
-                        <td class="whitespace-nowrap px-4 py-3 text-sm">
-                            <flux:badge
-                                size="sm"
-                                color="{{ $auditoria->getColor() }}"
-                                icon="{{ $auditoria->getIcono() }}"
-                            >
-                                {{ ucfirst($auditoria->accion) }}
-                            </flux:badge>
-                        </td>
-
-                        {{-- ENTIDAD: Nombre legible del tipo de registro --}}
-                        <td class="whitespace-nowrap px-4 py-3 text-sm text-zinc-600 dark:text-zinc-300">
-                            {{ $auditoria->getNombreEntidad() }}
-                        </td>
-
-                        {{-- DESCRIPCIÓN: Texto legible de lo que se hizo --}}
-                        <td class="max-w-xs truncate px-4 py-3 text-sm text-zinc-800 dark:text-zinc-200" title="{{ $auditoria->descripcion }}">
-                            {{ $auditoria->descripcion }}
-                        </td>
-
-                        {{-- IP: Dirección IP del usuario --}}
-                        <td class="whitespace-nowrap px-4 py-3 text-xs font-mono text-zinc-400">
-                            {{ $auditoria->ip ?? '-' }}
-                        </td>
-
-                        {{-- BOTÓN DE DETALLE: Solo aparece si hay datos para ver --}}
-                        <td class="whitespace-nowrap px-4 py-3 text-center">
-                            @if($auditoria->valores_anteriores || $auditoria->valores_nuevos)
-                                <flux:button
-                                    wire:click="verDetalle({{ $auditoria->id }})"
-                                    size="xs"
-                                    variant="subtle"
-                                    icon="eye"
-                                />
-                            @else
-                                <span class="text-xs text-zinc-300">—</span>
-                            @endif
-                        </td>
-                    </tr>
-                @empty
-                    {{-- Mensaje cuando no hay resultados --}}
+    <div class="overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-md ring-1 ring-neutral-200/50 dark:border-neutral-700 dark:bg-neutral-800 dark:ring-neutral-700/50">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-700">
+                <thead class="bg-neutral-50 dark:bg-neutral-900">
                     <tr>
-                        <td colspan="7" class="px-4 py-12 text-center">
-                            <div class="flex flex-col items-center gap-2">
-                                <flux:icon name="clipboard-document-list" class="size-12 text-zinc-300 dark:text-zinc-600" />
-                                <p class="text-sm text-zinc-500">No se encontraron registros de auditoría</p>
-                                @if($busqueda || $filtroUsuario || $filtroAccion || $filtroEntidad || $fechaDesde || $fechaHasta)
-                                    <flux:button wire:click="limpiarFiltros" size="xs" variant="subtle">
-                                        Limpiar filtros
-                                    </flux:button>
-                                @endif
-                            </div>
-                        </td>
+                        @foreach(['Cuándo', 'Quién', 'Qué hizo', 'Dónde', ''] as $columna)
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-neutral-700 dark:text-neutral-300">{{ $columna }}</th>
+                        @endforeach
                     </tr>
-                @endforelse
-            </tbody>
-        </table>
+                </thead>
+                <tbody class="divide-y divide-neutral-200 bg-white dark:divide-neutral-700 dark:bg-neutral-800">
+                    @forelse($auditorias as $auditoria)
+                        @php $evento = $eventos[$auditoria->id]; @endphp
+                        <tr class="hover:bg-neutral-50 dark:hover:bg-neutral-700/50 transition-colors duration-150" wire:key="auditoria-{{ $auditoria->id }}">
+                            <td class="whitespace-nowrap px-6 py-4 text-sm text-neutral-700 dark:text-neutral-300">
+                                <div class="flex flex-col">
+                                    <span>{{ $auditoria->created_at->format('d/m/Y') }}</span>
+                                    <span class="text-xs text-neutral-500 dark:text-neutral-400">{{ $auditoria->created_at->format('H:i') }}</span>
+                                </div>
+                            </td>
+                            <td class="whitespace-nowrap px-6 py-4 text-sm">
+                                <div class="flex items-center gap-2">
+                                    <flux:avatar size="xs" name="{{ $evento['usuario'] }}" />
+                                    <span class="text-neutral-800 dark:text-neutral-200">{{ $evento['usuario'] }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-neutral-800 dark:text-neutral-200">
+                                <div class="flex items-start gap-2">
+                                    <span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full {{ $colores[$evento['color']] ?? $colores['zinc'] }}">
+                                        <flux:icon :name="$evento['icono']" class="size-3.5" />
+                                    </span>
+                                    <div class="min-w-0">
+                                        <p>{{ $evento['texto'] }}</p>
+                                        @if($evento['motivo'])
+                                            <p class="text-xs text-red-600 dark:text-red-400">Motivo: {{ Str::limit($evento['motivo'], 80) }}</p>
+                                        @endif
+                                        @foreach(array_slice($evento['detalles'], 0, 2) as $cambio)
+                                            <p class="text-xs text-neutral-500 dark:text-neutral-400">
+                                                {{ $cambio['campo'] }}: <span class="line-through">{{ Str::limit($cambio['antes'], 30) }}</span> → <span class="font-medium text-neutral-700 dark:text-neutral-300">{{ Str::limit($cambio['despues'], 30) }}</span>
+                                            </p>
+                                        @endforeach
+                                        @if(count($evento['detalles']) > 2)
+                                            <p class="text-xs text-neutral-400">y {{ count($evento['detalles']) - 2 }} cambio(s) más</p>
+                                        @endif
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-neutral-700 dark:text-neutral-300">{{ $evento['donde'] }}</td>
+                            <td class="whitespace-nowrap px-6 py-4 text-right">
+                                <flux:button wire:click="verDetalle({{ $auditoria->id }})" variant="ghost" size="sm" icon="eye" title="Ver más" />
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="px-6 py-12 text-center">
+                                <div class="flex flex-col items-center gap-2">
+                                    <flux:icon name="clipboard-document-list" class="size-12 text-neutral-300 dark:text-neutral-600" />
+                                    <p class="text-sm text-neutral-500">No se encontraron movimientos</p>
+                                    @if($busqueda || $filtroUsuario || $filtroAccion || $filtroEntidad || $fechaDesde || $fechaHasta)
+                                        <flux:button wire:click="limpiarFiltros" size="xs" variant="subtle">Limpiar filtros</flux:button>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if($auditorias->hasPages())
+            <div class="border-t border-neutral-200 bg-neutral-50 px-6 py-4 dark:border-neutral-700 dark:bg-neutral-900">
+                {{ $auditorias->links() }}
+            </div>
+        @endif
     </div>
 
     {{-- ========================================== --}}
-    {{-- PAGINACIÓN                                  --}}
-    {{-- Livewire genera los links automáticamente   --}}
+    {{-- MODAL "VER MÁS": detalle legible           --}}
     {{-- ========================================== --}}
-    <div class="mt-4">
-        {{ $auditorias->links() }}
-    </div>
-
-    {{-- ========================================== --}}
-    {{-- MODAL DE DETALLE                            --}}
-    {{-- Muestra los valores anteriores y nuevos     --}}
-    {{-- cuando el usuario hace clic en "ver"        --}}
-    {{-- ========================================== --}}
-    <flux:modal wire:model="mostrarDetalle" class="max-w-2xl">
-        @if($detalle)
-            <div class="space-y-6">
-                {{-- Encabezado del modal --}}
-                <div>
-                    <flux:heading size="lg">Detalle de Auditoría</flux:heading>
-                    <flux:subheading>{{ $detalle->descripcion }}</flux:subheading>
-                </div>
-
-                {{-- Información general --}}
-                <div class="grid grid-cols-2 gap-4 rounded-lg bg-zinc-50 p-4 dark:bg-zinc-800">
-                    <div>
-                        <p class="text-xs font-medium uppercase text-zinc-500">Usuario</p>
-                        <p class="text-sm text-zinc-800 dark:text-zinc-200">
-                            {{ $detalle->user?->name ?? 'Sistema' }}
-                        </p>
-                    </div>
-                    <div>
-                        <p class="text-xs font-medium uppercase text-zinc-500">Fecha y Hora</p>
-                        <p class="text-sm text-zinc-800 dark:text-zinc-200">
-                            {{ $detalle->created_at->format('d/m/Y H:i:s') }}
-                        </p>
-                    </div>
-                    <div>
-                        <p class="text-xs font-medium uppercase text-zinc-500">Acción</p>
-                        <flux:badge size="sm" color="{{ $detalle->getColor() }}" icon="{{ $detalle->getIcono() }}">
-                            {{ ucfirst($detalle->accion) }}
-                        </flux:badge>
-                    </div>
-                    <div>
-                        <p class="text-xs font-medium uppercase text-zinc-500">Entidad</p>
-                        <p class="text-sm text-zinc-800 dark:text-zinc-200">
-                            {{ $detalle->getNombreEntidad() }} #{{ $detalle->entidad_id }}
-                        </p>
-                    </div>
-                    <div>
-                        <p class="text-xs font-medium uppercase text-zinc-500">Dirección IP</p>
-                        <p class="text-sm font-mono text-zinc-800 dark:text-zinc-200">
-                            {{ $detalle->ip ?? '-' }}
-                        </p>
-                    </div>
-                    <div>
-                        <p class="text-xs font-medium uppercase text-zinc-500">Navegador</p>
-                        <p class="max-w-xs truncate text-sm text-zinc-800 dark:text-zinc-200" title="{{ $detalle->user_agent }}">
-                            {{ Str::limit($detalle->user_agent, 50) ?? '-' }}
-                        </p>
+    <flux:modal wire:model="mostrarDetalle" class="w-full max-w-2xl">
+        @if($detalle && $eventoDetalle)
+            <div class="space-y-5">
+                <div class="pb-4 border-b border-neutral-200 dark:border-neutral-700">
+                    <div class="flex items-start gap-3">
+                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full {{ $colores[$eventoDetalle['color']] ?? $colores['zinc'] }}">
+                            <flux:icon :name="$eventoDetalle['icono']" class="size-5" />
+                        </span>
+                        <div>
+                            <h2 class="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+                                {{ $eventoDetalle['usuario'] }} {{ lcfirst($eventoDetalle['texto']) }}
+                            </h2>
+                            <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                                {{ $detalle->created_at->format('d/m/Y H:i') }} · {{ $eventoDetalle['donde'] }}
+                            </p>
+                        </div>
                     </div>
                 </div>
 
-                {{-- ================================== --}}
-                {{-- SECCIÓN DE CAMBIOS                  --}}
-                {{-- Para ACTUALIZAR: tabla comparativa  --}}
-                {{-- Para CREAR: valores del nuevo       --}}
-                {{-- Para ELIMINAR: valores del borrado  --}}
-                {{-- ================================== --}}
+                @if($eventoDetalle['motivo'])
+                    <div class="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700 dark:bg-red-900/10 dark:text-red-400">
+                        <span class="font-semibold">Motivo:</span> {{ $eventoDetalle['motivo'] }}
+                    </div>
+                @endif
 
-                @if($detalle->accion === 'actualizar' && $detalle->getCambios())
-                    {{-- ACTUALIZACIÓN: Muestra qué cambió (antes → después) --}}
+                {{-- Cambios: antes → después --}}
+                @if(count($eventoDetalle['detalles']))
                     <div>
-                        <p class="mb-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300">Campos modificados</p>
-                        <div class="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
-                            <table class="min-w-full divide-y divide-zinc-200 dark:divide-zinc-700">
-                                <thead class="bg-zinc-50 dark:bg-zinc-800">
+                        <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Qué cambió</p>
+                        <div class="overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
+                            <table class="min-w-full divide-y divide-neutral-200 text-sm dark:divide-neutral-700">
+                                <thead class="bg-neutral-50 dark:bg-neutral-900">
                                     <tr>
-                                        <th class="px-4 py-2 text-left text-xs font-medium uppercase text-zinc-500">Campo</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium uppercase text-zinc-500">Valor Anterior</th>
-                                        <th class="px-4 py-2 text-left text-xs font-medium uppercase text-zinc-500">Valor Nuevo</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium uppercase text-neutral-700 dark:text-neutral-300">Dato</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium uppercase text-neutral-700 dark:text-neutral-300">Antes</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium uppercase text-neutral-700 dark:text-neutral-300">Después</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-zinc-200 dark:divide-zinc-700">
-                                    @foreach($detalle->getCambios() as $campo => $valores)
+                                <tbody class="divide-y divide-neutral-200 bg-white dark:divide-neutral-700 dark:bg-neutral-800">
+                                    @foreach($eventoDetalle['detalles'] as $cambio)
                                         <tr>
-                                            <td class="whitespace-nowrap px-4 py-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">
-                                                {{ $campo }}
-                                            </td>
-                                            <td class="px-4 py-2 text-sm text-red-600 dark:text-red-400">
-                                                @if(is_array($valores['anterior']))
-                                                    <code class="text-xs">{{ json_encode($valores['anterior'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</code>
-                                                @else
-                                                    {{ $valores['anterior'] ?? '—' }}
-                                                @endif
-                                            </td>
-                                            <td class="px-4 py-2 text-sm text-green-600 dark:text-green-400">
-                                                @if(is_array($valores['nuevo']))
-                                                    <code class="text-xs">{{ json_encode($valores['nuevo'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) }}</code>
-                                                @else
-                                                    {{ $valores['nuevo'] ?? '—' }}
-                                                @endif
-                                            </td>
+                                            <td class="px-4 py-2 font-medium text-neutral-700 dark:text-neutral-300">{{ $cambio['campo'] }}</td>
+                                            <td class="px-4 py-2 text-red-600 dark:text-red-400">{{ $cambio['antes'] }}</td>
+                                            <td class="px-4 py-2 text-green-600 dark:text-green-400">{{ $cambio['despues'] }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
                             </table>
                         </div>
                     </div>
+                @endif
 
-                @elseif($detalle->accion === 'crear' && $detalle->valores_nuevos)
-                    {{-- CREACIÓN: Muestra los valores del registro nuevo --}}
+                {{-- Datos del registro creado o eliminado --}}
+                @if(count($datosDetalle))
                     <div>
-                        <p class="mb-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300">Valores del registro creado</p>
-                        <div class="max-h-80 overflow-y-auto rounded-lg border border-zinc-200 p-3 dark:border-zinc-700">
-                            <dl class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                                @foreach($detalle->valores_nuevos as $campo => $valor)
-                                    <div>
-                                        <dt class="text-xs font-medium uppercase text-zinc-500">{{ $campo }}</dt>
-                                        <dd class="text-sm text-zinc-800 dark:text-zinc-200">
-                                            @if(is_array($valor))
-                                                <code class="text-xs">{{ json_encode($valor, JSON_UNESCAPED_UNICODE) }}</code>
-                                            @else
-                                                {{ $valor ?? '—' }}
-                                            @endif
-                                        </dd>
-                                    </div>
-                                @endforeach
-                            </dl>
-                        </div>
-                    </div>
-
-                @elseif($detalle->accion === 'eliminar' && $detalle->valores_anteriores)
-                    {{-- ELIMINACIÓN: Muestra los valores del registro eliminado --}}
-                    <div>
-                        <p class="mb-2 text-sm font-semibold text-zinc-700 dark:text-zinc-300">Valores del registro eliminado</p>
-                        <div class="max-h-80 overflow-y-auto rounded-lg border border-red-200 bg-red-50/50 p-3 dark:border-red-800 dark:bg-red-900/10">
-                            <dl class="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                                @foreach($detalle->valores_anteriores as $campo => $valor)
-                                    <div>
-                                        <dt class="text-xs font-medium uppercase text-zinc-500">{{ $campo }}</dt>
-                                        <dd class="text-sm text-zinc-800 dark:text-zinc-200">
-                                            @if(is_array($valor))
-                                                <code class="text-xs">{{ json_encode($valor, JSON_UNESCAPED_UNICODE) }}</code>
-                                            @else
-                                                {{ $valor ?? '—' }}
-                                            @endif
-                                        </dd>
-                                    </div>
-                                @endforeach
-                            </dl>
-                        </div>
+                        <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
+                            {{ $detalle->accion === 'eliminar' ? 'Datos que tenía' : 'Datos registrados' }}
+                        </p>
+                        <dl class="grid max-h-72 grid-cols-1 gap-3 overflow-y-auto rounded-xl border border-neutral-200 p-4 sm:grid-cols-2 dark:border-neutral-700">
+                            @foreach($datosDetalle as $dato)
+                                <div>
+                                    <dt class="text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">{{ $dato['campo'] }}</dt>
+                                    <dd class="text-sm text-neutral-900 dark:text-neutral-100">{{ $dato['valor'] }}</dd>
+                                </div>
+                            @endforeach
+                        </dl>
                     </div>
                 @endif
+
+                {{-- Información técnica (oculta por defecto) --}}
+                <details class="rounded-lg bg-neutral-50 px-4 py-3 text-sm dark:bg-neutral-900">
+                    <summary class="cursor-pointer text-xs font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">Información técnica</summary>
+                    <div class="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        <p><span class="text-neutral-500">Dirección IP:</span> <span class="font-mono">{{ $detalle->ip ?? '-' }}</span></p>
+                        <p><span class="text-neutral-500">Registro:</span> {{ $detalle->getNombreEntidad() }} #{{ $detalle->entidad_id }}</p>
+                        <p class="sm:col-span-2 break-all"><span class="text-neutral-500">Navegador:</span> {{ $detalle->user_agent ?? '-' }}</p>
+                    </div>
+                </details>
+
+                <div class="flex justify-end">
+                    <flux:button type="button" wire:click="cerrarDetalle" variant="primary">Cerrar</flux:button>
+                </div>
             </div>
         @endif
     </flux:modal>

@@ -78,6 +78,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'ver-codigo-barras-muestra',
             'filtro-de-sucursal-muestra',
             'exportar-muestras',
+            'ver-historial-muestra', // Pestaña Historial en el detalle de la muestra (en producción se crea con su migración)
 
             // Vista general del sistema
             'vista-general-sistema', // Ver datos de TODAS las sucursales (sin este permiso, solo ve su sucursal)

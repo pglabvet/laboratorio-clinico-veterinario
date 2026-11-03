@@ -269,6 +269,7 @@
                             'enviar-resultados-muestra' => 'muestras',
                             'ver-codigo-barras-muestra' => 'muestras',
                             'filtro-de-sucursal-muestra' => 'muestras',
+                            'ver-historial-muestra' => 'muestras',
                             'aprobar-analisis' => 'analisis',
                             'rechazar-analisis' => 'analisis',
                             'actualizar-datos-analisis' => 'analisis',
