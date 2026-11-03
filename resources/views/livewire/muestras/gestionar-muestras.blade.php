@@ -484,6 +484,24 @@
                     <p class="text-sm text-neutral-500 dark:text-neutral-400 mt-1">Código: <span class="font-mono font-medium">{{ $muestraAVer->codigo_muestra }}</span></p>
                 </div>
 
+                {{-- Pestañas: Detalle / Historial --}}
+                @can('ver-historial-muestra')
+                <div class="flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-900">
+                    @foreach(['detalle' => 'Detalle', 'historial' => 'Historial'] as $pestana => $etiqueta)
+                        <button
+                            type="button"
+                            wire:click="$set('pestanaDetalle', '{{ $pestana }}')"
+                            class="flex-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors {{ $pestanaDetalle === $pestana ? 'bg-white text-neutral-900 shadow-sm dark:bg-neutral-700 dark:text-neutral-100' : 'text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200' }}"
+                        >
+                            {{ $etiqueta }}
+                        </button>
+                    @endforeach
+                </div>
+                @endcan
+
+                @if($pestanaDetalle === 'historial')
+                    @include('livewire.muestras.partials.historial-muestra', ['eventos' => $this->historialMuestra])
+                @else
                 {{-- Datos del Paciente --}}
                 <div class="rounded-xl border border-neutral-200 dark:border-neutral-700 divide-y divide-neutral-200 dark:divide-neutral-700 overflow-hidden bg-white dark:bg-neutral-800/50">
                     <div class="flex items-start gap-3 px-4 py-3.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
@@ -571,6 +589,7 @@
                             @endforeach
                         </div>
                     </div>
+                @endif
                 @endif
 
                 {{-- Botón cerrar --}}

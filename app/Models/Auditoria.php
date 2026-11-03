@@ -155,6 +155,10 @@ class Auditoria extends Model
             'MovimientoInventario' => 'Movimiento de Inventario',
             'InventarioSucursal' => 'Inventario',
             'Resultado' => 'Resultado',
+            'MuestraRechazada' => 'Muestra Rechazada',
+            'LoteInventario' => 'Lote de Inventario',
+            'Cobro' => 'Cobro',
+            'Pago de Cobro' => 'Pago de Cobro',
         ];
     }
 

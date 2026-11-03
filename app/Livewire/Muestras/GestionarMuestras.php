@@ -10,6 +10,7 @@ use App\Models\Muestra;
 use App\Models\Sucursal;
 use App\Models\TipoAnalisis;
 use App\Models\Veterinaria;
+use App\Services\AuditoriaLegibleService;
 use App\Services\EnvioResultadosService;
 use App\Services\PepsInventarioService;
 use Illuminate\Support\Facades\DB;
@@ -42,6 +43,9 @@ class GestionarMuestras extends Component
     public $muestraAEliminar = null;
 
     public $muestraAVer = null;
+
+    // Pestaña activa en el modal de detalle: 'detalle' o 'historial'
+    public $pestanaDetalle = 'detalle';
 
     public $muestraCodigoBarras = null;
 
@@ -109,6 +113,7 @@ class GestionarMuestras extends Component
             'analisis.tipoAnalisis',
             'analisis.plantillaFormulario',
         ])->findOrFail($id);
+        $this->pestanaDetalle = 'detalle';
         $this->modalVer = true;
     }
 
@@ -119,6 +124,21 @@ class GestionarMuestras extends Component
     {
         $this->modalVer = false;
         $this->muestraAVer = null;
+        $this->pestanaDetalle = 'detalle';
+    }
+
+    /**
+     * Historial legible de la muestra (pestaña Historial del detalle).
+     * Solo se calcula cuando la pestaña está abierta.
+     */
+    #[Computed]
+    public function historialMuestra()
+    {
+        if ($this->pestanaDetalle !== 'historial' || ! $this->muestraAVer || ! auth()->user()->can('ver-historial-muestra')) {
+            return collect();
+        }
+
+        return app(AuditoriaLegibleService::class)->historialMuestra($this->muestraAVer);
     }
 
     /**
