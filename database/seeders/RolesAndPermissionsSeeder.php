@@ -165,6 +165,18 @@ class RolesAndPermissionsSeeder extends Seeder
             'mostrar-detalle-muestra-rechazada',
             'exportar-muestras-rechazadas',
 
+            // Cobros (en producción se crean con la migración add_cobros_permissions)
+            'ver-cobros',
+            'mostrar-detalle-cobro',
+            'registrar-pago-cobro',
+            'anular-pago-cobro',
+            'editar-cobros',
+            'eliminar-cobros',
+            'exonerar-cobro',
+            'filtro-de-sucursal-cobro',
+            'registrar-cobro-muestra',
+            'exportar-cobros',
+
             // Ayuda / Guía del Sistema
             'ver-ayuda',
 

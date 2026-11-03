@@ -205,6 +205,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('can:exportar-muestras-rechazadas')
         ->name('muestras-rechazadas.exportar.pdf');
 
+    // Cobros
+    Route::get('/cobros', \App\Livewire\Cobros\GestionarCobros::class)
+        ->middleware('can:ver-cobros')
+        ->name('cobros.index');
+
+    Route::get('/cobros/exportar/excel', [\App\Http\Controllers\CobrosExportController::class, 'exportarExcel'])
+        ->middleware('can:exportar-cobros')
+        ->name('cobros.exportar.excel');
+
+    Route::get('/cobros/exportar/pdf', [\App\Http\Controllers\CobrosExportController::class, 'exportarPdf'])
+        ->middleware('can:exportar-cobros')
+        ->name('cobros.exportar.pdf');
+
     // Auditorías del sistema
     Route::get('/auditorias', \App\Livewire\Auditorias\ListarAuditorias::class)
         ->middleware('can:ver-auditorias')

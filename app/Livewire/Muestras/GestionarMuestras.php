@@ -3,6 +3,7 @@
 namespace App\Livewire\Muestras;
 
 use App\Models\Analisis;
+use App\Models\Cobro;
 use App\Models\Especie;
 use App\Models\MovimientoInventario;
 use App\Models\Muestra;
@@ -15,6 +16,7 @@ use App\Services\PepsInventarioService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -57,6 +59,9 @@ class GestionarMuestras extends Component
 
     public $buscar = '';
 
+    // Muestra recién creada cuyo formulario de cobro se muestra antes del código de barras
+    public $cobroMuestraId = null;
+
     /**
      * Inicializar componente
      */
@@ -68,8 +73,24 @@ class GestionarMuestras extends Component
         // Si hay una muestra recién creada, abrir su modal automáticamente
         if (session()->has('muestra_recien_creada_id')) {
             $muestraId = session()->pull('muestra_recien_creada_id');
-            $this->verCodigoBarras($muestraId);
+
+            // Primero el formulario flotante de cobro; al cerrarlo se abre el código de barras
+            if (auth()->user()->can('registrar-cobro-muestra') && Cobro::where('muestra_id', $muestraId)->exists()) {
+                $this->cobroMuestraId = $muestraId;
+            } else {
+                $this->verCodigoBarras($muestraId);
+            }
         }
+    }
+
+    /**
+     * Al cerrar el formulario de cobro, mostrar el código de barras de la muestra
+     */
+    #[On('cobro-muestra-cerrado')]
+    public function cobroMuestraCerrado($muestraId)
+    {
+        $this->cobroMuestraId = null;
+        $this->verCodigoBarras($muestraId);
     }
 
     /**
